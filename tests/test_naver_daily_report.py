@@ -63,23 +63,57 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(len(payload["weeks"][0]["daily"]), 7)
         self.assertEqual(payload["days"][0]["label"], "2026.07.31 (금)")
 
-    def test_summary_stats_uses_supported_single_id_request(self) -> None:
+    def test_summary_stats_uses_supported_bulk_summary_request(self) -> None:
         captured = {}
 
         class RecordingClient(report.NaverSearchAdClient):
             def get(self, uri, params=None):
                 captured["uri"] = uri
                 captured["params"] = params
-                return [{"impCnt": 100, "clkCnt": 5, "salesAmt": 1000}]
+                return {
+                    "summaryStatResponse": {
+                        "data": [
+                            {"id": "cmp-test", "impCnt": 100, "clkCnt": 5, "salesAmt": 1000}
+                        ]
+                    }
+                }
 
         client = RecordingClient("1", "api", "secret")
-        rows = client.summary_stats("cmp-test", date(2026, 7, 31), date(2026, 7, 31))
+        rows = client.summary_stats(
+            ["cmp-test", "cmp-other"], date(2026, 7, 31), date(2026, 7, 31)
+        )
 
         self.assertEqual(captured["uri"], "/stats")
-        self.assertEqual(captured["params"]["id"], "cmp-test")
-        self.assertNotIn("ids", captured["params"])
-        self.assertNotIn("timeIncrement", captured["params"])
+        self.assertEqual(captured["params"]["ids"], '["cmp-test","cmp-other"]')
+        self.assertNotIn("id", captured["params"])
+        self.assertEqual(captured["params"]["timeIncrement"], "allDays")
         self.assertEqual(rows[0]["clkCnt"], 5)
+
+    def test_collect_daily_metrics_batches_campaigns_by_day(self) -> None:
+        class BatchClient:
+            calls = []
+
+            def campaigns(self):
+                return [
+                    {"nccCampaignId": "place", "campaignTp": "PLACE", "name": "매장"},
+                    {"nccCampaignId": "power", "campaignTp": "WEB_SITE", "name": "검색"},
+                ]
+
+            def summary_stats(self, campaign_ids, since, until):
+                self.calls.append((campaign_ids, since, until))
+                return [
+                    {"id": "place", "impCnt": 100, "clkCnt": 10, "salesAmt": 1000},
+                    {"id": "power", "impCnt": 200, "clkCnt": 20, "salesAmt": 3000},
+                ]
+
+        client = BatchClient()
+        daily, matched = report.collect_daily_metrics(client, date(2026, 7, 31), weeks=1)
+
+        self.assertEqual(len(client.calls), 5)
+        self.assertEqual(client.calls[0][0], ["place", "power"])
+        self.assertEqual(len(matched), 2)
+        self.assertEqual(daily[date(2026, 7, 31)]["플레이스 검색광고"]["clicks"], 10)
+        self.assertEqual(daily[date(2026, 7, 31)]["파워링크"]["spend"], 3000)
 
 
 if __name__ == "__main__":

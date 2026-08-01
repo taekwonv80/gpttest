@@ -30,6 +30,7 @@ FIELDS = ("impCnt", "clkCnt", "salesAmt", "ctr", "cpc")
 DATA_PATH = Path("data/campaign_weekly.json")
 CONNECTIONS_PATH = Path("data/connections.json")
 DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
+STATS_BATCH_SIZE = 100
 
 
 class IntegrationError(RuntimeError):
@@ -99,16 +100,19 @@ class NaverSearchAdClient:
             raise IntegrationError("네이버 캠페인 응답 형식이 예상과 다릅니다.")
         return [item for item in result if isinstance(item, dict)]
 
-    def summary_stats(self, campaign_id: str, since: date, until: date) -> list[dict[str, Any]]:
+    def summary_stats(
+        self, campaign_ids: list[str], since: date, until: date
+    ) -> list[dict[str, Any]]:
         result = self.get(
             "/stats",
             {
-                "id": campaign_id,
-                "fields": json.dumps(FIELDS),
+                "ids": json.dumps(campaign_ids, separators=(",", ":")),
+                "fields": json.dumps(FIELDS, separators=(",", ":")),
                 "timeRange": json.dumps(
                     {"since": since.isoformat(), "until": until.isoformat()},
                     separators=(",", ":"),
                 ),
+                "timeIncrement": "allDays",
             },
         )
         return flatten_stat_rows(result)
@@ -117,6 +121,11 @@ class NaverSearchAdClient:
 def flatten_stat_rows(payload: Any) -> list[dict[str, Any]]:
     """Accept both flat and nested variants returned by the stats endpoint."""
     if isinstance(payload, dict):
+        for response_key in ("summaryStatResponse", "dailyStatResponse"):
+            response = payload.get(response_key)
+            if isinstance(response, dict):
+                payload = response
+                break
         for key in ("data", "items", "results"):
             if isinstance(payload.get(key), list):
                 payload = payload[key]
@@ -218,23 +227,14 @@ def collect_daily_metrics(
 
     campaigns = client.campaigns()
     matched: list[dict[str, Any]] = []
+    category_by_id: dict[str, str] = {}
     for campaign in campaigns:
         category = classify_campaign(campaign)
         campaign_id = str(campaign.get("nccCampaignId") or campaign.get("id") or "")
         if not category or not campaign_id:
             continue
         matched.append(campaign)
-        for target_day in sorted(daily):
-            try:
-                rows = client.summary_stats(campaign_id, target_day, target_day)
-            except IntegrationError as exc:
-                campaign_name = campaign.get("name") or "이름 없는 캠페인"
-                raise IntegrationError(
-                    f"{category} 캠페인 '{campaign_name}'의 {target_day.isoformat()} 통계 조회 실패: {exc}"
-                ) from None
-            for row in rows:
-                add_row(daily[target_day][category], row)
-            time.sleep(0.2)
+        category_by_id[campaign_id] = category
 
     if not matched:
         available = ", ".join(
@@ -248,6 +248,30 @@ def collect_daily_metrics(
         raise IntegrationError(
             "플레이스·지역소상공인·파워링크 캠페인을 찾지 못했습니다. "
             f"계정의 캠페인 유형: {available or '없음'}"
+        )
+
+    campaign_ids = list(category_by_id)
+    batches = [
+        campaign_ids[start : start + STATS_BATCH_SIZE]
+        for start in range(0, len(campaign_ids), STATS_BATCH_SIZE)
+    ]
+    for target_day in sorted(daily):
+        for batch in batches:
+            try:
+                rows = client.summary_stats(batch, target_day, target_day)
+            except IntegrationError as exc:
+                raise IntegrationError(
+                    f"{target_day.isoformat()} 캠페인 통계 묶음 조회 실패: {exc}"
+                ) from None
+            for row in rows:
+                campaign_id = str(row.get("id") or row.get("nccCampaignId") or "")
+                category = category_by_id.get(campaign_id)
+                if category:
+                    add_row(daily[target_day][category], row)
+            time.sleep(0.2)
+        print(
+            f"네이버 통계 수집: {target_day.isoformat()} "
+            f"({len(campaign_ids)}개 캠페인, {len(batches)}개 묶음)"
         )
     return daily, matched
 

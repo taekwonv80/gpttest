@@ -21,7 +21,7 @@ concurrency:
 jobs:
   collect-and-report:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     env:
       NAVER_CUSTOMER_ID: ${{ secrets.NAVER_CUSTOMER_ID }}
       NAVER_ACCESS_LICENSE: ${{ secrets.NAVER_ACCESS_LICENSE }}

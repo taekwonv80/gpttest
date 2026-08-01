@@ -37,6 +37,11 @@ class IntegrationError(RuntimeError):
     """An external integration failed without exposing a credential."""
 
 
+def query_string(params: dict[str, Any] | None = None) -> str:
+    """Encode repeated query keys the same way as Naver's requests example."""
+    return urlencode(params or {}, doseq=True)
+
+
 def required_env(name: str) -> str:
     value = os.environ.get(name, "").strip()
     if not value:
@@ -68,7 +73,7 @@ class NaverSearchAdClient:
         }
 
     def get(self, uri: str, params: dict[str, Any] | None = None) -> Any:
-        query = urlencode(params or {})
+        query = query_string(params)
         request = Request(
             f"{BASE_URL}{uri}{'?' + query if query else ''}",
             headers=self._headers("GET", uri),
@@ -106,7 +111,7 @@ class NaverSearchAdClient:
         result = self.get(
             "/stats",
             {
-                "ids": json.dumps(campaign_ids, separators=(",", ":")),
+                "ids": campaign_ids,
                 "fields": json.dumps(FIELDS, separators=(",", ":")),
                 "timeRange": json.dumps(
                     {"since": since.isoformat(), "until": until.isoformat()},

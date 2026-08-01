@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="네이버 검색광고 성과를 한눈에 분석하는 마케팅 대시보드">
+  <title>Localight · 네이버 마케팅 대시보드</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="주요 메뉴">
+      <a class="brand" href="#overview" aria-label="Localight 홈">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-copy">localight<small>MARKETING OS</small></span>
+      </a>
+
+      <nav class="main-nav">
+        <button class="nav-item is-active" type="button" data-view="overview" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">⌂</span><span>대시보드</span>
+        </button>
+        <button class="nav-item" type="button" data-view="campaigns">
+          <span class="nav-icon" aria-hidden="true">↗</span><span>캠페인 분석</span>
+        </button>
+        <button class="nav-item" type="button" data-view="report">
+          <span class="nav-icon" aria-hidden="true">▤</span><span>데일리 리포트</span>
+        </button>
+        <button class="nav-item" type="button" data-view="connections">
+          <span class="nav-icon" aria-hidden="true">⌁</span><span>데이터 연동</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="demo-badge"><span></span> DEMO DATA</div>
+        <p>API 연결 전 샘플 화면</p>
+        <a href="https://github.com/taekwonv80/gpttest" target="_blank" rel="noreferrer">GitHub 저장소 ↗</a>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">NAVER PERFORMANCE CENTER</p>
+          <h1 id="page-title">마케팅 대시보드</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="status-chip" type="button" data-view-link="connections">
+            <span class="status-dot"></span> 데이터 연동 준비
+          </button>
+          <button class="avatar" type="button" aria-label="계정 메뉴">TK</button>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="view is-visible" id="overview" data-view-panel="overview">
+          <div class="hero-row">
+            <div>
+              <p class="section-kicker">PERFORMANCE OVERVIEW</p>
+              <h2>오늘의 광고 흐름을<br><em>한눈에.</em></h2>
+              <p class="hero-description">세 가지 네이버 광고 유형의 핵심 성과를 비교하고, 다음 액션까지 빠르게 확인하세요.</p>
+            </div>
+            <div class="period-control" role="group" aria-label="조회 기간">
+              <button type="button" class="period-button is-active" data-period="7">최근 7일</button>
+              <button type="button" class="period-button" data-period="30">최근 30일</button>
+            </div>
+          </div>
+
+          <div class="notice-bar" role="status">
+            <span class="notice-icon">i</span>
+            <p><strong>샘플 데이터로 보는 화면입니다.</strong> 네이버 검색광고 API 키를 연결하면 매일 자동 갱신됩니다.</p>
+            <button type="button" data-view-link="connections">연동 방법 보기</button>
+          </div>
+
+          <section class="metric-grid" aria-label="핵심 광고 지표">
+            <article class="metric-card metric-card--dark">
+              <div class="metric-top"><span>총 광고비</span><span class="metric-index">01</span></div>
+              <strong id="metric-spend">-</strong>
+              <p id="metric-spend-change"></p>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>노출수</span><span class="metric-index">02</span></div>
+              <strong id="metric-impressions">-</strong>
+              <p id="metric-impressions-change"></p>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>클릭수</span><span class="metric-index">03</span></div>
+              <strong id="metric-clicks">-</strong>
+              <p id="metric-clicks-change"></p>
+            </article>
+            <article class="metric-card metric-card--accent">
+              <div class="metric-top"><span>클릭률</span><span class="metric-index">04</span></div>
+              <strong id="metric-ctr">-</strong>
+              <p id="metric-ctr-change"></p>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>평균 CPC</span><span class="metric-index">05</span></div>
+              <strong id="metric-cpc">-</strong>
+              <p id="metric-cpc-change"></p>
+            </article>
+          </section>
+
+          <div class="overview-grid">
+            <section class="panel trend-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-kicker">7 DAY TREND</p>
+                  <h3>성과 추이</h3>
+                </div>
+                <div class="chart-tabs" role="group" aria-label="차트 지표">
+                  <button type="button" class="chart-tab is-active" data-chart-metric="clicks">클릭수</button>
+                  <button type="button" class="chart-tab" data-chart-metric="spend">광고비</button>
+                  <button type="button" class="chart-tab" data-chart-metric="ctr">클릭률</button>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <div class="chart-scale" aria-hidden="true"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0</span></div>
+                <svg id="trend-chart" viewBox="0 0 700 260" role="img" aria-label="최근 7일 클릭수 추이"></svg>
+                <div id="chart-labels" class="chart-labels" aria-hidden="true"></div>
+              </div>
+            </section>
+
+            <aside class="panel insight-panel">
+              <div class="insight-label"><span>✦</span> TODAY'S SIGNAL</div>
+              <h3>데이터가 말하는<br>오늘의 포인트</h3>
+              <div id="insight-list" class="insight-list"></div>
+              <button class="text-button" type="button" data-view-link="report">전체 리포트 보기 <span>→</span></button>
+            </aside>
+          </div>
+
+          <section class="panel campaign-summary">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">CAMPAIGN MIX</p>
+                <h3>캠페인별 성과</h3>
+              </div>
+              <button class="text-button" type="button" data-view-link="campaigns">자세히 분석 <span>→</span></button>
+            </div>
+            <div id="campaign-cards" class="campaign-cards"></div>
+          </section>
+        </section>
+
+        <section class="view" id="campaigns" data-view-panel="campaigns" hidden>
+          <div class="view-heading">
+            <div>
+              <p class="section-kicker">CAMPAIGN ANALYSIS</p>
+              <h2>광고 유형별 성과</h2>
+              <p>같은 기준으로 세 캠페인의 효율을 비교합니다.</p>
+            </div>
+            <span class="date-range">2026.07.25 — 07.31</span>
+          </div>
+
+          <div class="campaign-type-grid">
+            <article><span class="type-number">01</span><h3>플레이스 검색광고</h3><p>장소 검색 결과에서 매장 방문 의도가 높은 고객에게 노출됩니다.</p><small>클릭 과금 · CPC</small></article>
+            <article><span class="type-number">02</span><h3>지역소상공인 광고</h3><p>사업장 인근 사용자에게 지역 기반으로 매장을 알립니다.</p><small>노출 과금 · 평균 CPC는 참고값</small></article>
+            <article><span class="type-number">03</span><h3>파워링크</h3><p>검색 키워드에 맞춰 사이트와 핵심 정보를 노출합니다.</p><small>클릭 과금 · CPC</small></article>
+          </div>
+
+          <section class="panel table-panel">
+            <div class="panel-heading">
+              <div><p class="section-kicker">SIDE BY SIDE</p><h3>핵심 지표 비교</h3></div>
+              <span class="demo-badge"><span></span> DEMO DATA</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>캠페인 분류</th><th>광고비</th><th>노출수</th><th>클릭수</th><th>클릭률</th><th>평균 CPC</th></tr></thead>
+                <tbody id="campaign-table-body"></tbody>
+              </table>
+            </div>
+            <div class="metric-note"><strong>평균 CPC</strong> = 광고비 ÷ 클릭수. 지역소상공인 광고는 노출 과금형이므로 효율을 판단할 때 노출수와 클릭률을 함께 확인하세요.</div>
+          </section>
+
+          <section class="panel efficiency-panel">
+            <div class="panel-heading"><div><p class="section-kicker">EFFICIENCY MAP</p><h3>클릭률 vs 평균 CPC</h3></div></div>
+            <div id="efficiency-bars" class="efficiency-bars"></div>
+          </section>
+        </section>
+
+        <section class="view" id="report" data-view-panel="report" hidden>
+          <div class="view-heading">
+            <div>
+              <p class="section-kicker">DAILY BRIEF</p>
+              <h2>아침 8시 30분,<br>숫자를 <em>결론으로.</em></h2>
+              <p>어제의 성과와 오늘 할 일을 Slack으로 요약합니다.</p>
+            </div>
+            <div class="report-status"><span></span> 자동 발송 준비</div>
+          </div>
+
+          <div class="report-layout">
+            <article class="slack-preview" aria-label="Slack 데일리 리포트 미리보기">
+              <div class="slack-top">
+                <div class="slack-logo">L</div>
+                <div><strong>Localight Report</strong><span>앱 · 오전 8:30</span></div>
+              </div>
+              <div id="report-content" class="report-content"></div>
+              <div class="report-actions">
+                <button id="copy-report" type="button">리포트 문구 복사</button>
+                <span id="copy-feedback" role="status" aria-live="polite"></span>
+              </div>
+            </article>
+
+            <aside class="report-steps">
+              <p class="section-kicker">AUTOMATION FLOW</p>
+              <h3>매일 자동으로<br>이렇게 움직입니다.</h3>
+              <ol>
+                <li><span>01</span><div><strong>데이터 수집</strong><p>네이버 검색광고 API에서 전일 지표를 가져옵니다.</p></div></li>
+                <li><span>02</span><div><strong>성과 계산</strong><p>클릭률과 평균 CPC를 일관된 기준으로 계산합니다.</p></div></li>
+                <li><span>03</span><div><strong>인사이트 생성</strong><p>검증된 수치만 바탕으로 변화와 주의점을 요약합니다.</p></div></li>
+                <li><span>04</span><div><strong>Slack 발송</strong><p>매일 오전 8시 30분 담당 채널로 전달합니다.</p></div></li>
+              </ol>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="connections" data-view-panel="connections" hidden>
+          <div class="view-heading">
+            <div>
+              <p class="section-kicker">DATA CONNECTIONS</p>
+              <h2>자동화 연결 설계</h2>
+              <p>공식 API와 안전한 비밀키 보관을 전제로 단계별로 연결합니다.</p>
+            </div>
+          </div>
+
+          <div class="connection-grid">
+            <article class="connection-card connection-card--primary">
+              <div class="connection-head"><span class="connection-icon">N</span><span class="connection-state is-ready">1순위 · 연결 가능</span></div>
+              <h3>네이버 검색광고 API</h3>
+              <p>세 캠페인의 광고비, 노출수, 클릭수, 클릭률, 평균 CPC를 매일 자동 수집합니다.</p>
+              <ul><li>Customer ID</li><li>Access License</li><li>Secret Key</li></ul>
+              <a href="https://naver.github.io/searchad-apidoc/" target="_blank" rel="noreferrer">공식 문서 보기 ↗</a>
+            </article>
+            <article class="connection-card">
+              <div class="connection-head"><span class="connection-icon connection-icon--slack">#</span><span class="connection-state">2순위 · 준비</span></div>
+              <h3>Slack 데일리 리포트</h3>
+              <p>Incoming Webhook을 통해 매일 계산된 리포트를 지정 채널에 자동 전송합니다.</p>
+              <ul><li>Webhook URL</li><li>채널 선택</li><li>발송 시각 08:30</li></ul>
+              <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noreferrer">공식 문서 보기 ↗</a>
+            </article>
+            <article class="connection-card connection-card--muted">
+              <div class="connection-head"><span class="connection-icon">P</span><span class="connection-state is-later">추후 연동</span></div>
+              <h3>예약 · 주문 · POS</h3>
+              <p>예약/주문 서비스나 POS가 제공하는 공식 API 또는 Webhook이 있을 때 연결합니다.</p>
+              <ul><li>예약 유입·신청·취소</li><li>주문 신청수</li><li>매출 데이터</li></ul>
+            </article>
+            <article class="connection-card connection-card--muted">
+              <div class="connection-head"><span class="connection-icon">C</span><span class="connection-state is-later">추후 연동</span></div>
+              <h3>콜 트래킹</h3>
+              <p>공식 통화 추적 서비스 API를 통해 전화 문의와 광고 성과를 연결합니다.</p>
+              <ul><li>스마트콜/추적번호</li><li>통화수·응답률</li><li>캠페인 매칭</li></ul>
+            </article>
+          </div>
+
+          <div class="scope-note">
+            <span>!</span>
+            <div><strong>스마트플레이스 내부 통계는 현재 자동화 범위에서 제외합니다.</strong><p>공개 API가 제공되지 않는 플레이스 유입, 리뷰, 유입키워드 등의 데이터는 임의 수집하지 않습니다. 공식 연동 수단이 생기면 추가합니다.</p></div>
+          </div>
+
+          <section class="secret-panel">
+            <div><p class="section-kicker">SECURITY RULE</p><h3>API 키는 화면에 저장하지 않습니다.</h3></div>
+            <p>네이버·Slack 키는 GitHub Secrets 또는 서버 환경변수에만 저장하고, 공개되는 HTML과 JavaScript에는 포함하지 않습니다.</p>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" aria-label="모바일 주요 메뉴">
+    <button class="is-active" type="button" data-view="overview"><span>⌂</span>대시보드</button>
+    <button type="button" data-view="campaigns"><span>↗</span>캠페인</button>
+    <button type="button" data-view="report"><span>▤</span>리포트</button>
+    <button type="button" data-view="connections"><span>⌁</span>연동</button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

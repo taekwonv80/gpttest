@@ -1,0 +1,15 @@
+{
+  "generated_at": null,
+  "naver": {
+    "connected": false,
+    "status": "첫 실행 대기",
+    "last_sync": null,
+    "campaign_count": 0
+  },
+  "slack": {
+    "connected": false,
+    "status": "첫 실행 대기",
+    "last_delivery": null,
+    "send_time": "08:30"
+  }
+}

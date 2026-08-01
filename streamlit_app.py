@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
 from html import escape
+from pathlib import Path
 
 import plotly.graph_objects as go
 import streamlit as st
@@ -21,7 +23,7 @@ COLORS = {
     "파워링크": "#FF8F4D",
 }
 
-WEEKLY_DATA = {
+SAMPLE_WEEKLY_DATA = {
     "2026.07.25 — 07.31": [
         {"name": "플레이스 검색광고", "spend": 642_800, "impressions": 158_420, "clicks": 5_374},
         {"name": "지역소상공인 광고", "spend": 318_000, "impressions": 94_850, "clicks": 1_897},
@@ -48,6 +50,36 @@ WEEKLY_DATA = {
         {"name": "파워링크", "spend": 925_600, "impressions": 224_300, "clicks": 5_481},
     ],
 }
+
+
+def load_json(path: str) -> dict:
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+
+DASHBOARD_PAYLOAD = load_json("data/campaign_weekly.json")
+CONNECTIONS = load_json("data/connections.json")
+LIVE_DATA = DASHBOARD_PAYLOAD.get("source") == "naver-searchad-api"
+
+if DASHBOARD_PAYLOAD.get("weeks"):
+    WEEKLY_DATA = {
+        week["label"]: week.get("campaigns", [])
+        for week in DASHBOARD_PAYLOAD["weeks"]
+        if week.get("label") and week.get("campaigns")
+    }
+    DAILY_DATA = {
+        week["label"]: week.get("daily", [])
+        for week in DASHBOARD_PAYLOAD["weeks"]
+        if week.get("label")
+    }
+else:
+    WEEKLY_DATA = SAMPLE_WEEKLY_DATA
+    DAILY_DATA = {}
+
+if not WEEKLY_DATA:
+    WEEKLY_DATA = SAMPLE_WEEKLY_DATA
 
 WEEK_KEYS = list(WEEKLY_DATA)
 
@@ -92,6 +124,25 @@ def allocate(total: int, weights: list[float]) -> list[int]:
 
 
 def daily_series(week_label: str, rows: list[dict]) -> tuple[list[str], dict]:
+    live_daily = DAILY_DATA.get(week_label, [])
+    if live_daily:
+        ordered = sorted(live_daily, key=lambda item: item.get("date", ""))
+        days = [item.get("date", "")[-5:].replace("-", ".") for item in ordered]
+        result = {
+            name: {"clicks": [], "spend": []}
+            for name in COLORS
+        }
+        for item in ordered:
+            by_name = {
+                campaign.get("name"): campaign
+                for campaign in item.get("campaigns", [])
+            }
+            for name in COLORS:
+                campaign = by_name.get(name, {})
+                result[name]["clicks"].append(int(campaign.get("clicks", 0)))
+                result[name]["spend"].append(int(campaign.get("spend", 0)))
+        return days, result
+
     start_text = week_label.split(" — ")[0]
     start = datetime.strptime(start_text, "%Y.%m.%d")
     days = [(start + timedelta(days=index)).strftime("%m.%d") for index in range(7)]
@@ -157,7 +208,11 @@ def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]
         unsafe_allow_html=True,
     )
 
-    st.info("현재 공개 화면은 샘플 데이터입니다. 네이버 API 비밀키는 GitHub Pages에 저장하지 않습니다.", icon="ℹ️")
+    if LIVE_DATA:
+        synced = str(DASHBOARD_PAYLOAD.get("generated_at", ""))[:19].replace("T", " ")
+        st.success(f"네이버 검색광고 API 자동 연동 · 마지막 동기화 {synced}", icon="✅")
+    else:
+        st.info("첫 자동 수집 전까지 샘플 데이터를 표시합니다. 비밀키는 GitHub Actions Secrets에만 저장됩니다.", icon="ℹ️")
 
     metric_cols = st.columns(5)
     metrics = [
@@ -313,6 +368,7 @@ def render_campaigns(week_label: str, rows: list[dict]) -> None:
 def render_report(week_label: str, rows: list[dict]) -> None:
     current = totals(rows)
     best = max(rows, key=lambda item: item["ctr"])
+    data_note = "네이버 API 자동 수집 데이터" if LIVE_DATA else "첫 자동 수집 전 샘플 데이터"
     st.markdown(
         """
         <div class="page-heading"><span>DAILY BRIEF</span><h1>숫자를 결론으로.</h1>
@@ -335,7 +391,7 @@ def render_report(week_label: str, rows: list[dict]) -> None:
               <p><b>전체 CTR</b> <mark>{current['ctr']:.2f}%</mark> · <b>평균 CPC</b> {won(current['cpc'])}</p>
               <hr><b>캠페인별 성과</b><ul>{lines}</ul>
               <b>이번 주 포인트</b><p>{escape(best['name'])}의 CTR이 {best['ctr']:.2f}%로 가장 높습니다. 전환은 측정하지 않으며 클릭 품질과 비용 효율을 중심으로 판단합니다.</p>
-              <small>※ 현재 화면은 샘플 데이터입니다.</small>
+              <small>※ {data_note}</small>
             </div>
             """,
             unsafe_allow_html=True,
@@ -346,7 +402,7 @@ def render_report(week_label: str, rows: list[dict]) -> None:
             <div class="flow-card"><span>AUTOMATION FLOW</span><h3>매일 자동화 흐름</h3>
               <ol><li><b>01</b><div><strong>데이터 수집</strong><p>검색광고 API에서 전일 지표 수집</p></div></li>
               <li><b>02</b><div><strong>성과 계산</strong><p>Python으로 CTR·평균 CPC 계산</p></div></li>
-              <li><b>03</b><div><strong>인사이트 생성</strong><p>검증된 수치만 GPT에 전달</p></div></li>
+              <li><b>03</b><div><strong>대시보드 갱신</strong><p>집계 JSON을 GitHub에 안전하게 저장</p></div></li>
               <li><b>04</b><div><strong>Slack 발송</strong><p>오전 8시 30분 지정 채널 전송</p></div></li></ol>
             </div>
             """,
@@ -355,6 +411,12 @@ def render_report(week_label: str, rows: list[dict]) -> None:
 
 
 def render_connections() -> None:
+    naver = CONNECTIONS.get("naver", {})
+    slack = CONNECTIONS.get("slack", {})
+    naver_status = escape(str(naver.get("status", "첫 실행 대기")))
+    slack_status = escape(str(slack.get("status", "첫 실행 대기")))
+    naver_sync = str(naver.get("last_sync") or "아직 실행되지 않음")[:19].replace("T", " ")
+    slack_delivery = str(slack.get("last_delivery") or "아직 발송되지 않음")[:19].replace("T", " ")
     st.markdown(
         """
         <div class="page-heading"><span>DATA CONNECTIONS</span><h1>자동화 연결 설계</h1>
@@ -365,23 +427,26 @@ def render_connections() -> None:
     left, right = st.columns(2)
     with left:
         st.markdown(
-            """
-            <div class="connection-card primary"><div><i>N</i><span>1순위 · 연결 가능</span></div>
+            f"""
+            <div class="connection-card primary"><div><i>N</i><span>{naver_status}</span></div>
             <h3>네이버 검색광고 API</h3><p>광고비, 노출수, 클릭수, 클릭률, 평균 CPC를 자동 수집합니다.</p>
-            <small>Customer ID · Access License · Secret Key</small></div>
+            <small>마지막 동기화 · {escape(naver_sync)}</small></div>
             """,
             unsafe_allow_html=True,
         )
     with right:
         st.markdown(
-            """
-            <div class="connection-card"><div><i>#</i><span>2순위 · 준비</span></div>
+            f"""
+            <div class="connection-card"><div><i>#</i><span>{slack_status}</span></div>
             <h3>Slack 데일리 리포트</h3><p>Incoming Webhook으로 계산된 리포트를 지정 채널에 전송합니다.</p>
-            <small>Webhook URL · 채널 · 발송 시각 08:30</small></div>
+            <small>최근 발송 · {escape(slack_delivery)} · 매일 08:30</small></div>
             """,
             unsafe_allow_html=True,
         )
-    st.warning("GitHub Pages에서 실행되는 stlite에는 비밀키를 저장할 수 없습니다. 실제 자동 수집은 GitHub Actions Secrets 또는 외부 실행 환경이 필요합니다.", icon="🔒")
+    if naver.get("connected") and slack.get("connected"):
+        st.success("API 키와 Webhook은 GitHub Actions Secrets에 보관되며, 이 화면에는 연결 상태만 표시됩니다.", icon="🔒")
+    else:
+        st.warning("Secrets 등록 후 GitHub Actions를 처음 실행하면 연결 상태가 자동으로 갱신됩니다.", icon="⏳")
 
 
 st.markdown(

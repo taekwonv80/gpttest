@@ -31,12 +31,16 @@
     if (!appResponse.ok) throw new Error(`Python app load failed: ${appResponse.status}`);
     const appSource = await appResponse.text();
 
+    const files = { "streamlit_app.py": appSource };
+    for (const path of ["data/campaign_weekly.json", "data/connections.json"]) {
+      const response = await fetch(new URL(`./${path}`, window.location.href), { cache: "no-store" });
+      if (response.ok) files[path] = await response.text();
+    }
+
     mount(
       {
         entrypoint: "streamlit_app.py",
-        files: {
-          "streamlit_app.py": appSource,
-        },
+        files,
         requirements: ["plotly"],
         streamlitConfig: {
           "client.toolbarMode": "viewer",

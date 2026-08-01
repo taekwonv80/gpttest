@@ -1,0 +1,66 @@
+name: Naver daily marketing report
+
+on:
+  workflow_dispatch:
+    inputs:
+      report_date:
+        description: "기준일(비워두면 한국시간 기준 전일, YYYY-MM-DD)"
+        required: false
+        type: string
+  schedule:
+    # GitHub cron은 UTC 기준입니다. 23:30 UTC = 다음 날 08:30 KST.
+    - cron: "30 23 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: naver-daily-report
+  cancel-in-progress: false
+
+jobs:
+  collect-and-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NAVER_CUSTOMER_ID: ${{ secrets.NAVER_CUSTOMER_ID }}
+      NAVER_ACCESS_LICENSE: ${{ secrets.NAVER_ACCESS_LICENSE }}
+      NAVER_SECRET_KEY: ${{ secrets.NAVER_SECRET_KEY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      REPORT_DATE: ${{ inputs.report_date }}
+      DASHBOARD_URL: https://taekwonv80.github.io/gpttest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          for name in NAVER_CUSTOMER_ID NAVER_ACCESS_LICENSE NAVER_SECRET_KEY SLACK_WEBHOOK_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required Actions secret is missing: ${name}"
+              exit 1
+            fi
+          done
+
+      - name: Collect Naver metrics and send Slack report
+        run: python scripts/naver_daily_report.py
+
+      - name: Commit refreshed public aggregate data
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/campaign_weekly.json data/connections.json
+          if git diff --cached --quiet; then
+            echo "No aggregate data changes to commit."
+            exit 0
+          fi
+          git commit -m "data: refresh Naver marketing report"
+          git push

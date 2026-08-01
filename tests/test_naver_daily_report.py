@@ -84,10 +84,16 @@ class ReportTests(unittest.TestCase):
         )
 
         self.assertEqual(captured["uri"], "/stats")
-        self.assertEqual(captured["params"]["ids"], '["cmp-test","cmp-other"]')
+        self.assertEqual(captured["params"]["ids"], ["cmp-test", "cmp-other"])
         self.assertNotIn("id", captured["params"])
         self.assertEqual(captured["params"]["timeIncrement"], "allDays")
         self.assertEqual(rows[0]["clkCnt"], 5)
+
+    def test_query_string_repeats_bulk_ids(self) -> None:
+        self.assertEqual(
+            report.query_string({"ids": ["cmp-one", "cmp-two"], "timeIncrement": "allDays"}),
+            "ids=cmp-one&ids=cmp-two&timeIncrement=allDays",
+        )
 
     def test_collect_daily_metrics_batches_campaigns_by_day(self) -> None:
         class BatchClient:

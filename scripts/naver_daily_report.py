@@ -99,17 +99,16 @@ class NaverSearchAdClient:
             raise IntegrationError("네이버 캠페인 응답 형식이 예상과 다릅니다.")
         return [item for item in result if isinstance(item, dict)]
 
-    def daily_stats(self, campaign_id: str, since: date, until: date) -> list[dict[str, Any]]:
+    def summary_stats(self, campaign_id: str, since: date, until: date) -> list[dict[str, Any]]:
         result = self.get(
             "/stats",
             {
-                "ids": json.dumps([campaign_id], ensure_ascii=False),
+                "id": campaign_id,
                 "fields": json.dumps(FIELDS),
                 "timeRange": json.dumps(
                     {"since": since.isoformat(), "until": until.isoformat()},
                     separators=(",", ":"),
                 ),
-                "timeIncrement": "1",
             },
         )
         return flatten_stat_rows(result)
@@ -205,9 +204,11 @@ def add_row(target: dict[str, Any], row: dict[str, Any]) -> None:
 def collect_daily_metrics(
     client: NaverSearchAdClient,
     report_date: date,
-    days: int = 35,
+    weeks: int = 5,
 ) -> tuple[dict[date, dict[str, dict[str, Any]]], list[dict[str, Any]]]:
-    since = report_date - timedelta(days=days - 1)
+    current_week_start = report_date - timedelta(days=report_date.weekday())
+    since = current_week_start - timedelta(days=(weeks - 1) * 7)
+    days = (report_date - since).days + 1
     daily: dict[date, dict[str, dict[str, Any]]] = {
         since + timedelta(days=offset): {
             category: blank_metrics(category) for category in CATEGORIES
@@ -223,12 +224,17 @@ def collect_daily_metrics(
         if not category or not campaign_id:
             continue
         matched.append(campaign)
-        rows = client.daily_stats(campaign_id, since, report_date)
-        for row in rows:
-            row_day = stat_date(row)
-            if row_day in daily:
-                add_row(daily[row_day][category], row)
-        time.sleep(0.35)
+        for target_day in sorted(daily):
+            try:
+                rows = client.summary_stats(campaign_id, target_day, target_day)
+            except IntegrationError as exc:
+                campaign_name = campaign.get("name") or "이름 없는 캠페인"
+                raise IntegrationError(
+                    f"{category} 캠페인 '{campaign_name}'의 {target_day.isoformat()} 통계 조회 실패: {exc}"
+                ) from None
+            for row in rows:
+                add_row(daily[target_day][category], row)
+            time.sleep(0.2)
 
     if not matched:
         available = ", ".join(
@@ -268,25 +274,43 @@ def build_dashboard_payload(
     report_date: date,
 ) -> dict[str, Any]:
     weeks: list[dict[str, Any]] = []
+    current_week_start = report_date - timedelta(days=report_date.weekday())
     for index in range(5):
-        until = report_date - timedelta(days=index * 7)
-        since = until - timedelta(days=6)
+        since = current_week_start - timedelta(days=index * 7)
+        until = since + timedelta(days=6)
+        observed_until = min(until, report_date)
         daily_rows = [
             {
                 "date": day.isoformat(),
-                "campaigns": [daily[day][category] for category in CATEGORIES],
+                "available": day <= report_date,
+                "campaigns": [
+                    daily.get(day, {name: blank_metrics(name) for name in CATEGORIES})[category]
+                    for category in CATEGORIES
+                ],
             }
             for day in (since + timedelta(days=offset) for offset in range(7))
         ]
+        progress = " · 진행 중" if until > report_date else ""
         weeks.append(
             {
-                "label": f"{since:%Y.%m.%d} — {until:%m.%d}",
+                "label": f"{since:%Y.%m.%d} — {until:%m.%d}{progress}",
                 "since": since.isoformat(),
                 "until": until.isoformat(),
-                "campaigns": campaign_rows_for_period(daily, since, until),
+                "observed_until": observed_until.isoformat(),
+                "campaigns": campaign_rows_for_period(daily, since, observed_until),
                 "daily": daily_rows,
             }
         )
+
+    weekday_names = ("월", "화", "수", "목", "금", "토", "일")
+    days = [
+        {
+            "date": day.isoformat(),
+            "label": f"{day:%Y.%m.%d} ({weekday_names[day.weekday()]})",
+            "campaigns": [daily[day][category] for category in CATEGORIES],
+        }
+        for day in sorted(daily, reverse=True)
+    ]
 
     return {
         "schema_version": 1,
@@ -295,6 +319,7 @@ def build_dashboard_payload(
         "report_date": report_date.isoformat(),
         "matched_campaign_count": len(matched_campaigns),
         "weeks": weeks,
+        "days": days,
         "daily_report": {
             "date": report_date.isoformat(),
             "campaigns": [daily[report_date][category] for category in CATEGORIES],
@@ -338,11 +363,11 @@ def slack_payload(payload: dict[str, Any], dashboard_url: str) -> dict[str, Any]
         )
 
     return {
-        "text": f"네이버 광고 데일리 리포트 · {daily['date']}",
+        "text": f"택이네조개전골 장현점 바다를품다 광고 리포트 · {daily['date']}",
         "blocks": [
             {
                 "type": "header",
-                "text": {"type": "plain_text", "text": "📊 네이버 광고 데일리 리포트"},
+                "text": {"type": "plain_text", "text": "📊 택이네조개전골 장현점 광고 리포트"},
             },
             {
                 "type": "context",

@@ -10,7 +10,7 @@ import streamlit as st
 
 
 st.set_page_config(
-    page_title="Localight · 네이버 마케팅 대시보드",
+    page_title="택이네조개전골 장현점 바다를품다 · 광고 대시보드",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -83,6 +83,21 @@ if not WEEKLY_DATA:
 
 WEEK_KEYS = list(WEEKLY_DATA)
 
+DAY_DATA = {
+    item["label"]: item.get("campaigns", [])
+    for item in DASHBOARD_PAYLOAD.get("days", [])
+    if item.get("label") and item.get("campaigns")
+}
+if not DAY_DATA:
+    DAY_DATA = {
+        "2026.07.31 (금)": [
+            {"name": "플레이스 검색광고", "spend": 91_800, "impressions": 22_700, "clicks": 768},
+            {"name": "지역소상공인 광고", "spend": 45_400, "impressions": 13_550, "clicks": 271},
+            {"name": "파워링크", "spend": 146_400, "impressions": 34_020, "clicks": 926},
+        ]
+    }
+DAY_KEYS = list(DAY_DATA)
+
 
 def won(value: float) -> str:
     return f"{value:,.0f}원"
@@ -124,7 +139,10 @@ def allocate(total: int, weights: list[float]) -> list[int]:
 
 
 def daily_series(week_label: str, rows: list[dict]) -> tuple[list[str], dict]:
-    live_daily = DAILY_DATA.get(week_label, [])
+    live_daily = [
+        item for item in DAILY_DATA.get(week_label, [])
+        if item.get("available", True)
+    ]
     if live_daily:
         ordered = sorted(live_daily, key=lambda item: item.get("date", ""))
         days = [item.get("date", "")[-5:].replace("-", ".") for item in ordered]
@@ -267,6 +285,65 @@ def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]
     campaign_cards(rows)
 
 
+def render_daily(day_label: str, rows: list[dict], previous_rows: list[dict]) -> None:
+    current = totals(rows)
+    previous = totals(previous_rows)
+    st.markdown(
+        f"""
+        <div class="page-heading">
+          <span>DAILY ANALYSIS</span>
+          <h1>하루의 성과를<br>정확하게.</h1>
+          <p>{escape(day_label)} · 전일과 비교해 광고 효율 변화를 확인합니다.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    metric_cols = st.columns(5)
+    metrics = [
+        ("총 광고비", won(current["spend"]), pct_change(current["spend"], previous["spend"]), "%"),
+        ("노출수", f"{current['impressions']:,}", pct_change(current["impressions"], previous["impressions"]), "%"),
+        ("클릭수", f"{current['clicks']:,}", pct_change(current["clicks"], previous["clicks"]), "%"),
+        ("클릭률", f"{current['ctr']:.2f}%", current["ctr"] - previous["ctr"], "%p"),
+        ("평균 CPC", won(current["cpc"]), pct_change(current["cpc"], previous["cpc"]), "%"),
+    ]
+    for col, (label, value, delta, suffix) in zip(metric_cols, metrics):
+        with col:
+            st.metric(label, value, f"{delta:+.2f}{suffix} 전일 대비")
+
+    st.markdown("### 광고 유형별 일일 성과")
+    campaign_cards(rows)
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown("### 클릭수")
+        clicks = go.Figure(
+            go.Bar(
+                x=[row["name"] for row in rows],
+                y=[row["clicks"] for row in rows],
+                marker_color=[COLORS[row["name"]] for row in rows],
+                text=[f"{row['clicks']:,}" for row in rows],
+                textposition="outside",
+                hovertemplate="%{x}<br>%{y:,} 클릭<extra></extra>",
+            )
+        )
+        st.plotly_chart(plot_layout(clicks, 340), use_container_width=True, config={"displayModeBar": False})
+    with right:
+        st.markdown("### 광고비")
+        spend = go.Figure(
+            go.Bar(
+                x=[row["name"] for row in rows],
+                y=[row["spend"] for row in rows],
+                marker_color=[COLORS[row["name"]] for row in rows],
+                text=[won(row["spend"]) for row in rows],
+                textposition="outside",
+                hovertemplate="%{x}<br>%{y:,.0f}원<extra></extra>",
+            )
+        )
+        spend.update_yaxes(tickprefix="₩")
+        st.plotly_chart(plot_layout(spend, 340), use_container_width=True, config={"displayModeBar": False})
+
+
 def render_campaigns(week_label: str, rows: list[dict]) -> None:
     st.markdown(
         f"""
@@ -365,14 +442,14 @@ def render_campaigns(week_label: str, rows: list[dict]) -> None:
     st.plotly_chart(plot_layout(history, 340), use_container_width=True, config={"displayModeBar": False})
 
 
-def render_report(week_label: str, rows: list[dict]) -> None:
+def render_report(day_label: str, rows: list[dict]) -> None:
     current = totals(rows)
     best = max(rows, key=lambda item: item["ctr"])
     data_note = "네이버 API 자동 수집 데이터" if LIVE_DATA else "첫 자동 수집 전 샘플 데이터"
     st.markdown(
         """
         <div class="page-heading"><span>DAILY BRIEF</span><h1>숫자를 결론으로.</h1>
-        <p>선택한 주간의 핵심 성과를 Slack 리포트 형식으로 미리 봅니다.</p></div>
+        <p>선택한 날짜의 핵심 성과를 Slack 리포트 형식으로 미리 봅니다.</p></div>
         """,
         unsafe_allow_html=True,
     )
@@ -385,8 +462,8 @@ def render_report(week_label: str, rows: list[dict]) -> None:
         st.markdown(
             f"""
             <div class="slack-card">
-              <div class="slack-card__app"><i>L</i><div><b>Localight Report</b><small>앱 · 오전 8:30</small></div></div>
-              <h3>📊 네이버 광고 주간 브리프</h3><p>{week_label}</p>
+              <div class="slack-card__app"><i>택</i><div><b>택이네조개전골 장현점 바다를품다</b><small>앱 · 오전 8:30</small></div></div>
+              <h3>📊 네이버 광고 일일 브리프</h3><p>{escape(day_label)}</p>
               <hr><p><b>총 광고비</b> {won(current['spend'])} · <b>클릭</b> {current['clicks']:,}</p>
               <p><b>전체 CTR</b> <mark>{current['ctr']:.2f}%</mark> · <b>평균 CPC</b> {won(current['cpc'])}</p>
               <hr><b>캠페인별 성과</b><ul>{lines}</ul>
@@ -458,7 +535,7 @@ st.markdown(
     .block-container { max-width:1440px; padding:1.7rem 3rem 5rem; }
     h1,h2,h3,p { letter-spacing:-.025em; }
     .top-brand { display:flex; align-items:center; justify-content:space-between; padding:.3rem 0 1.25rem; border-bottom:1px solid var(--line); margin-bottom:1rem; }
-    .top-brand__name { display:flex; align-items:center; gap:.7rem; font-size:1.15rem; font-weight:900; }
+    .top-brand__name { display:flex; align-items:center; gap:.7rem; font-size:1rem; font-weight:900; line-height:1.25; }
     .top-brand__mark { display:inline-flex; gap:3px; transform:skew(-8deg); }
     .top-brand__mark i { width:7px; height:28px; background:var(--lime); border-radius:2px; display:block; }
     .top-brand__mark i:nth-child(2) { transform:translateY(5px); }
@@ -519,7 +596,7 @@ st.markdown(
     .connection-card span { padding:.35rem .55rem; border:1px solid rgba(0,0,0,.18); border-radius:999px; font-size:.58rem; font-weight:800; }
     .connection-card h3 { margin:1.6rem 0 .6rem; }.connection-card p { color:var(--muted); font-size:.75rem; }.connection-card small { font-weight:800; }
     @media(max-width:760px){
-      .block-container{padding:1rem 1rem 4rem}.top-brand__status{display:none}
+      .block-container{padding:1rem 1rem 4rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
       .hero-copy h1,.page-heading h1{font-size:2.8rem;line-height:1.08}
       [data-testid="stRadio"] div[role="radiogroup"]{width:100%;overflow-x:auto}
@@ -527,32 +604,47 @@ st.markdown(
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
     }
     </style>
-    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>localight</div><div class="top-brand__status">● PYTHON · STLITE</div></div>
+    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점 바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div>
     """,
     unsafe_allow_html=True,
 )
 
-nav_col, week_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
+nav_col, filter_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
 with nav_col:
     page = st.radio(
         "메뉴",
-        ["대시보드", "캠페인 분석", "데일리 리포트", "데이터 연동"],
+        ["대시보드", "캠페인 분석", "일일 분석", "데일리 리포트", "데이터 연동"],
         horizontal=True,
         label_visibility="collapsed",
     )
-with week_col:
-    selected_week = st.selectbox("분석 주간", WEEK_KEYS, index=0)
+
+selected_week = WEEK_KEYS[0]
+selected_day = DAY_KEYS[0]
+with filter_col:
+    if page in {"일일 분석", "데일리 리포트"}:
+        selected_day = st.selectbox("분석 일자", DAY_KEYS, index=0)
+    elif page != "데이터 연동":
+        selected_week = st.selectbox("분석 주간 (월—일)", WEEK_KEYS, index=0)
+    else:
+        st.caption("매일 08:30 자동 연동")
 
 selected_index = WEEK_KEYS.index(selected_week)
 previous_index = min(selected_index + 1, len(WEEK_KEYS) - 1)
 selected_rows = enrich(WEEKLY_DATA[selected_week])
 previous_rows = enrich(WEEKLY_DATA[WEEK_KEYS[previous_index]])
 
+selected_day_index = DAY_KEYS.index(selected_day)
+previous_day_index = min(selected_day_index + 1, len(DAY_KEYS) - 1)
+selected_day_rows = enrich(DAY_DATA[selected_day])
+previous_day_rows = enrich(DAY_DATA[DAY_KEYS[previous_day_index]])
+
 if page == "대시보드":
     render_overview(selected_week, selected_rows, previous_rows)
 elif page == "캠페인 분석":
     render_campaigns(selected_week, selected_rows)
+elif page == "일일 분석":
+    render_daily(selected_day, selected_day_rows, previous_day_rows)
 elif page == "데일리 리포트":
-    render_report(selected_week, selected_rows)
+    render_report(selected_day, selected_day_rows)
 else:
     render_connections()

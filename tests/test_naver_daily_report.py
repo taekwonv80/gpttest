@@ -56,9 +56,30 @@ class ReportTests(unittest.TestCase):
             report_date,
         )
         self.assertEqual(len(payload["weeks"]), 5)
-        self.assertEqual(payload["weeks"][0]["label"], "2026.07.25 — 07.31")
+        self.assertEqual(payload["weeks"][0]["label"], "2026.07.27 — 08.02 · 진행 중")
+        self.assertEqual(payload["weeks"][0]["since"], "2026-07-27")
+        self.assertEqual(payload["weeks"][0]["until"], "2026-08-02")
         self.assertEqual(payload["daily_report"]["date"], "2026-07-31")
         self.assertEqual(len(payload["weeks"][0]["daily"]), 7)
+        self.assertEqual(payload["days"][0]["label"], "2026.07.31 (금)")
+
+    def test_summary_stats_uses_supported_single_id_request(self) -> None:
+        captured = {}
+
+        class RecordingClient(report.NaverSearchAdClient):
+            def get(self, uri, params=None):
+                captured["uri"] = uri
+                captured["params"] = params
+                return [{"impCnt": 100, "clkCnt": 5, "salesAmt": 1000}]
+
+        client = RecordingClient("1", "api", "secret")
+        rows = client.summary_stats("cmp-test", date(2026, 7, 31), date(2026, 7, 31))
+
+        self.assertEqual(captured["uri"], "/stats")
+        self.assertEqual(captured["params"]["id"], "cmp-test")
+        self.assertNotIn("ids", captured["params"])
+        self.assertNotIn("timeIncrement", captured["params"])
+        self.assertEqual(rows[0]["clkCnt"], 5)
 
 
 if __name__ == "__main__":

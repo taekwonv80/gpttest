@@ -507,7 +507,16 @@ def as_int(value: object) -> int | None:
         return None
 
 
-def json_counts(value: object) -> dict[str, int]:
+def as_number(value: object) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(str(value).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def json_counts(value: object) -> dict[str, float]:
     try:
         parsed = value if isinstance(value, dict) else json.loads(str(value or "{}"))
     except (TypeError, ValueError, json.JSONDecodeError):
@@ -517,7 +526,7 @@ def json_counts(value: object) -> dict[str, int]:
     return {
         str(name): count
         for name, raw in parsed.items()
-        if (count := as_int(raw)) is not None
+        if (count := as_number(raw)) is not None
     }
 
 
@@ -531,17 +540,27 @@ def delta_label(value: object) -> str | None:
     return f"오늘 +{parsed:,}회" if parsed is not None else None
 
 
-def counts_chart(values: dict[str, int], color: str, height: int = 330) -> go.Figure:
+def counts_chart(
+    values: dict[str, float],
+    color: str,
+    height: int = 330,
+    suffix: str = "회",
+) -> go.Figure:
     ranked = sorted(values.items(), key=lambda item: item[1], reverse=True)[:10]
+    labels = [
+        f"{value:.2f}%" if suffix == "%" else f"{value:,.0f}"
+        for _, value in ranked
+    ][::-1]
+    hover = "%{y}<br>%{x:.2f}%<extra></extra>" if suffix == "%" else "%{y}<br>%{x:,.0f}회<extra></extra>"
     figure = go.Figure(
         go.Bar(
             x=[value for _, value in ranked][::-1],
             y=[name for name, _ in ranked][::-1],
             orientation="h",
             marker_color=color,
-            text=[f"{value:,}" for _, value in ranked][::-1],
+            text=labels,
             textposition="outside",
-            hovertemplate="%{y}<br>%{x:,}회<extra></extra>",
+            hovertemplate=hover,
         )
     )
     figure.update_xaxes(showgrid=True, gridcolor="#edf0ee", rangemode="tozero")
@@ -624,20 +643,20 @@ def render_place_statistics() -> None:
     keyword_counts = json_counts(PLACE_LATEST.get("keywords_json"))
     channel_column, keyword_column = st.columns(2)
     with channel_column:
-        st.subheader("유입채널")
+        st.subheader("유입채널 비율")
         if channel_counts:
             st.plotly_chart(
-                counts_chart(channel_counts, "#03C75A"),
+                counts_chart(channel_counts, "#03C75A", suffix="%"),
                 use_container_width=True,
                 config={"displayModeBar": False},
             )
         else:
             st.info("수집 화면에서 유입채널을 확인하지 못했습니다.")
     with keyword_column:
-        st.subheader("유입키워드")
+        st.subheader("유입키워드 비율")
         if keyword_counts:
             st.plotly_chart(
-                counts_chart(keyword_counts, "#C9FF3D"),
+                counts_chart(keyword_counts, "#C9FF3D", suffix="%"),
                 use_container_width=True,
                 config={"displayModeBar": False},
             )

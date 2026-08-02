@@ -9,6 +9,8 @@ from pathlib import Path
 import plotly.graph_objects as go
 import streamlit as st
 
+from dashboard_math import infer_ratio_counts
+
 
 st.set_page_config(
     page_title="택이네조개전골 장현점 바다를품다 · 광고 대시보드",
@@ -568,6 +570,34 @@ def counts_chart(
     return plot_layout(figure, height)
 
 
+def ratio_count_chart(
+    ratios: dict[str, float], color: str, text_color: str = "white", height: int = 330
+) -> go.Figure | None:
+    counts = infer_ratio_counts(ratios)
+    if not counts:
+        return None
+    ranked = sorted(ratios.items(), key=lambda item: counts[item[0]], reverse=True)[:10]
+    figure = go.Figure(
+        go.Bar(
+            x=[counts[name] for name, _ in ranked][::-1],
+            y=[name for name, _ in ranked][::-1],
+            orientation="h",
+            marker_color=color,
+            customdata=[percentage for _, percentage in ranked][::-1],
+            text=[f"{percentage:.2f}%" for _, percentage in ranked][::-1],
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color=text_color, size=12),
+            hovertemplate="%{y}<br>%{x:,.0f}회 · %{customdata:.2f}%<extra></extra>",
+        )
+    )
+    figure.update_xaxes(
+        title="유입 횟수 (회)", showgrid=True, gridcolor="#edf0ee", rangemode="tozero"
+    )
+    figure.update_yaxes(showgrid=False)
+    return plot_layout(figure, height)
+
+
 def render_place_statistics() -> None:
     st.markdown(
         """
@@ -648,23 +678,33 @@ def render_place_statistics() -> None:
     keyword_counts = json_counts(PLACE_LATEST.get("keywords_json"))
     channel_column, keyword_column = st.columns(2)
     with channel_column:
-        st.subheader("유입채널 비율")
+        st.subheader("유입채널 횟수")
         if channel_counts:
-            st.plotly_chart(
-                counts_chart(channel_counts, "#03C75A", suffix="%"),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            channel_figure = ratio_count_chart(channel_counts, "#03C75A")
+            if channel_figure:
+                st.plotly_chart(
+                    channel_figure,
+                    use_container_width=True,
+                    config={"displayModeBar": False},
+                )
+                st.caption("막대 길이는 유입 횟수, 막대 안 숫자는 비율입니다.")
+            else:
+                st.info("유입채널 비율에서 횟수를 환산하지 못했습니다.")
         else:
             st.info("수집 화면에서 유입채널을 확인하지 못했습니다.")
     with keyword_column:
-        st.subheader("유입키워드 비율")
+        st.subheader("유입키워드 횟수")
         if keyword_counts:
-            st.plotly_chart(
-                counts_chart(keyword_counts, "#C9FF3D", suffix="%"),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            keyword_figure = ratio_count_chart(keyword_counts, "#C9FF3D", "#121413")
+            if keyword_figure:
+                st.plotly_chart(
+                    keyword_figure,
+                    use_container_width=True,
+                    config={"displayModeBar": False},
+                )
+                st.caption("막대 길이는 유입 횟수, 막대 안 숫자는 비율입니다.")
+            else:
+                st.info("유입키워드 비율에서 횟수를 환산하지 못했습니다.")
         else:
             st.info("수집 화면에서 유입키워드를 확인하지 못했습니다.")
 
@@ -723,11 +763,17 @@ def render_place_statistics() -> None:
         st.markdown("**예약 유입채널**")
         reservation_channels = json_counts(PLACE_LATEST.get("reservation_channels_json"))
         if reservation_channels:
-            st.plotly_chart(
-                counts_chart(reservation_channels, "#7C5CFF", 330),
-                use_container_width=True,
-                config={"displayModeBar": False},
+            reservation_channel_figure = ratio_count_chart(
+                reservation_channels, "#7C5CFF"
             )
+            if reservation_channel_figure:
+                st.plotly_chart(
+                    reservation_channel_figure,
+                    use_container_width=True,
+                    config={"displayModeBar": False},
+                )
+            else:
+                st.info("예약 유입채널 비율에서 횟수를 환산하지 못했습니다.")
         else:
             st.info("예약 유입채널 데이터가 아직 없습니다.")
 

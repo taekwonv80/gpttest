@@ -14,7 +14,7 @@ import json
 import os
 import re
 import unicodedata
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -60,6 +60,16 @@ FIELDS = (
     "reservation_cancellations_daily_delta",
     "reservation_completions_daily_delta",
     "reservation_channels_json",
+)
+DAILY_METRIC_PAIRS = (
+    ("place_visits_weekly", "place_visits_daily_delta"),
+    ("booking_orders_weekly", "booking_orders_daily_delta"),
+    ("smartcall_weekly", "smartcall_daily_delta"),
+    ("reviews_weekly", "reviews_daily_delta"),
+    ("reservation_inflows_weekly", "reservation_inflows_daily_delta"),
+    ("reservation_applications_weekly", "reservation_applications_daily_delta"),
+    ("reservation_cancellations_weekly", "reservation_cancellations_daily_delta"),
+    ("reservation_completions_weekly", "reservation_completions_daily_delta"),
 )
 
 
@@ -110,6 +120,16 @@ def current_week_url(url: str, collected_date: date) -> str:
     query = dict(parse_qsl(parsed.query, keep_blank_values=True))
     query["startDate"] = week_start.isoformat()
     query["endDate"] = collected_date.isoformat()
+    return urlunparse(parsed._replace(query=urlencode(query)))
+
+
+def statistics_range_url(url: str, start_date: date, end_date: date, term: str) -> str:
+    """Move a saved statistics URL to an explicit Naver statistics range."""
+    parsed = urlparse(url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query["startDate"] = start_date.isoformat()
+    query["endDate"] = end_date.isoformat()
+    query["term"] = term
     return urlunparse(parsed._replace(query=urlencode(query)))
 
 
@@ -320,9 +340,15 @@ def parse_reservation_text(text: str) -> dict[str, Any]:
     normalized = re.sub(r"[ \t]+", " ", text)
     channels = parse_ranked_section(
         normalized,
-        r"유입\s*(?:채널|경로)",
-        r"유입\s*트렌드|검색\s*키워드|예약\s*현황|$",
+        r"유입\s*채널",
+        r"고객\s*분석|검색\s*키워드|예약\s*현황|$",
     )
+    if not channels:
+        channels = parse_ranked_section(
+            normalized,
+            r"유입\s*경로",
+            r"유입\s*트렌드|검색\s*키워드|예약\s*현황|$",
+        )
     metrics = {
         "reservation_inflows_weekly": number_after(
             normalized, ("예약 페이지 유입", "예약 유입", "유입")
@@ -352,6 +378,13 @@ def merge_present(row: dict[str, Any], values: dict[str, Any]) -> None:
             row[key] = value
 
 
+def merge_missing(row: dict[str, Any], values: dict[str, Any]) -> None:
+    """Use a detail tab only when the report tab did not provide the metric."""
+    for key, value in values.items():
+        if row.get(key) in (None, "", "{}") and value not in (None, "", "{}"):
+            row[key] = value
+
+
 def load_rows(path: Path = DATA_PATH) -> list[dict[str, str]]:
     if not path.exists():
         return []
@@ -360,18 +393,8 @@ def load_rows(path: Path = DATA_PATH) -> list[dict[str, str]]:
 
 
 def add_daily_deltas(row: dict[str, Any], previous: dict[str, str] | None) -> None:
-    pairs = (
-        ("place_visits_weekly", "place_visits_daily_delta"),
-        ("booking_orders_weekly", "booking_orders_daily_delta"),
-        ("smartcall_weekly", "smartcall_daily_delta"),
-        ("reviews_weekly", "reviews_daily_delta"),
-        ("reservation_inflows_weekly", "reservation_inflows_daily_delta"),
-        ("reservation_applications_weekly", "reservation_applications_daily_delta"),
-        ("reservation_cancellations_weekly", "reservation_cancellations_daily_delta"),
-        ("reservation_completions_weekly", "reservation_completions_daily_delta"),
-    )
     same_week = previous and previous.get("week_start") == row["week_start"]
-    for total_key, delta_key in pairs:
+    for total_key, delta_key in DAILY_METRIC_PAIRS:
         if row.get(total_key, "") in (None, ""):
             row[delta_key] = ""
             continue
@@ -380,13 +403,53 @@ def add_daily_deltas(row: dict[str, Any], previous: dict[str, str] | None) -> No
         row[delta_key] = max(0, current - prior)
 
 
-def upsert_row(row: dict[str, Any], path: Path = DATA_PATH) -> None:
+def build_daily_history_row(
+    report_text: str, reservation_text: str, collected_date: date
+) -> dict[str, Any]:
+    """Build one exact daily history row from single-day Naver report pages."""
+    report = parse_summary_metrics(report_text)
+    reservation = parse_reservation_text(reservation_text)
+    totals = {**report, **reservation}
+    result: dict[str, Any] = {
+        "collected_date": collected_date.isoformat(),
+        "week_start": (collected_date - timedelta(days=collected_date.weekday())).isoformat(),
+    }
+    for total_key, delta_key in DAILY_METRIC_PAIRS:
+        value = totals.get(total_key, "")
+        result[delta_key] = value if value not in (None, "") else ""
+    return result
+
+
+def upsert_row(
+    row: dict[str, Any],
+    path: Path = DATA_PATH,
+    daily_rows: list[dict[str, Any]] | None = None,
+) -> None:
     rows = load_rows(path)
-    previous = next((item for item in reversed(rows) if item["collected_date"] < row["collected_date"]), None)
+    previous = next(
+        (
+            item
+            for item in reversed(rows)
+            if item["collected_date"] < row["collected_date"]
+            and any(item.get(total_key) not in (None, "") for total_key, _ in DAILY_METRIC_PAIRS)
+        ),
+        None,
+    )
     add_daily_deltas(row, previous)
-    rows = [item for item in rows if item.get("collected_date") != row["collected_date"]]
-    rows.append({key: row.get(key, "") for key in FIELDS})
-    rows.sort(key=lambda item: item["collected_date"])
+    by_date = {item["collected_date"]: dict(item) for item in rows}
+    by_date[row["collected_date"]] = {key: row.get(key, "") for key in FIELDS}
+    for daily in daily_rows or []:
+        daily_date = str(daily["collected_date"])
+        target = by_date.setdefault(daily_date, {key: "" for key in FIELDS})
+        target["collected_date"] = daily_date
+        target["week_start"] = daily.get("week_start", target.get("week_start", ""))
+        for _, delta_key in DAILY_METRIC_PAIRS:
+            value = daily.get(delta_key, "")
+            if value not in (None, ""):
+                target[delta_key] = value
+                if daily_date == row["collected_date"]:
+                    row[delta_key] = value
+    rows = sorted(by_date.values(), key=lambda item: item["collected_date"])
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=FIELDS)
@@ -411,9 +474,10 @@ def collect_page_text(
     markers: tuple[str, ...],
     tab_name: str,
     debug_name: str,
+    wait_ms: int = 8_000,
 ) -> str:
     page.goto(url, wait_until="domcontentloaded", timeout=90_000)
-    page.wait_for_timeout(8_000)
+    page.wait_for_timeout(wait_ms)
     if "nid.naver.com" in page.url or "login" in page.url.lower():
         raise CollectionError("네이버 로그인 세션이 만료되었습니다. 세션 Secret을 갱신해주세요.")
     text = page.locator("body").inner_text(timeout=30_000)
@@ -429,6 +493,54 @@ def collect_page_text(
             f"{tab_name} 통계 화면이 열리지 않았습니다. 저장된 URL 또는 업체 선택 상태를 확인해주세요."
         )
     return text
+
+
+def collect_current_week_daily(
+    page: "Page", report_url: str, reservation_url: str, today: date
+) -> list[dict[str, Any]]:
+    """Backfill exact daily metrics from Monday through today."""
+    week_start = today - timedelta(days=today.weekday())
+    daily_rows: list[dict[str, Any]] = []
+    for offset in range((today - week_start).days + 1):
+        target = week_start + timedelta(days=offset)
+        debug_date = target.strftime("%Y%m%d")
+        report_text = collect_page_text(
+            page,
+            statistics_range_url(report_url, target, target, "daily"),
+            ("리포트", "플레이스 유입", "방문 전 지표"),
+            f"{target.isoformat()} 리포트",
+            f"daily-report-{debug_date}",
+            wait_ms=4_000,
+        )
+        reservation_text = collect_page_text(
+            page,
+            statistics_range_url(reservation_url, target, target, "daily"),
+            ("유입 트렌드", "예약 지표", "예약지표", "예약주문"),
+            f"{target.isoformat()} 예약주문",
+            f"daily-booking-{debug_date}",
+            wait_ms=4_000,
+        )
+        daily = build_daily_history_row(report_text, reservation_text, target)
+        if daily.get("place_visits_daily_delta") in (None, ""):
+            raise CollectionError(f"{target.isoformat()} 플레이스 일별 유입을 찾지 못했습니다.")
+        daily_rows.append(daily)
+    return daily_rows
+
+
+def validate_daily_totals(
+    daily_rows: list[dict[str, Any]], weekly_row: dict[str, Any]
+) -> None:
+    """Reject a daily query if Naver returned the weekly card for every date."""
+    for total_key, delta_key in DAILY_METRIC_PAIRS:
+        weekly = weekly_row.get(total_key, "")
+        values = [item.get(delta_key, "") for item in daily_rows]
+        if weekly in (None, "") or any(value in (None, "") for value in values):
+            continue
+        daily_total = sum(int(value) for value in values)
+        if daily_total != int(weekly):
+            raise CollectionError(
+                f"일별 합계 검증 실패: {delta_key}={daily_total}, 주간={weekly}"
+            )
 
 
 def main() -> None:
@@ -494,19 +606,23 @@ def main() -> None:
 
             row = parse_rendered_text(place_text, today, require_place_visits=False)
             merge_present(row, parse_summary_metrics(report_text))
-            merge_present(row, parse_smartcall_text(smartcall_text))
+            merge_missing(row, parse_smartcall_text(smartcall_text))
             reservation_values = parse_reservation_text(reservation_text)
             merge_present(row, reservation_values)
             if not row.get("booking_orders_weekly"):
                 row["booking_orders_weekly"] = reservation_values.get(
                     "reservation_applications_weekly", ""
                 )
-            merge_present(row, parse_review_text(review_text))
+            merge_missing(row, parse_review_text(review_text))
             if row.get("place_visits_weekly") in (None, ""):
                 raise CollectionError(
                     "플레이스 탭과 리포트 탭 모두에서 유입 수를 찾지 못했습니다."
                 )
-            upsert_row(row)
+            daily_rows = collect_current_week_daily(
+                page, tab_urls["리포트"], tab_urls["예약주문"], today
+            )
+            validate_daily_totals(daily_rows, row)
+            upsert_row(row, daily_rows=daily_rows)
             SNAPSHOT_PATH.write_text(
                 json.dumps({"generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"), **row}, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",

@@ -71,6 +71,7 @@ def load_csv_rows(path: str) -> list[dict[str, str]]:
 
 
 DASHBOARD_PAYLOAD = load_json("data/campaign_weekly.json")
+KEYWORD_ANALYSIS = load_json("data/keyword_analysis.json")
 CONNECTIONS = load_json("data/connections.json")
 PLACE_LATEST = load_json("data/naver_place_latest.json")
 PLACE_DAILY = load_csv_rows("data/naver_place_daily.csv")
@@ -453,6 +454,186 @@ def render_campaigns(week_label: str, rows: list[dict]) -> None:
     history.add_vline(x=week_label.replace("2026.", ""), line_dash="dot", line_color="#121413")
     history.update_yaxes(ticksuffix="%")
     st.plotly_chart(plot_layout(history, 340), use_container_width=True, config={"displayModeBar": False})
+
+
+def analysis_rows(rows: list[dict]) -> list[dict]:
+    enriched = []
+    for row in rows:
+        spend = float(row.get("spend") or 0)
+        impressions = float(row.get("impressions") or 0)
+        clicks = float(row.get("clicks") or 0)
+        enriched.append(
+            {
+                **row,
+                "spend": spend,
+                "impressions": impressions,
+                "clicks": clicks,
+                "ctr": clicks / impressions * 100 if impressions else 0,
+                "cpc": spend / clicks if clicks else 0,
+            }
+        )
+    return enriched
+
+
+def ctr_rank_chart(rows: list[dict], color: str) -> go.Figure:
+    plotted = list(reversed(rows))
+    labels = [
+        row["value"] if len(row["value"]) <= 18 else f"{row['value'][:17]}…"
+        for row in plotted
+    ]
+    figure = go.Figure(
+        go.Bar(
+            x=[row["ctr"] for row in plotted],
+            y=labels,
+            orientation="h",
+            marker=dict(color=color, line=dict(width=0)),
+            text=[f"{row['ctr']:.2f}%" for row in plotted],
+            textposition="outside",
+            customdata=[
+                [row["value"], row["impressions"], row["clicks"], row["cpc"], row["spend"]]
+                for row in plotted
+            ],
+            hovertemplate=(
+                "%{customdata[0]}<br>노출 %{customdata[1]:,.0f} · 클릭 %{customdata[2]:,.0f}"
+                "<br>CTR %{x:.2f}% · CPC %{customdata[3]:,.0f}원"
+                "<br>총비용 %{customdata[4]:,.0f}원<extra></extra>"
+            ),
+        )
+    )
+    figure.update_xaxes(title="클릭률", ticksuffix="%", rangemode="tozero")
+    figure.update_yaxes(title=None)
+    return plot_layout(figure, max(330, 42 * len(rows) + 80))
+
+
+def render_keyword_analysis() -> None:
+    generated_at = str(KEYWORD_ANALYSIS.get("generated_at") or "첫 수집 대기")
+    st.markdown(
+        """
+        <div class="page-heading"><span>SEARCH INTELLIGENCE</span><h1>키워드와 검색어를<br>성과로 판단합니다.</h1>
+        <p>광고주가 등록한 키워드와 고객이 실제 입력한 검색어를 분리해 CTR과 비용 효율을 비교합니다.</p></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption(f"네이버 검색광고 API · 마지막 갱신 {generated_at} · 총비용 0원 항목 제외")
+
+    mode_column, category_column, search_column = st.columns([1.2, 1.2, 1.6])
+    with mode_column:
+        mode = st.radio(
+            "분석 대상",
+            ["등록 키워드", "실제 검색어"],
+            horizontal=True,
+        )
+    with category_column:
+        category = st.selectbox("광고그룹 유형", ["전체", *COLORS.keys()])
+    with search_column:
+        search = st.text_input("키워드·검색어 찾기", placeholder="예: 장현동 맛집")
+
+    source_key = "keywords" if mode == "등록 키워드" else "search_terms"
+    rows = analysis_rows(list(KEYWORD_ANALYSIS.get(source_key) or []))
+    rows = [row for row in rows if row["spend"] > 0]
+    if category != "전체":
+        rows = [row for row in rows if row.get("category") == category]
+    if search.strip():
+        needle = search.strip().casefold()
+        rows = [row for row in rows if needle in str(row.get("value") or "").casefold()]
+
+    coverage = KEYWORD_ANALYSIS.get("coverage") or {}
+    if mode == "등록 키워드":
+        coverage_note = str(coverage.get("keywords") or "첫 수집 대기")
+    elif category == "파워링크":
+        coverage_note = str(coverage.get("powerlink_search_terms") or "첫 수집 대기")
+    elif category in {"플레이스 검색광고", "지역소상공인 광고"}:
+        coverage_note = str(coverage.get("place_search_terms") or "첫 수집 대기")
+    else:
+        coverage_note = "플레이스 최근 30일 · 파워링크 일별 누적"
+    st.caption(f"데이터 범위: {coverage_note}")
+
+    if not rows:
+        st.info(
+            "조건에 맞는 비용 발생 데이터가 아직 없습니다. "
+            "첫 자동 수집 후 광고그룹 유형별 키워드와 검색어가 표시됩니다."
+        )
+        return
+
+    total = totals(rows)
+    metric_columns = st.columns(5)
+    metrics = [
+        ("분석 항목", f"{len(rows):,}개"),
+        ("노출수", f"{total['impressions']:,.0f}"),
+        ("클릭수", f"{total['clicks']:,.0f}"),
+        ("클릭률", f"{total['ctr']:.2f}%"),
+        ("평균 CPC / 총비용", f"{won(total['cpc'])} / {won(total['spend'])}"),
+    ]
+    for column, (label, value) in zip(metric_columns, metrics):
+        column.metric(label, value)
+
+    top = sorted(rows, key=lambda row: (-row["ctr"], -row["clicks"], -row["spend"]))[:10]
+    bottom = sorted(rows, key=lambda row: (row["ctr"], -row["spend"], -row["impressions"]))[:10]
+    top_column, bottom_column = st.columns(2)
+    with top_column:
+        st.subheader("클릭률 상위 10개")
+        st.caption("같은 CTR이면 클릭수와 비용이 큰 항목을 우선합니다.")
+        st.plotly_chart(
+            ctr_rank_chart(top, "#03C75A"),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
+    with bottom_column:
+        st.subheader("클릭률 하위 10개")
+        st.caption("비용이 발생했지만 반응이 낮은 개선 후보입니다.")
+        st.plotly_chart(
+            ctr_rank_chart(bottom, "#FF7657"),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
+
+    zero_click_spend = sum(row["spend"] for row in rows if row["clicks"] == 0)
+    best = top[0]
+    improvement = max(bottom, key=lambda row: row["spend"])
+    st.markdown(
+        f"""
+        <div class="keyword-signals">
+          <div><span>BEST SIGNAL</span><b>{escape(best['value'])}</b><p>CTR {best['ctr']:.2f}% · 클릭 {best['clicks']:,.0f}회</p></div>
+          <div><span>개선 우선</span><b>{escape(improvement['value'])}</b><p>CTR {improvement['ctr']:.2f}% · 비용 {won(improvement['spend'])}</p></div>
+          <div><span>무클릭 비용</span><b>{won(zero_click_spend)}</b><p>클릭 0회인데 발생한 비용 합계</p></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.subheader(f"{mode} 전체 성과")
+    table_rows = sorted(rows, key=lambda row: (-row["spend"], -row["clicks"]))[:100]
+    match_header = "<th>검색유형</th>" if mode == "실제 검색어" else ""
+    body = "".join(
+        (
+            "<tr>"
+            + f"<td><b>{escape(str(row.get('value') or ''))}</b></td>"
+            + f"<td>{escape(str(row.get('category') or ''))}</td>"
+            + (
+                f"<td>{escape(', '.join(row.get('match_types') or []) or '-')}</td>"
+                if mode == "실제 검색어"
+                else ""
+            )
+            + f"<td>{row['impressions']:,.0f}</td>"
+            + f"<td>{row['clicks']:,.0f}</td>"
+            + f"<td><strong>{row['ctr']:.2f}%</strong></td>"
+            + f"<td>{won(row['cpc'])}</td>"
+            + f"<td>{won(row['spend'])}</td>"
+            + "</tr>"
+        )
+        for row in table_rows
+    )
+    st.markdown(
+        f"""
+        <div class="analysis-table-wrap"><table class="analysis-table">
+          <thead><tr><th>{mode}</th><th>광고그룹 유형</th>{match_header}<th>노출수</th><th>클릭수</th><th>클릭률</th><th>평균 CPC</th><th>총비용</th></tr></thead>
+          <tbody>{body}</tbody>
+        </table></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    if len(rows) > len(table_rows):
+        st.caption(f"비용순 상위 {len(table_rows)}개 표시 · 검색창으로 전체 {len(rows):,}개 항목을 찾을 수 있습니다.")
 
 
 def render_report(day_label: str, rows: list[dict]) -> None:
@@ -899,6 +1080,17 @@ st.markdown(
     .flow-card li { display:grid; grid-template-columns:32px 1fr; gap:.6rem; padding:.9rem 0; border-top:1px solid #343936; }
     .flow-card li > b { color:var(--lime); font:italic .65rem Georgia,serif; }
     .flow-card strong { font-size:.75rem; }.flow-card p { margin:.25rem 0 0; color:#9ba19e; font-size:.67rem; }
+    .keyword-signals { display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin:1rem 0 2.2rem; }
+    .keyword-signals > div { min-height:122px; padding:1.1rem; border:1px solid var(--line); border-radius:16px; background:white; }
+    .keyword-signals span { display:block; margin-bottom:.8rem; color:var(--muted); font-size:.58rem; font-weight:900; letter-spacing:.08em; }
+    .keyword-signals b { display:block; overflow:hidden; font-size:1.05rem; text-overflow:ellipsis; white-space:nowrap; }
+    .keyword-signals p { margin:.35rem 0 0; color:var(--muted); font-size:.7rem; }
+    .analysis-table-wrap { overflow:auto; max-height:620px; border:1px solid var(--line); border-radius:16px; background:white; }
+    .analysis-table { width:100%; border-collapse:collapse; font-size:.72rem; }
+    .analysis-table thead { position:sticky; top:0; z-index:1; background:#f7f9f7; }
+    .analysis-table th,.analysis-table td { padding:.8rem .75rem; border-bottom:1px solid #edf0ee; text-align:right; white-space:nowrap; }
+    .analysis-table th:first-child,.analysis-table td:first-child,.analysis-table th:nth-child(2),.analysis-table td:nth-child(2) { text-align:left; }
+    .analysis-table tbody tr:hover { background:#f8fff0; }
     .connection-card { min-height:230px; padding:1.6rem; border:1px solid var(--line); border-radius:20px; background:white; }
     .connection-card.primary { background:var(--lime); border-color:#a9ec00; }
     .connection-card > div { display:flex; align-items:center; justify-content:space-between; }
@@ -915,6 +1107,7 @@ st.markdown(
       [data-testid="stRadio"] div[role="radiogroup"]{width:100%;overflow-x:auto}
       [data-testid="stRadio"] div[role="radiogroup"] label{padding:.4rem .55rem;white-space:nowrap;font-size:.72rem}
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
+      .keyword-signals{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
     }
     </style>
     <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점 바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div>
@@ -926,7 +1119,7 @@ nav_col, filter_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
 with nav_col:
     page = st.radio(
         "메뉴",
-        ["대시보드", "캠페인 분석", "일일 분석", "플레이스 통계", "데일리 리포트", "데이터 연동"],
+        ["대시보드", "캠페인 분석", "일일 분석", "키워드 분석", "플레이스 통계", "데일리 리포트", "데이터 연동"],
         horizontal=True,
         label_visibility="collapsed",
     )
@@ -936,8 +1129,10 @@ selected_day = DAY_KEYS[0]
 with filter_col:
     if page in {"일일 분석", "데일리 리포트"}:
         selected_day = st.selectbox("분석 일자", DAY_KEYS, index=0)
-    elif page not in {"플레이스 통계", "데이터 연동"}:
+    elif page not in {"키워드 분석", "플레이스 통계", "데이터 연동"}:
         selected_week = st.selectbox("분석 주간 (월—일)", WEEK_KEYS, index=0)
+    elif page == "키워드 분석":
+        st.caption("매일 08:30 자동 수집 · 최근 30일")
     elif page == "플레이스 통계":
         st.caption("매일 09:10 자동 수집")
     else:
@@ -959,6 +1154,8 @@ elif page == "캠페인 분석":
     render_campaigns(selected_week, selected_rows)
 elif page == "일일 분석":
     render_daily(selected_day, selected_day_rows, previous_day_rows)
+elif page == "키워드 분석":
+    render_keyword_analysis()
 elif page == "플레이스 통계":
     render_place_statistics()
 elif page == "데일리 리포트":

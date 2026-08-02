@@ -13,6 +13,7 @@ import csv
 import json
 import os
 import re
+import unicodedata
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -69,6 +70,24 @@ class CollectionError(RuntimeError):
 MetricNumber = int | float
 
 
+def normalize_metric_text(value: str) -> str:
+    """Normalize whitespace and the visually similar middle dots used by SmartPlace."""
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = normalized.translate(str.maketrans("・∙⋅•ㆍ", "·····"))
+    normalized = re.sub(r"[\u200b-\u200d\u2060\ufeff]", "", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def metric_label_pattern(label: str) -> str:
+    """Allow SmartPlace to split a visible metric label across nested DOM nodes."""
+    parts = re.split(r"(·|\s+)", normalize_metric_text(label))
+    return "".join(
+        r"\s*·\s*" if part == "·" else r"\s*" if part.isspace() else re.escape(part)
+        for part in parts
+        if part
+    )
+
+
 def metric_number(raw_value: str) -> MetricNumber:
     normalized = raw_value.replace(",", "")
     return float(normalized) if "." in normalized else int(normalized)
@@ -95,12 +114,14 @@ def current_week_url(url: str, collected_date: date) -> str:
 
 
 def number_after(text: str, labels: tuple[str, ...]) -> int | None:
+    normalized = normalize_metric_text(text)
     for label in labels:
         pattern = (
-            rf"{re.escape(label)}\s*(?:은|는|이|가)?\s*([\d,]+)"
+            rf"{metric_label_pattern(label)}"
+            rf"(?:\s*(?:도움말|정보|[?ⓘ]))*\s*(?:은|는|이|가)?\s*([\d,]+)"
             rf"(?:\s*(?:회|건|명))?(?=\s|$)"
         )
-        match = re.search(pattern, text)
+        match = re.search(pattern, normalized)
         if match:
             return int(match.group(1).replace(",", ""))
     return None
@@ -371,6 +392,9 @@ def collect_page_text(
     if "nid.naver.com" in page.url or "login" in page.url.lower():
         raise CollectionError("네이버 로그인 세션이 만료되었습니다. 세션 Secret을 갱신해주세요.")
     text = page.locator("body").inner_text(timeout=30_000)
+    (DEBUG_PATH.parent / f"naver-place-{debug_name}.txt").write_text(
+        text, encoding="utf-8"
+    )
     page.screenshot(
         path=str(DEBUG_PATH.parent / f"naver-place-{debug_name}.png"),
         full_page=True,

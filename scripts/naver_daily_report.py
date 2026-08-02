@@ -206,9 +206,11 @@ def classify_place_adgroup(adgroup: dict[str, Any]) -> str | None:
     if adgroup_type:
         if adgroup_type in {"DOOH", "DIGITAL_OUTDOOR"}:
             return None
-        if adgroup_type in {"LOCAL_AD", "LOCAL", "SMB"}:
+        # Naver's legacy type names are counterintuitive: LOCAL_AD was
+        # introduced as "플레이스 검색", while PLACE represents Local SMB.
+        if adgroup_type in {"PLACE", "LOCAL_SMB", "SMB"}:
             return "지역소상공인 광고"
-        if adgroup_type in {"PLACE", "PLACE_SEARCH"}:
+        if adgroup_type in {"LOCAL_AD", "PLACE_SEARCH"}:
             return "플레이스 검색광고"
         return None
 

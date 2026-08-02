@@ -387,6 +387,24 @@ class CollectorTests(unittest.TestCase):
             self.assertEqual(historical["place_visits_daily_delta"], "95")
             self.assertEqual(historical["place_visits_weekly"], "")
 
+    def test_upsert_clears_unpublished_current_day_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "daily.csv"
+            weekly = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))
+            current_daily = {
+                "collected_date": "2026-08-01",
+                "week_start": "2026-07-27",
+                "place_visits_daily_delta": "",
+                "booking_orders_daily_delta": 2,
+                "smartcall_daily_delta": "",
+                "reviews_daily_delta": "",
+            }
+            collector.upsert_row(weekly, path, [current_daily])
+            current = collector.load_rows(path)[0]
+            self.assertEqual(current["place_visits_daily_delta"], "")
+            self.assertEqual(current["booking_orders_daily_delta"], "2")
+            self.assertEqual(weekly["place_visits_daily_delta"], "")
+
 
 if __name__ == "__main__":
     unittest.main()

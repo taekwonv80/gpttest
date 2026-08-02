@@ -139,7 +139,7 @@ def number_after(text: str, labels: tuple[str, ...]) -> int | None:
         pattern = (
             rf"{metric_label_pattern(label)}"
             rf"(?:\s*(?:도움말|정보|[?ⓘ]))*\s*(?:은|는|이|가)?\s*([\d,]+)"
-            rf"(?:\s*(?:회|건|명))?(?=\s|$)"
+            rf"(?:\s*(?:회|건|명))?(?=\s|[,，.]|$)"
         )
         match = re.search(pattern, normalized)
         if match:

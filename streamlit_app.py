@@ -591,8 +591,23 @@ def ratio_count_chart(
             hovertemplate="%{y}<br>%{x:,.0f}회 · %{customdata:.2f}%<extra></extra>",
         )
     )
+    for name, _ in ranked:
+        figure.add_annotation(
+            x=counts[name],
+            y=name,
+            text=f"{counts[name]:,}회",
+            showarrow=False,
+            xanchor="left",
+            xshift=7,
+            font=dict(color="#59605C", size=11),
+        )
+    maximum = max(counts[name] for name, _ in ranked)
     figure.update_xaxes(
-        title="유입 횟수 (회)", showgrid=True, gridcolor="#edf0ee", rangemode="tozero"
+        title="유입 횟수 (회)",
+        showgrid=True,
+        gridcolor="#edf0ee",
+        rangemode="tozero",
+        range=[0, max(1, maximum * 1.2)],
     )
     figure.update_yaxes(showgrid=False)
     return plot_layout(figure, height)

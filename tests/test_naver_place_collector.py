@@ -93,6 +93,11 @@ class CollectorTests(unittest.TestCase):
         metrics = collector.parse_summary_metrics("유입 수·매출액 703회")
         self.assertEqual(metrics["place_visits_weekly"], 703)
 
+    def test_place_sales_card_label_split_across_dom_nodes(self) -> None:
+        rendered = "유입\n수 ∙ 매출액\n도움말\n703\n회"
+        metrics = collector.parse_summary_metrics(rendered)
+        self.assertEqual(metrics["place_visits_weekly"], 703)
+
     def test_actual_smartplace_metric_labels(self) -> None:
         metrics = collector.parse_summary_metrics(ACTUAL_LABEL_SAMPLE)
         self.assertEqual(metrics["place_visits_weekly"], 703)

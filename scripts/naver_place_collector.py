@@ -16,6 +16,7 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
@@ -63,6 +64,26 @@ FIELDS = (
 
 class CollectionError(RuntimeError):
     pass
+
+
+def is_smartplace_url(url: str) -> bool:
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    return parsed.scheme == "https" and (
+        hostname == "smartplace.naver.com" or hostname.endswith(".smartplace.naver.com")
+    )
+
+
+def current_week_url(url: str, collected_date: date) -> str:
+    """Move a saved statistics URL to Monday-through-today at collection time."""
+    week_start = collected_date.fromordinal(
+        collected_date.toordinal() - collected_date.weekday()
+    )
+    parsed = urlparse(url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query["startDate"] = week_start.isoformat()
+    query["endDate"] = collected_date.isoformat()
+    return urlunparse(parsed._replace(query=urlencode(query)))
 
 
 def number_after(text: str, labels: tuple[str, ...]) -> int | None:
@@ -315,15 +336,12 @@ def main() -> None:
     missing_urls = [name for name, url in tab_urls.items() if not url]
     if missing_urls:
         raise CollectionError("통계 탭 URL Secret이 없습니다: " + ", ".join(missing_urls))
-    invalid_urls = [
-        name
-        for name, url in tab_urls.items()
-        if not url.startswith("https://new.smartplace.naver.com/")
-    ]
+    invalid_urls = [name for name, url in tab_urls.items() if not is_smartplace_url(url)]
     if invalid_urls:
         raise CollectionError("통계 탭 URL 형식이 올바르지 않습니다: " + ", ".join(invalid_urls))
     session_from_env()
     today = datetime.now(SEOUL).date()
+    tab_urls = {name: current_week_url(url, today) for name, url in tab_urls.items()}
     DEBUG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)

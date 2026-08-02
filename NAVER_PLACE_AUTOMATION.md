@@ -23,6 +23,8 @@ python scripts/setup_naver_place_session.py
 
 각 탭을 연 뒤 터미널에서 Enter를 누르면 해당 주소가 등록됩니다.
 
+탭 주소에 포함된 조회 날짜는 저장된 값을 그대로 사용하지 않습니다. Actions 실행 시마다 서울 날짜를 기준으로 이번 주 월요일부터 실행일까지 자동 갱신합니다.
+
 다음 Repository Secret이 자동 등록됩니다.
 
 - `NAVER_PLACE_STORAGE_STATE_B64`: 로그인 쿠키가 포함된 브라우저 세션

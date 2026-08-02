@@ -8,8 +8,11 @@ Credentials are read from environment variables and are never persisted.
 from __future__ import annotations
 
 import base64
+import csv
+import gzip
 import hashlib
 import hmac
+import io
 import json
 import os
 import time
@@ -28,9 +31,13 @@ SEOUL = ZoneInfo("Asia/Seoul")
 CATEGORIES = ("플레이스 검색광고", "지역소상공인 광고", "파워링크")
 FIELDS = ("impCnt", "clkCnt", "salesAmt", "ctr", "cpc")
 DATA_PATH = Path("data/campaign_weekly.json")
+KEYWORD_DATA_PATH = Path("data/keyword_analysis.json")
 CONNECTIONS_PATH = Path("data/connections.json")
 DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
 STATS_BATCH_SIZE = 100
+KEYWORD_LOOKBACK_DAYS = 30
+STAT_REPORT_POLL_SECONDS = 2
+STAT_REPORT_MAX_POLLS = 30
 
 
 class IntegrationError(RuntimeError):
@@ -99,6 +106,24 @@ class NaverSearchAdClient:
                     continue
         raise IntegrationError(f"네이버 SearchAd API 연결 실패: {last_error}")
 
+    def post(self, uri: str, payload: dict[str, Any]) -> Any:
+        request = Request(
+            f"{BASE_URL}{uri}",
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+            headers=self._headers("POST", uri),
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=40) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as error:
+            body = error.read().decode("utf-8", errors="replace")[:500]
+            raise IntegrationError(
+                f"네이버 SearchAd API 오류: HTTP {error.code} · {body}"
+            ) from None
+        except (URLError, TimeoutError) as error:
+            raise IntegrationError(f"네이버 SearchAd API 연결 실패: {error}") from None
+
     def campaigns(self) -> list[dict[str, Any]]:
         result = self.get("/ncc/campaigns")
         if not isinstance(result, list):
@@ -113,6 +138,39 @@ class NaverSearchAdClient:
         if not isinstance(result, list):
             raise IntegrationError("네이버 광고그룹 응답 형식이 예상과 다릅니다.")
         return [item for item in result if isinstance(item, dict)]
+
+    def keywords(self, adgroup_id: str) -> list[dict[str, Any]]:
+        result = self.get(
+            "/ncc/keywords",
+            {"nccAdgroupId": adgroup_id, "recordSize": 1000},
+        )
+        if not isinstance(result, list):
+            raise IntegrationError("네이버 키워드 응답 형식이 예상과 다릅니다.")
+        return [item for item in result if isinstance(item, dict)]
+
+    def place_search_terms(self, adgroup_id: str) -> list[dict[str, Any]]:
+        result = self.get(
+            "/stats",
+            {"id": adgroup_id, "statType": "NPLA_SCH_KEYWORD"},
+        )
+        if not isinstance(result, list):
+            raise IntegrationError("네이버 플레이스 검색어 응답 형식이 예상과 다릅니다.")
+        return [item for item in result if isinstance(item, dict)]
+
+    def create_stat_report(self, report_type: str, stat_date: date) -> dict[str, Any]:
+        result = self.post(
+            "/stat-reports",
+            {"reportTp": report_type, "statDt": stat_date.strftime("%Y%m%d")},
+        )
+        if not isinstance(result, dict):
+            raise IntegrationError("네이버 대용량 보고서 생성 응답 형식이 예상과 다릅니다.")
+        return result
+
+    def stat_report(self, report_job_id: int | str) -> dict[str, Any]:
+        result = self.get(f"/stat-reports/{report_job_id}")
+        if not isinstance(result, dict):
+            raise IntegrationError("네이버 대용량 보고서 조회 응답 형식이 예상과 다릅니다.")
+        return result
 
     def summary_stats(
         self, entity_ids: list[str], since: date, until: date
@@ -354,6 +412,304 @@ def collect_daily_metrics(
     return daily, matched
 
 
+def collect_adgroup_catalog(client: NaverSearchAdClient) -> list[dict[str, str]]:
+    """Return every reportable ad group with its dashboard category."""
+    catalog: list[dict[str, str]] = []
+    for campaign in client.campaigns():
+        campaign_id = str(campaign.get("nccCampaignId") or campaign.get("id") or "")
+        if not campaign_id:
+            continue
+        campaign_name = str(campaign.get("name") or campaign.get("campaignName") or "")
+        place_campaign = is_place_campaign(campaign)
+        campaign_category = classify_campaign(campaign)
+        if not place_campaign and not campaign_category:
+            continue
+        for adgroup in client.adgroups(campaign_id):
+            adgroup_id = str(adgroup.get("nccAdgroupId") or adgroup.get("id") or "")
+            if not adgroup_id:
+                continue
+            category = classify_place_adgroup(adgroup) if place_campaign else campaign_category
+            if not category:
+                continue
+            catalog.append(
+                {
+                    "campaign_id": campaign_id,
+                    "campaign_name": campaign_name,
+                    "adgroup_id": adgroup_id,
+                    "adgroup_name": str(
+                        adgroup.get("name") or adgroup.get("adgroupName") or ""
+                    ),
+                    "category": category,
+                }
+            )
+    return catalog
+
+
+def analysis_record(
+    category: str,
+    value: str,
+    impressions: Any,
+    clicks: Any,
+    spend: Any,
+    **extra: Any,
+) -> dict[str, Any]:
+    return {
+        "category": category,
+        "value": value.strip(),
+        "impressions": round(number(impressions)),
+        "clicks": round(number(clicks)),
+        "spend": round(number(spend)),
+        **extra,
+    }
+
+
+def aggregate_analysis_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Aggregate duplicate terms at advertising-group-type level."""
+    grouped: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        category = str(row.get("category") or "").strip()
+        value = str(row.get("value") or "").strip()
+        if not category or not value or value == "-":
+            continue
+        key = (category, value)
+        target = grouped.setdefault(
+            key,
+            analysis_record(category, value, 0, 0, 0),
+        )
+        target["impressions"] += round(number(row.get("impressions")))
+        target["clicks"] += round(number(row.get("clicks")))
+        target["spend"] += round(number(row.get("spend")))
+        row_match_types = list(row.get("match_types") or [])
+        match_type = str(row.get("match_type") or "").strip()
+        if match_type:
+            row_match_types.append(match_type)
+        for match_type in row_match_types:
+            match_type = str(match_type).strip()
+            if not match_type:
+                continue
+            target.setdefault("match_types", [])
+            if match_type not in target["match_types"]:
+                target["match_types"].append(match_type)
+    return sorted(
+        grouped.values(),
+        key=lambda item: (-item["spend"], -item["clicks"], item["value"]),
+    )
+
+
+def collect_registered_keyword_rows(
+    client: NaverSearchAdClient,
+    catalog: list[dict[str, str]],
+    since: date,
+    until: date,
+) -> list[dict[str, Any]]:
+    keyword_by_id: dict[str, dict[str, Any]] = {}
+    for group in catalog:
+        try:
+            keywords = client.keywords(group["adgroup_id"])
+        except IntegrationError as exc:
+            print(f"키워드 목록 건너뜀: {group['adgroup_name']} · {exc}")
+            continue
+        for keyword in keywords:
+            keyword_id = str(keyword.get("nccKeywordId") or keyword.get("id") or "")
+            value = str(keyword.get("keyword") or keyword.get("name") or "").strip()
+            if not keyword_id or not value:
+                continue
+            keyword_by_id[keyword_id] = analysis_record(
+                group["category"], value, 0, 0, 0
+            )
+
+    keyword_ids = list(keyword_by_id)
+    for start in range(0, len(keyword_ids), STATS_BATCH_SIZE):
+        batch = keyword_ids[start : start + STATS_BATCH_SIZE]
+        for row in client.summary_stats(batch, since, until):
+            keyword_id = str(row.get("id") or row.get("nccKeywordId") or "")
+            target = keyword_by_id.get(keyword_id)
+            if target:
+                target["impressions"] += round(number(row.get("impCnt")))
+                target["clicks"] += round(number(row.get("clkCnt")))
+                target["spend"] += round(number(row.get("salesAmt")))
+        time.sleep(0.2)
+    return [
+        row
+        for row in aggregate_analysis_rows(list(keyword_by_id.values()))
+        if row["spend"] > 0
+    ]
+
+
+def collect_place_search_term_rows(
+    client: NaverSearchAdClient, catalog: list[dict[str, str]]
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for group in catalog:
+        if group["category"] == "파워링크":
+            continue
+        try:
+            search_terms = client.place_search_terms(group["adgroup_id"])
+        except IntegrationError as exc:
+            print(f"플레이스 검색어 건너뜀: {group['adgroup_name']} · {exc}")
+            continue
+        for item in search_terms:
+            term = str(item.get("schKeyword") or item.get("searchKeyword") or "").strip()
+            if term and term != "-":
+                rows.append(
+                    analysis_record(
+                        group["category"],
+                        term,
+                        item.get("impCnt"),
+                        item.get("clkCnt"),
+                        item.get("salesAmt"),
+                    )
+                )
+        time.sleep(0.1)
+    return [row for row in aggregate_analysis_rows(rows) if row["spend"] > 0]
+
+
+def decode_stat_report(content: bytes) -> str:
+    if content.startswith(b"\x1f\x8b"):
+        content = gzip.decompress(content)
+    for encoding in ("utf-8-sig", "cp949"):
+        try:
+            return content.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return content.decode("utf-8", errors="replace")
+
+
+def parse_expkeyword_report(
+    text: str, powerlink_adgroup_ids: set[str], powerlink_campaign_ids: set[str]
+) -> list[dict[str, Any]]:
+    """Parse Naver's headerless 12-column Powerlink search-term report."""
+    rows: list[dict[str, Any]] = []
+    match_types = {"0": "일치", "5": "일치", "1": "확장", "2": "유사"}
+    for columns in csv.reader(io.StringIO(text), delimiter="\t"):
+        if len(columns) < 12:
+            continue
+        campaign_id, adgroup_id = columns[2].strip(), columns[3].strip()
+        if (
+            adgroup_id not in powerlink_adgroup_ids
+            and campaign_id not in powerlink_campaign_ids
+        ):
+            continue
+        term = columns[4].strip()
+        if not term or term == "-":
+            continue
+        rows.append(
+            analysis_record(
+                "파워링크",
+                term,
+                columns[8],
+                columns[9],
+                columns[10],
+                match_type=match_types.get(columns[7].strip(), columns[7].strip()),
+            )
+        )
+    return [row for row in aggregate_analysis_rows(rows) if row["spend"] > 0]
+
+
+def collect_powerlink_search_term_rows(
+    client: NaverSearchAdClient,
+    catalog: list[dict[str, str]],
+    report_date: date,
+) -> list[dict[str, Any]]:
+    powerlink_groups = [group for group in catalog if group["category"] == "파워링크"]
+    if not powerlink_groups:
+        return []
+    job = client.create_stat_report("EXPKEYWORD", report_date)
+    report_job_id = job.get("reportJobId")
+    if not report_job_id:
+        raise IntegrationError("EXPKEYWORD 보고서 작업 ID가 없습니다.")
+
+    for _ in range(STAT_REPORT_MAX_POLLS):
+        current = client.stat_report(report_job_id)
+        status = str(current.get("status") or "").upper()
+        download_url = str(current.get("downloadUrl") or "").strip()
+        if status == "BUILT" and download_url:
+            try:
+                with urlopen(download_url, timeout=60) as response:
+                    text = decode_stat_report(response.read())
+            except (HTTPError, URLError, TimeoutError) as error:
+                raise IntegrationError(f"EXPKEYWORD 보고서 다운로드 실패: {error}") from None
+            return parse_expkeyword_report(
+                text,
+                {group["adgroup_id"] for group in powerlink_groups},
+                {group["campaign_id"] for group in powerlink_groups},
+            )
+        if status in {"ERROR", "NONE"}:
+            raise IntegrationError(f"EXPKEYWORD 보고서 생성 실패: {status}")
+        time.sleep(STAT_REPORT_POLL_SECONDS)
+    raise IntegrationError("EXPKEYWORD 보고서 생성 시간이 초과되었습니다.")
+
+
+def merge_powerlink_days(
+    existing_days: list[dict[str, Any]],
+    report_date: date,
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    cutoff = report_date - timedelta(days=KEYWORD_LOOKBACK_DAYS - 1)
+    merged = [
+        item
+        for item in existing_days
+        if isinstance(item, dict)
+        and cutoff.isoformat() <= str(item.get("date") or "") <= report_date.isoformat()
+        and str(item.get("date")) != report_date.isoformat()
+    ]
+    merged.append({"date": report_date.isoformat(), "rows": rows})
+    return sorted(merged, key=lambda item: str(item.get("date") or ""))
+
+
+def build_keyword_analysis_payload(
+    client: NaverSearchAdClient,
+    report_date: date,
+    existing: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    existing = existing or {}
+    catalog = collect_adgroup_catalog(client)
+    since = report_date - timedelta(days=KEYWORD_LOOKBACK_DAYS - 1)
+    keywords = collect_registered_keyword_rows(client, catalog, since, report_date)
+    place_terms = collect_place_search_term_rows(client, catalog)
+
+    powerlink_days = list(existing.get("powerlink_days") or [])
+    try:
+        powerlink_today = collect_powerlink_search_term_rows(client, catalog, report_date)
+        powerlink_days = merge_powerlink_days(powerlink_days, report_date, powerlink_today)
+    except IntegrationError as exc:
+        print(f"파워링크 검색어 보고서 건너뜀: {exc}")
+
+    powerlink_terms = aggregate_analysis_rows(
+        [
+            row
+            for day in powerlink_days
+            if isinstance(day, dict)
+            for row in day.get("rows", [])
+            if isinstance(row, dict)
+        ]
+    )
+    coverage_dates = [str(day.get("date")) for day in powerlink_days if day.get("date")]
+    return {
+        "schema_version": 1,
+        "source": "naver-searchad-api",
+        "generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"),
+        "report_date": report_date.isoformat(),
+        "period": {"since": since.isoformat(), "until": report_date.isoformat()},
+        "coverage": {
+            "keywords": "최근 30일",
+            "place_search_terms": "네이버 제공 최근 30일",
+            "powerlink_search_terms": (
+                f"{coverage_dates[0]} ~ {coverage_dates[-1]} · {len(coverage_dates)}일 누적"
+                if coverage_dates
+                else "첫 수집 대기"
+            ),
+        },
+        "adgroup_counts": {
+            category: sum(group["category"] == category for group in catalog)
+            for category in CATEGORIES
+        },
+        "keywords": keywords,
+        "search_terms": aggregate_analysis_rows(place_terms + powerlink_terms),
+        "powerlink_days": powerlink_days,
+    }
+
+
 def campaign_rows_for_period(
     daily: dict[date, dict[str, dict[str, Any]]], since: date, until: date
 ) -> list[dict[str, Any]]:
@@ -529,6 +885,14 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
+def read_json(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
 def parse_report_date() -> date:
     raw = os.environ.get("REPORT_DATE", "").strip()
     if raw:
@@ -553,7 +917,18 @@ def main() -> None:
     dashboard = build_dashboard_payload(daily, matched, report_date)
     send_to_slack(webhook_url, slack_payload(dashboard, dashboard_url))
 
+    existing_keyword_data = read_json(KEYWORD_DATA_PATH)
+    try:
+        keyword_dashboard = build_keyword_analysis_payload(
+            client, report_date, existing_keyword_data
+        )
+    except IntegrationError as exc:
+        keyword_dashboard = existing_keyword_data
+        print(f"키워드 분석 갱신 건너뜀: {exc}")
+
     write_json(DATA_PATH, dashboard)
+    if keyword_dashboard:
+        write_json(KEYWORD_DATA_PATH, keyword_dashboard)
     generated_at = dashboard["generated_at"]
     write_json(
         CONNECTIONS_PATH,
@@ -575,7 +950,7 @@ def main() -> None:
     )
     print(
         f"완료: {report_date.isoformat()} · 매칭 캠페인 {len(matched)}개 · "
-        "대시보드 JSON 갱신 및 Slack 전송"
+        "대시보드·키워드 JSON 갱신 및 Slack 전송"
     )
 
 

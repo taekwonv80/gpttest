@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "first-collection-pending",
+  "generated_at": null,
+  "report_date": null,
+  "period": {},
+  "coverage": {
+    "keywords": "첫 수집 대기",
+    "place_search_terms": "첫 수집 대기",
+    "powerlink_search_terms": "첫 수집 대기"
+  },
+  "adgroup_counts": {},
+  "keywords": [],
+  "search_terms": [],
+  "powerlink_days": []
+}

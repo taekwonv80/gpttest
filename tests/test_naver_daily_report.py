@@ -117,6 +117,71 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(captured["params"]["recordSize"], 1000)
         self.assertEqual(groups[0]["adgroupType"], "LOCAL_AD")
 
+    def test_keywords_are_requested_for_an_adgroup(self) -> None:
+        captured = {}
+
+        class RecordingClient(report.NaverSearchAdClient):
+            def get(self, uri, params=None):
+                captured["uri"] = uri
+                captured["params"] = params
+                return [{"nccKeywordId": "kw-test", "keyword": "장현동 맛집"}]
+
+        keywords = RecordingClient("1", "api", "secret").keywords("group-test")
+
+        self.assertEqual(captured["uri"], "/ncc/keywords")
+        self.assertEqual(captured["params"]["nccAdgroupId"], "group-test")
+        self.assertEqual(keywords[0]["keyword"], "장현동 맛집")
+
+    def test_place_search_terms_use_npla_stat_type(self) -> None:
+        captured = {}
+
+        class RecordingClient(report.NaverSearchAdClient):
+            def get(self, uri, params=None):
+                captured["uri"] = uri
+                captured["params"] = params
+                return [{"schKeyword": "조개전골", "impCnt": 10}]
+
+        rows = RecordingClient("1", "api", "secret").place_search_terms("group-test")
+
+        self.assertEqual(captured["uri"], "/stats")
+        self.assertEqual(captured["params"]["id"], "group-test")
+        self.assertEqual(captured["params"]["statType"], "NPLA_SCH_KEYWORD")
+        self.assertEqual(rows[0]["schKeyword"], "조개전골")
+
+    def test_expkeyword_report_is_parsed_and_duplicate_terms_are_aggregated(self) -> None:
+        text = "\n".join(
+            [
+                "20260801\t1\tcmp-power\tgrp-power\t장현동 맛집\t123\tM\t1\t100\t5\t1000\t0",
+                "20260801\t1\tcmp-power\tgrp-power\t장현동 맛집\t123\tP\t0\t50\t2\t300\t0",
+                "20260801\t1\tcmp-power\tgrp-power\t-\t123\tP\t0\t20\t1\t100\t0",
+                "20260801\t1\tcmp-other\tgrp-other\t제외\t123\tP\t0\t20\t1\t100\t0",
+            ]
+        )
+
+        rows = report.parse_expkeyword_report(
+            text, {"grp-power"}, {"cmp-power"}
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["value"], "장현동 맛집")
+        self.assertEqual(rows[0]["impressions"], 150)
+        self.assertEqual(rows[0]["clicks"], 7)
+        self.assertEqual(rows[0]["spend"], 1300)
+        self.assertEqual(rows[0]["match_types"], ["확장", "일치"])
+
+    def test_powerlink_search_term_days_keep_latest_thirty_days(self) -> None:
+        existing = [
+            {"date": "2026-07-02", "rows": []},
+            {"date": "2026-07-04", "rows": [{"value": "기존"}]},
+            {"date": "2026-08-02", "rows": [{"value": "교체"}]},
+        ]
+        rows = [{"value": "신규", "category": "파워링크", "spend": 100}]
+
+        merged = report.merge_powerlink_days(existing, date(2026, 8, 2), rows)
+
+        self.assertEqual([item["date"] for item in merged], ["2026-07-04", "2026-08-02"])
+        self.assertEqual(merged[-1]["rows"][0]["value"], "신규")
+
     def test_query_string_repeats_bulk_ids(self) -> None:
         self.assertEqual(
             report.query_string({"ids": ["cmp-one", "cmp-two"], "timeIncrement": "allDays"}),

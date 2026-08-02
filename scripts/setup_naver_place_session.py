@@ -6,8 +6,11 @@ from __future__ import annotations
 import base64
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
-from playwright.sync_api import sync_playwright
+if TYPE_CHECKING:
+    from playwright.sync_api import BrowserContext, Page
 
 
 SESSION_PATH = Path(".naver-place-session.json")
@@ -20,6 +23,33 @@ TAB_SECRETS = (
 )
 
 
+def is_owner_page_url(url: str) -> bool:
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    smartplace_host = hostname == "smartplace.naver.com" or hostname.endswith(
+        ".smartplace.naver.com"
+    )
+    return parsed.scheme == "https" and smartplace_host and parsed.path.rstrip("/") != ""
+
+
+def latest_owner_page(context: "BrowserContext") -> "Page":
+    candidates = [page for page in context.pages if is_owner_page_url(page.url)]
+    if not candidates:
+        raise SystemExit(
+            "업체 통계 페이지를 찾지 못했습니다. 업체 카드에서 통계를 새로 연 뒤 다시 시도해주세요."
+        )
+    return candidates[-1]
+
+
+def validate_tab_url(tab_name: str, url: str, saved_urls: set[str]) -> None:
+    if not is_owner_page_url(url):
+        raise SystemExit(f"{tab_name} 탭의 업체 관리 주소를 확인할 수 없습니다.")
+    if url in saved_urls:
+        raise SystemExit(
+            f"{tab_name} 탭 주소가 이전 탭과 같습니다. 실제 [{tab_name}] 탭을 누른 뒤 다시 등록해주세요."
+        )
+
+
 def set_secret(name: str, value: str) -> None:
     subprocess.run(
         ["gh", "secret", "set", name],
@@ -30,19 +60,24 @@ def set_secret(name: str, value: str) -> None:
 
 
 def main() -> None:
+    from playwright.sync_api import sync_playwright
+
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context(locale="ko-KR", timezone_id="Asia/Seoul")
         page = context.new_page()
         page.goto("https://new.smartplace.naver.com/", wait_until="domcontentloaded")
         input("브라우저에서 로그인하고 대상 업체의 [통계] 메뉴를 연 뒤 Enter를 누르세요: ")
+        latest_owner_page(context)
         tab_urls: dict[str, str] = {}
+        saved_urls: set[str] = set()
         for tab_name, secret_name in TAB_SECRETS:
             input(f"통계의 [{tab_name}] 탭을 연 뒤 Enter를 누르세요: ")
-            tab_url = page.url
-            if not tab_url.startswith("https://new.smartplace.naver.com/"):
-                raise SystemExit(f"{tab_name} 탭의 스마트플레이스 주소를 확인할 수 없습니다.")
+            tab_url = latest_owner_page(context).url
+            validate_tab_url(tab_name, tab_url, saved_urls)
             tab_urls[secret_name] = tab_url
+            saved_urls.add(tab_url)
+            print(f"{tab_name} 탭 주소 확인 완료")
         context.storage_state(path=str(SESSION_PATH))
         browser.close()
 

@@ -64,6 +64,24 @@ REVIEW_SAMPLE = """
 
 
 class CollectorTests(unittest.TestCase):
+    def test_statistics_url_moves_to_current_monday(self) -> None:
+        url = (
+            "https://new.smartplace.naver.com/bizes/place/1/statistics?"
+            "menu=reports&startDate=2026-07-01&endDate=2026-07-07&term=weekly"
+        )
+        moved = collector.current_week_url(url, date(2026, 8, 2))
+        self.assertIn("startDate=2026-07-27", moved)
+        self.assertIn("endDate=2026-08-02", moved)
+        self.assertIn("menu=reports", moved)
+
+    def test_smartcall_subdomain_is_allowed(self) -> None:
+        self.assertTrue(
+            collector.is_smartplace_url(
+                "https://smartcall.smartplace.naver.com/statistics/1"
+            )
+        )
+        self.assertFalse(collector.is_smartplace_url("https://example.com/statistics"))
+
     def test_parse_screenshot_text(self) -> None:
         row = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))
         self.assertEqual(row["week_start"], "2026-07-27")

@@ -658,8 +658,12 @@ def render_place_statistics() -> None:
     history = PLACE_DAILY or [
         {key: str(value) for key, value in PLACE_LATEST.items() if value is not None}
     ]
-    period = st.selectbox("통계 기간", ["최근 7일", "최근 30일", "전체"], index=1)
-    limit = {"최근 7일": 7, "최근 30일": 30}.get(period)
+    period = st.selectbox(
+        "통계 기간",
+        ["최근 1일", "최근 7일", "최근 30일", "전체"],
+        index=2,
+    )
+    limit = {"최근 1일": 1, "최근 7일": 7, "최근 30일": 30}.get(period)
     visible = history[-limit:] if limit else history
     # Keep short date labels categorical. Plotly otherwise parses values such as
     # "08-02" as 2008-02-01 in the browser (especially under Stlite/Pyodide).

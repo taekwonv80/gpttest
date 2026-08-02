@@ -62,8 +62,30 @@ REVIEW_SAMPLE = """
 방문자 리뷰
 """
 
+ACTUAL_LABEL_SAMPLE = """
+플레이스 상세페이지 유입 수
+703
+리뷰 등록 수 7건
+누적 통화 연결 11회
+"""
+
 
 class CollectorTests(unittest.TestCase):
+    def test_actual_smartplace_metric_labels(self) -> None:
+        metrics = collector.parse_summary_metrics(ACTUAL_LABEL_SAMPLE)
+        self.assertEqual(metrics["place_visits_weekly"], 703)
+        self.assertEqual(metrics["smartcall_weekly"], 11)
+        self.assertEqual(metrics["reviews_weekly"], 7)
+
+    def test_report_can_supply_place_visits_when_place_tab_has_no_card(self) -> None:
+        place_only = "유입채널\n네이버 검색\n197\n유입키워드\n"
+        row = collector.parse_rendered_text(
+            place_only, date(2026, 8, 2), require_place_visits=False
+        )
+        collector.merge_present(row, collector.parse_summary_metrics(ACTUAL_LABEL_SAMPLE))
+        self.assertEqual(row["place_visits_weekly"], 703)
+        self.assertEqual(collector.parse_channels(place_only)["네이버 검색"], 197)
+
     def test_statistics_url_moves_to_current_monday(self) -> None:
         url = (
             "https://new.smartplace.naver.com/bizes/place/1/statistics?"

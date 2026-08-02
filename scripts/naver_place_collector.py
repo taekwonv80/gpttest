@@ -88,7 +88,10 @@ def current_week_url(url: str, collected_date: date) -> str:
 
 def number_after(text: str, labels: tuple[str, ...]) -> int | None:
     for label in labels:
-        pattern = rf"{re.escape(label)}\s*(?:은|는|이|가)?\s*([\d,]+)\s*(?:회|건|명)"
+        pattern = (
+            rf"{re.escape(label)}\s*(?:은|는|이|가)?\s*([\d,]+)"
+            rf"(?:\s*(?:회|건|명))?(?=\s|$)"
+        )
         match = re.search(pattern, text)
         if match:
             return int(match.group(1).replace(",", ""))
@@ -116,12 +119,18 @@ def parse_ranked_section(text: str, start: str, end: str) -> dict[str, int]:
     section = match.group("section") if match else ""
     values: dict[str, int] = {}
     for name, raw_value in re.findall(
-        r"(?:^|\n)\s*(?:\d+[.)]?\s+)?([^\n\d][^\n]*?)\s+([\d,]+)\s*(?:회|건|명)\s*(?=\n|$)",
+        r"(?:^|\n)\s*(?:\d+[.)]?\s+)?([^\n\d][^\n]*?)\s+([\d,]+)\s*(?:회|건|명)?\s*(?=\n|$)",
         section,
     ):
         cleaned = re.sub(r"\s+", " ", name).strip(" -")
         if cleaned and cleaned not in {"지난 주", "이번 주"}:
             values[cleaned] = int(raw_value.replace(",", ""))
+    lines = [re.sub(r"\s+", " ", line).strip() for line in section.splitlines() if line.strip()]
+    for name, raw_value in zip(lines, lines[1:]):
+        value_match = re.fullmatch(r"([\d,]+)\s*(?:회|건|명)?", raw_value)
+        cleaned = re.sub(r"^\d+[.)]?\s+", "", name).strip(" -")
+        if value_match and cleaned and not re.fullmatch(r"[\d,]+", cleaned):
+            values.setdefault(cleaned, int(value_match.group(1).replace(",", "")))
     return values
 
 
@@ -146,18 +155,38 @@ def parse_keywords(text: str) -> dict[str, int]:
 def parse_summary_metrics(text: str) -> dict[str, int | str]:
     normalized = re.sub(r"[ \t]+", " ", text)
     metrics = {
-        "place_visits_weekly": number_after(normalized, ("플레이스 유입",)),
+        "place_visits_weekly": number_after(
+            normalized,
+            (
+                "플레이스 상세페이지 유입 수",
+                "플레이스 상세페이지 유입수",
+                "플레이스 조회 수",
+                "플레이스 조회수",
+                "플레이스 유입 수",
+                "플레이스 유입수",
+                "플레이스 유입",
+                "유입 수",
+                "유입수",
+            ),
+        ),
         "booking_orders_weekly": number_after(
             normalized,
             ("예약·주문 신청", "예약・주문 신청", "예약/주문 신청", "예약 신청"),
         ),
-        "smartcall_weekly": number_after(normalized, ("스마트콜 통화", "통화 연결")),
-        "reviews_weekly": number_after(normalized, ("리뷰 등록", "신규 리뷰")),
+        "smartcall_weekly": number_after(
+            normalized,
+            ("스마트콜 통화", "누적 통화 연결", "통화 연결", "총 통화 수", "총 통화수"),
+        ),
+        "reviews_weekly": number_after(
+            normalized, ("리뷰 등록 수", "리뷰 등록", "신규 리뷰", "리뷰 수", "리뷰수")
+        ),
     }
     return {key: value if value is not None else "" for key, value in metrics.items()}
 
 
-def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
+def parse_rendered_text(
+    text: str, collected_date: date, require_place_visits: bool = True
+) -> dict[str, Any]:
     normalized = re.sub(r"[ \t]+", " ", text)
     channels = parse_channels(normalized)
     keywords = parse_keywords(normalized)
@@ -180,10 +209,8 @@ def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
         "naver_talktalk_weekly": channel_value(channels, normalized, "네이버톡톡", "네이버 톡톡"),
         "website_weekly": channel_value(channels, normalized, "웹사이트"),
     }
-    required = ("place_visits_weekly",)
-    missing = [name for name in required if metrics[name] in (None, "")]
-    if missing:
-        raise CollectionError("필수 통계 항목을 찾지 못했습니다: " + ", ".join(missing))
+    if require_place_visits and metrics["place_visits_weekly"] in (None, ""):
+        raise CollectionError("필수 통계 항목을 찾지 못했습니다: place_visits_weekly")
 
     return {
         "collected_date": collected_date.isoformat(),
@@ -200,7 +227,15 @@ def parse_smartcall_text(text: str) -> dict[str, int | str]:
     normalized = re.sub(r"[ \t]+", " ", text)
     value = number_after(
         normalized,
-        ("스마트콜 통화", "통화 연결", "연결된 통화", "총 통화"),
+        (
+            "스마트콜 통화",
+            "누적 통화 연결",
+            "통화 연결",
+            "연결된 통화",
+            "총 통화 수",
+            "총 통화수",
+            "총 통화",
+        ),
     )
     return {"smartcall_weekly": value if value is not None else ""}
 
@@ -209,7 +244,7 @@ def parse_review_text(text: str) -> dict[str, int | str]:
     normalized = re.sub(r"[ \t]+", " ", text)
     value = number_after(
         normalized,
-        ("리뷰 등록", "신규 리뷰", "등록된 리뷰", "새 리뷰"),
+        ("리뷰 등록 수", "리뷰 등록", "신규 리뷰", "등록된 리뷰", "새 리뷰", "리뷰 수", "리뷰수"),
     )
     return {"reviews_weekly": value if value is not None else ""}
 
@@ -379,7 +414,7 @@ def main() -> None:
                 "리뷰",
             )
 
-            row = parse_rendered_text(place_text, today)
+            row = parse_rendered_text(place_text, today, require_place_visits=False)
             merge_present(row, parse_summary_metrics(report_text))
             merge_present(row, parse_smartcall_text(smartcall_text))
             reservation_values = parse_reservation_text(reservation_text)
@@ -389,6 +424,10 @@ def main() -> None:
                     "reservation_applications_weekly", ""
                 )
             merge_present(row, parse_review_text(review_text))
+            if row.get("place_visits_weekly") in (None, ""):
+                raise CollectionError(
+                    "플레이스 탭과 리포트 탭 모두에서 유입 수를 찾지 못했습니다."
+                )
             upsert_row(row)
             SNAPSHOT_PATH.write_text(
                 json.dumps({"generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"), **row}, ensure_ascii=False, indent=2) + "\n",

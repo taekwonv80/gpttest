@@ -345,12 +345,22 @@ def session_from_env() -> None:
         raise CollectionError("로그인 세션 Secret 형식이 올바르지 않습니다.") from exc
 
 
-def collect_page_text(page: "Page", url: str, markers: tuple[str, ...], tab_name: str) -> str:
+def collect_page_text(
+    page: "Page",
+    url: str,
+    markers: tuple[str, ...],
+    tab_name: str,
+    debug_name: str,
+) -> str:
     page.goto(url, wait_until="domcontentloaded", timeout=90_000)
     page.wait_for_timeout(8_000)
     if "nid.naver.com" in page.url or "login" in page.url.lower():
         raise CollectionError("네이버 로그인 세션이 만료되었습니다. 세션 Secret을 갱신해주세요.")
     text = page.locator("body").inner_text(timeout=30_000)
+    page.screenshot(
+        path=str(DEBUG_PATH.parent / f"naver-place-{debug_name}.png"),
+        full_page=True,
+    )
     if not any(marker in text for marker in markers):
         raise CollectionError(
             f"{tab_name} 통계 화면이 열리지 않았습니다. 저장된 URL 또는 업체 선택 상태를 확인해주세요."
@@ -388,30 +398,35 @@ def main() -> None:
                 tab_urls["리포트"],
                 ("리포트", "플레이스 유입", "방문 전 지표"),
                 "리포트",
+                "report",
             )
             place_text = collect_page_text(
                 page,
                 tab_urls["플레이스"],
                 ("플레이스 유입", "유입채널", "유입 채널", "유입키워드"),
                 "플레이스",
+                "place",
             )
             smartcall_text = collect_page_text(
                 page,
                 tab_urls["스마트콜"],
                 ("스마트콜", "통화 연결", "통화내역"),
                 "스마트콜",
+                "smartcall",
             )
             reservation_text = collect_page_text(
                 page,
                 tab_urls["예약주문"],
                 ("유입트렌드", "유입 트렌드", "예약 통계", "예약통계", "예약주문"),
                 "예약주문",
+                "booking",
             )
             review_text = collect_page_text(
                 page,
                 tab_urls["리뷰"],
                 ("리뷰", "방문자 리뷰", "블로그 리뷰"),
                 "리뷰",
+                "review",
             )
 
             row = parse_rendered_text(place_text, today, require_place_visits=False)

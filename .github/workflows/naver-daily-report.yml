@@ -28,7 +28,7 @@ jobs:
       NAVER_SECRET_KEY: ${{ secrets.NAVER_SECRET_KEY }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       REPORT_DATE: ${{ inputs.report_date }}
-      DASHBOARD_URL: https://taekwonv80.github.io/gpttest
+      DASHBOARD_URL: https://eklove.pages.dev
 
     steps:
       - name: Checkout repository

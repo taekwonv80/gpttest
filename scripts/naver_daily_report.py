@@ -29,7 +29,7 @@ CATEGORIES = ("플레이스 검색광고", "지역소상공인 광고", "파워�
 FIELDS = ("impCnt", "clkCnt", "salesAmt", "ctr", "cpc")
 DATA_PATH = Path("data/campaign_weekly.json")
 CONNECTIONS_PATH = Path("data/connections.json")
-DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
+DEFAULT_DASHBOARD_URL = "https://eklove.pages.dev"
 STATS_BATCH_SIZE = 100
 
 

@@ -134,6 +134,16 @@ DAILY_REPORT_SAMPLE = """
 리뷰 등록 1회
 """
 
+DAILY_REPORT_WITH_TREND_SAMPLE = """
+리뷰 등록
+down
+67%
+1회
+전일 3회
+하루동안 리뷰는
+1회 입니다.
+"""
+
 DAILY_BOOKING_SAMPLE = """
 예약 지표
 유입 28회
@@ -193,6 +203,10 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(metrics["place_visits_weekly"], 703)
         self.assertEqual(metrics["smartcall_weekly"], 11)
         self.assertEqual(metrics["reviews_weekly"], 7)
+
+    def test_daily_review_uses_narrative_after_trend_percentage(self) -> None:
+        metrics = collector.parse_summary_metrics(DAILY_REPORT_WITH_TREND_SAMPLE)
+        self.assertEqual(metrics["reviews_weekly"], 1)
 
     def test_report_can_supply_place_visits_when_place_tab_has_no_card(self) -> None:
         place_only = "유입채널\n네이버 검색\n197\n유입키워드\n"
@@ -302,6 +316,17 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(row["smartcall_daily_delta"], 3)
         self.assertEqual(row["reviews_daily_delta"], 1)
         self.assertEqual(row["reservation_inflows_daily_delta"], 28)
+
+    def test_daily_total_validation_allows_unpublished_current_day(self) -> None:
+        daily_rows = [
+            {"place_visits_daily_delta": 300},
+            {"place_visits_daily_delta": 403},
+            {"booking_orders_daily_delta": 2},
+        ]
+        collector.validate_daily_totals(
+            daily_rows,
+            {"place_visits_weekly": 703, "booking_orders_weekly": 2},
+        )
 
     def test_daily_delta_uses_previous_cumulative_total(self) -> None:
         row = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))

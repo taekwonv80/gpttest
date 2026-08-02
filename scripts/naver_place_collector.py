@@ -254,7 +254,16 @@ def parse_summary_metrics(text: str) -> dict[str, int | str]:
             ("스마트콜 통화", "누적 통화 연결", "통화 연결", "총 통화 수", "총 통화수"),
         ),
         "reviews_weekly": number_after(
-            normalized, ("리뷰 등록 수", "리뷰 등록", "신규 리뷰", "리뷰 수", "리뷰수")
+            normalized,
+            (
+                "리뷰 등록 수",
+                "리뷰 등록",
+                "하루동안 리뷰",
+                "한 주간 리뷰",
+                "신규 리뷰",
+                "리뷰 수",
+                "리뷰수",
+            ),
         ),
     }
     return {key: value if value is not None else "" for key, value in metrics.items()}
@@ -521,9 +530,8 @@ def collect_current_week_daily(
             wait_ms=4_000,
         )
         daily = build_daily_history_row(report_text, reservation_text, target)
-        if daily.get("place_visits_daily_delta") in (None, ""):
-            raise CollectionError(f"{target.isoformat()} 플레이스 일별 유입을 찾지 못했습니다.")
-        daily_rows.append(daily)
+        if any(daily.get(delta_key) not in (None, "") for _, delta_key in DAILY_METRIC_PAIRS):
+            daily_rows.append(daily)
     return daily_rows
 
 
@@ -533,8 +541,12 @@ def validate_daily_totals(
     """Reject a daily query if Naver returned the weekly card for every date."""
     for total_key, delta_key in DAILY_METRIC_PAIRS:
         weekly = weekly_row.get(total_key, "")
-        values = [item.get(delta_key, "") for item in daily_rows]
-        if weekly in (None, "") or any(value in (None, "") for value in values):
+        values = [
+            item.get(delta_key, "")
+            for item in daily_rows
+            if item.get(delta_key, "") not in (None, "")
+        ]
+        if weekly in (None, "") or not values:
             continue
         daily_total = sum(int(value) for value in values)
         if daily_total != int(weekly):

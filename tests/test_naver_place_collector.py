@@ -62,6 +62,16 @@ REVIEW_SAMPLE = """
 방문자 리뷰
 """
 
+ACTUAL_REVIEW_SAMPLE = """
+리뷰 지표
+영수증 7회
+POS 0회
+Npay커넥트 0회
+예약 0회
+주문 0회
+결제내역 0회
+"""
+
 ACTUAL_LABEL_SAMPLE = """
 플레이스 상세페이지 유입 수
 703
@@ -80,6 +90,34 @@ PLACE_RATIO_SAMPLE = """
 한 주간 리뷰
 """
 
+ACTUAL_BOOKING_ORDER_SAMPLE = """
+유입 채널 도움말
+유입 203회
+신청 5회
+이용완료 3회
+취소 1회
+확정 5회
+유입 트렌드
+"""
+
+NOISY_PLACE_RATIO_SAMPLE = """
+유입 채널
+도움말 1
+네이버지도 40.98%
+네이버검색 30.12%
+40.98% 2
+유입 키워드
+도움말 41
+택이네조개전골 74.51%
+맛집 6.86%
+74.51% 2
+성별
+남자 59%
+여자 41%
+연령
+30대 41%
+"""
+
 
 class CollectorTests(unittest.TestCase):
     def test_place_channel_and_keyword_ratios(self) -> None:
@@ -88,6 +126,16 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(channels["네이버지도"], 40.98)
         self.assertEqual(channels["네이버검색"], 30.12)
         self.assertEqual(keywords["장현동 맛집"], 52.25)
+
+    def test_place_ratios_exclude_ui_and_demographic_noise(self) -> None:
+        self.assertEqual(
+            collector.parse_channels(NOISY_PLACE_RATIO_SAMPLE),
+            {"네이버지도": 40.98, "네이버검색": 30.12},
+        )
+        self.assertEqual(
+            collector.parse_keywords(NOISY_PLACE_RATIO_SAMPLE),
+            {"택이네조개전골": 74.51, "맛집": 6.86},
+        )
 
     def test_place_sales_card_label(self) -> None:
         metrics = collector.parse_summary_metrics("유입 수·매출액 703회")
@@ -160,6 +208,17 @@ class CollectorTests(unittest.TestCase):
             collector.parse_smartcall_text(SMARTCALL_SAMPLE)["smartcall_weekly"], 18
         )
         self.assertEqual(collector.parse_review_text(REVIEW_SAMPLE)["reviews_weekly"], 7)
+        self.assertEqual(
+            collector.parse_review_text(ACTUAL_REVIEW_SAMPLE)["reviews_weekly"], 7
+        )
+
+    def test_booking_cards_parse_when_dom_places_channel_heading_first(self) -> None:
+        row = collector.parse_reservation_text(ACTUAL_BOOKING_ORDER_SAMPLE)
+        self.assertEqual(row["reservation_inflows_weekly"], 203)
+        self.assertEqual(row["reservation_applications_weekly"], 5)
+        self.assertEqual(row["reservation_completions_weekly"], 3)
+        self.assertEqual(row["reservation_cancellations_weekly"], 1)
+        self.assertEqual(row["reservation_channels_json"], "{}")
 
     def test_merge_present_does_not_erase_valid_values(self) -> None:
         row = {"smartcall_weekly": 11, "channels_json": '{"네이버지도":10}'}

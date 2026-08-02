@@ -32,15 +32,15 @@ class ReportTests(unittest.TestCase):
     def test_place_adgroups_are_classified_by_official_type(self) -> None:
         self.assertEqual(
             report.classify_place_adgroup(
-                {"adgroupType": "PLACE", "name": "지역소상공인 이름"}
+                {"adgroupType": "PLACE", "name": "플레이스검색 이름"}
             ),
-            "플레이스 검색광고",
+            "지역소상공인 광고",
         )
         self.assertEqual(
             report.classify_place_adgroup(
-                {"adgroupType": "LOCAL_AD", "name": "플레이스검색 이름"}
+                {"adgroupType": "LOCAL_AD", "name": "지역소상공인 이름"}
             ),
-            "지역소상공인 광고",
+            "플레이스 검색광고",
         )
         self.assertIsNone(
             report.classify_place_adgroup({"adgroupType": "DOOH", "name": "플레이스검색"})
@@ -137,16 +137,16 @@ class ReportTests(unittest.TestCase):
             def adgroups(self, campaign_id):
                 self.assert_campaign_id = campaign_id
                 return [
-                    {"nccAdgroupId": "place-search", "adgroupType": "PLACE"},
-                    {"nccAdgroupId": "local-ad", "adgroupType": "LOCAL_AD"},
+                    {"nccAdgroupId": "local-smb", "adgroupType": "PLACE"},
+                    {"nccAdgroupId": "place-search", "adgroupType": "LOCAL_AD"},
                     {"nccAdgroupId": "outdoor", "adgroupType": "DOOH"},
                 ]
 
             def summary_stats(self, entity_ids, since, until):
                 self.calls.append((entity_ids, since, until))
                 stats = {
-                    "place-search": {"impCnt": 100, "clkCnt": 10, "salesAmt": 1000},
-                    "local-ad": {"impCnt": 300, "clkCnt": 3, "salesAmt": 5000},
+                    "local-smb": {"impCnt": 100, "clkCnt": 10, "salesAmt": 1000},
+                    "place-search": {"impCnt": 300, "clkCnt": 3, "salesAmt": 5000},
                     "power": {"impCnt": 200, "clkCnt": 20, "salesAmt": 3000},
                 }
                 return [{"id": entity_id, **stats[entity_id]} for entity_id in entity_ids]
@@ -155,12 +155,12 @@ class ReportTests(unittest.TestCase):
         daily, matched = report.collect_daily_metrics(client, date(2026, 7, 31), weeks=1)
 
         self.assertEqual(len(client.calls), 10)
-        self.assertEqual(client.calls[0][0], ["place-search", "local-ad"])
+        self.assertEqual(client.calls[0][0], ["local-smb", "place-search"])
         self.assertEqual(client.calls[1][0], ["power"])
         self.assertTrue(all("outdoor" not in call[0] for call in client.calls))
         self.assertEqual(len(matched), 2)
-        self.assertEqual(daily[date(2026, 7, 31)]["플레이스 검색광고"]["clicks"], 10)
-        self.assertEqual(daily[date(2026, 7, 31)]["지역소상공인 광고"]["spend"], 5000)
+        self.assertEqual(daily[date(2026, 7, 31)]["플레이스 검색광고"]["spend"], 5000)
+        self.assertEqual(daily[date(2026, 7, 31)]["지역소상공인 광고"]["clicks"], 10)
         self.assertEqual(daily[date(2026, 7, 31)]["파워링크"]["spend"], 3000)
 
 

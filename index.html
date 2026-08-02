@@ -32,7 +32,12 @@
     const appSource = await appResponse.text();
 
     const files = { "streamlit_app.py": appSource };
-    for (const path of ["data/campaign_weekly.json", "data/connections.json"]) {
+    for (const path of [
+      "data/campaign_weekly.json",
+      "data/connections.json",
+      "data/naver_place_daily.csv",
+      "data/naver_place_latest.json",
+    ]) {
       const response = await fetch(new URL(`./${path}`, window.location.href), { cache: "no-store" });
       if (response.ok) files[path] = await response.text();
     }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 from datetime import datetime, timedelta
 from html import escape
@@ -59,8 +60,18 @@ def load_json(path: str) -> dict:
         return {}
 
 
+def load_csv_rows(path: str) -> list[dict[str, str]]:
+    try:
+        with Path(path).open("r", encoding="utf-8-sig", newline="") as handle:
+            return list(csv.DictReader(handle))
+    except OSError:
+        return []
+
+
 DASHBOARD_PAYLOAD = load_json("data/campaign_weekly.json")
 CONNECTIONS = load_json("data/connections.json")
+PLACE_LATEST = load_json("data/naver_place_latest.json")
+PLACE_DAILY = load_csv_rows("data/naver_place_daily.csv")
 LIVE_DATA = DASHBOARD_PAYLOAD.get("source") == "naver-searchad-api"
 
 if DASHBOARD_PAYLOAD.get("weeks"):
@@ -487,6 +498,213 @@ def render_report(day_label: str, rows: list[dict]) -> None:
         )
 
 
+def as_int(value: object) -> int | None:
+    if value in (None, ""):
+        return None
+    try:
+        return int(str(value).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def json_counts(value: object) -> dict[str, int]:
+    try:
+        parsed = value if isinstance(value, dict) else json.loads(str(value or "{}"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    if not isinstance(parsed, dict):
+        return {}
+    return {
+        str(name): count
+        for name, raw in parsed.items()
+        if (count := as_int(raw)) is not None
+    }
+
+
+def count_label(value: object) -> str:
+    parsed = as_int(value)
+    return f"{parsed:,}회" if parsed is not None else "—"
+
+
+def delta_label(value: object) -> str | None:
+    parsed = as_int(value)
+    return f"오늘 +{parsed:,}회" if parsed is not None else None
+
+
+def counts_chart(values: dict[str, int], color: str, height: int = 330) -> go.Figure:
+    ranked = sorted(values.items(), key=lambda item: item[1], reverse=True)[:10]
+    figure = go.Figure(
+        go.Bar(
+            x=[value for _, value in ranked][::-1],
+            y=[name for name, _ in ranked][::-1],
+            orientation="h",
+            marker_color=color,
+            text=[f"{value:,}" for _, value in ranked][::-1],
+            textposition="outside",
+            hovertemplate="%{y}<br>%{x:,}회<extra></extra>",
+        )
+    )
+    figure.update_xaxes(showgrid=True, gridcolor="#edf0ee", rangemode="tozero")
+    figure.update_yaxes(showgrid=False)
+    return plot_layout(figure, height)
+
+
+def render_place_statistics() -> None:
+    st.markdown(
+        """
+        <div class="page-heading"><span>NAVER SMARTPLACE</span><h1>플레이스 통계.</h1>
+        <p>유입부터 예약 신청까지, 매일 쌓인 실제 운영 지표를 한 화면에서 봅니다.</p></div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not PLACE_LATEST:
+        st.warning(
+            "아직 네이버 플레이스 자동 수집 결과가 없습니다. 최초 로그인 세션과 통계 화면을 등록한 뒤 "
+            "GitHub Actions의 ‘Naver SmartPlace daily statistics’를 실행해주세요.",
+            icon="🔐",
+        )
+        st.markdown(
+            """
+            <div class="place-empty"><b>연결되면 자동으로 표시되는 항목</b>
+            <p>플레이스 유입 · 예약/주문 신청 · 스마트콜 통화 · 리뷰 등록 · 유입채널 · 유입키워드</p>
+            <p>예약 유입 · 신청 · 취소 · 완료 · 예약 유입채널 · 일별 유입트렌드</p></div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
+
+    generated_at = str(PLACE_LATEST.get("generated_at") or "")[:19].replace("T", " ")
+    st.caption(f"마지막 자동 수집: {generated_at or '확인 불가'} · 이번 주 월요일부터 현재까지 누적")
+    metric_columns = st.columns(4)
+    metric_specs = (
+        ("플레이스 유입수", "place_visits_weekly", "place_visits_daily_delta"),
+        ("예약·주문 신청수", "booking_orders_weekly", "booking_orders_daily_delta"),
+        ("스마트콜 통화수", "smartcall_weekly", "smartcall_daily_delta"),
+        ("리뷰 등록수", "reviews_weekly", "reviews_daily_delta"),
+    )
+    for column, (label, total_key, delta_key) in zip(metric_columns, metric_specs):
+        column.metric(
+            label,
+            count_label(PLACE_LATEST.get(total_key)),
+            delta=delta_label(PLACE_LATEST.get(delta_key)),
+            delta_color="normal",
+        )
+
+    history = PLACE_DAILY or [
+        {key: str(value) for key, value in PLACE_LATEST.items() if value is not None}
+    ]
+    period = st.selectbox("통계 기간", ["최근 7일", "최근 30일", "전체"], index=1)
+    limit = {"최근 7일": 7, "최근 30일": 30}.get(period)
+    visible = history[-limit:] if limit else history
+    dates = [str(row.get("collected_date", ""))[5:] for row in visible]
+
+    st.subheader("일별 유입트렌드")
+    trend = go.Figure()
+    for label, field, color in (
+        ("플레이스 유입", "place_visits_daily_delta", "#03C75A"),
+        ("예약·주문 신청", "booking_orders_daily_delta", "#7C5CFF"),
+        ("스마트콜", "smartcall_daily_delta", "#FF8F4D"),
+        ("리뷰 등록", "reviews_daily_delta", "#121413"),
+    ):
+        trend.add_trace(
+            go.Scatter(
+                x=dates,
+                y=[as_int(row.get(field)) for row in visible],
+                name=label,
+                mode="lines+markers",
+                line=dict(color=color, width=3),
+                hovertemplate=f"{label}<br>%{{x}} · %{{y:,}}회<extra></extra>",
+            )
+        )
+    trend.update_yaxes(rangemode="tozero", showgrid=True, gridcolor="#edf0ee")
+    st.plotly_chart(plot_layout(trend, 350), use_container_width=True, config={"displayModeBar": False})
+
+    channel_counts = json_counts(PLACE_LATEST.get("channels_json"))
+    keyword_counts = json_counts(PLACE_LATEST.get("keywords_json"))
+    channel_column, keyword_column = st.columns(2)
+    with channel_column:
+        st.subheader("유입채널")
+        if channel_counts:
+            st.plotly_chart(
+                counts_chart(channel_counts, "#03C75A"),
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
+        else:
+            st.info("수집 화면에서 유입채널을 확인하지 못했습니다.")
+    with keyword_column:
+        st.subheader("유입키워드")
+        if keyword_counts:
+            st.plotly_chart(
+                counts_chart(keyword_counts, "#C9FF3D"),
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
+        else:
+            st.info("수집 화면에서 유입키워드를 확인하지 못했습니다.")
+
+    st.markdown("<div class='section-rule'></div>", unsafe_allow_html=True)
+    st.subheader("예약통계")
+    reservation_fields = (
+        ("예약 유입", "reservation_inflows_weekly", "reservation_inflows_daily_delta"),
+        ("예약 신청", "reservation_applications_weekly", "reservation_applications_daily_delta"),
+        ("예약 취소", "reservation_cancellations_weekly", "reservation_cancellations_daily_delta"),
+        ("이용 완료", "reservation_completions_weekly", "reservation_completions_daily_delta"),
+    )
+    reservation_available = any(
+        as_int(PLACE_LATEST.get(total_key)) is not None
+        for _, total_key, _ in reservation_fields
+    )
+    if not reservation_available:
+        st.info(
+            "예약 통계 화면 연결 대기 중입니다. NAVER_PLACE_RESERVATION_STATS_URL Secret을 등록하면 "
+            "예약 유입·신청·취소·완료와 유입채널이 표시됩니다."
+        )
+        return
+
+    reservation_columns = st.columns(4)
+    for column, (label, total_key, delta_key) in zip(reservation_columns, reservation_fields):
+        column.metric(
+            label,
+            count_label(PLACE_LATEST.get(total_key)),
+            delta=delta_label(PLACE_LATEST.get(delta_key)),
+        )
+
+    reservation_trend = go.Figure()
+    for label, total_key, delta_key in reservation_fields[:3]:
+        reservation_trend.add_trace(
+            go.Scatter(
+                x=dates,
+                y=[as_int(row.get(delta_key)) for row in visible],
+                name=label,
+                mode="lines+markers",
+                line=dict(width=3),
+                hovertemplate=f"{label}<br>%{{x}} · %{{y:,}}회<extra></extra>",
+            )
+        )
+    reservation_trend.update_yaxes(rangemode="tozero", showgrid=True, gridcolor="#edf0ee")
+    reservation_left, reservation_right = st.columns([1.4, 1])
+    with reservation_left:
+        st.markdown("**예약 유입트렌드**")
+        st.plotly_chart(
+            plot_layout(reservation_trend, 330),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
+    with reservation_right:
+        st.markdown("**예약 유입채널**")
+        reservation_channels = json_counts(PLACE_LATEST.get("reservation_channels_json"))
+        if reservation_channels:
+            st.plotly_chart(
+                counts_chart(reservation_channels, "#7C5CFF", 330),
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
+        else:
+            st.info("예약 유입채널 데이터가 아직 없습니다.")
+
+
 def render_connections() -> None:
     naver = CONNECTIONS.get("naver", {})
     slack = CONNECTIONS.get("slack", {})
@@ -595,6 +813,9 @@ st.markdown(
     .connection-card i { width:38px; height:38px; display:grid; place-items:center; border-radius:10px; background:var(--ink); color:var(--lime); font-style:normal; font-weight:900; }
     .connection-card span { padding:.35rem .55rem; border:1px solid rgba(0,0,0,.18); border-radius:999px; font-size:.58rem; font-weight:800; }
     .connection-card h3 { margin:1.6rem 0 .6rem; }.connection-card p { color:var(--muted); font-size:.75rem; }.connection-card small { font-weight:800; }
+    .place-empty { margin-top:1rem; padding:1.5rem; border:1px solid var(--line); border-radius:18px; background:white; }
+    .place-empty b { font-size:1rem; }.place-empty p { margin:.65rem 0 0; color:var(--muted); font-size:.76rem; }
+    .section-rule { height:1px; margin:2.2rem 0; background:var(--line); }
     @media(max-width:760px){
       .block-container{padding:1rem 1rem 4rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
@@ -613,7 +834,7 @@ nav_col, filter_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
 with nav_col:
     page = st.radio(
         "메뉴",
-        ["대시보드", "캠페인 분석", "일일 분석", "데일리 리포트", "데이터 연동"],
+        ["대시보드", "캠페인 분석", "일일 분석", "플레이스 통계", "데일리 리포트", "데이터 연동"],
         horizontal=True,
         label_visibility="collapsed",
     )
@@ -623,8 +844,10 @@ selected_day = DAY_KEYS[0]
 with filter_col:
     if page in {"일일 분석", "데일리 리포트"}:
         selected_day = st.selectbox("분석 일자", DAY_KEYS, index=0)
-    elif page != "데이터 연동":
+    elif page not in {"플레이스 통계", "데이터 연동"}:
         selected_week = st.selectbox("분석 주간 (월—일)", WEEK_KEYS, index=0)
+    elif page == "플레이스 통계":
+        st.caption("매일 09:10 자동 수집")
     else:
         st.caption("매일 08:30 자동 연동")
 
@@ -644,6 +867,8 @@ elif page == "캠페인 분석":
     render_campaigns(selected_week, selected_rows)
 elif page == "일일 분석":
     render_daily(selected_day, selected_day_rows, previous_day_rows)
+elif page == "플레이스 통계":
+    render_place_statistics()
 elif page == "데일리 리포트":
     render_report(selected_day, selected_day_rows)
 else:

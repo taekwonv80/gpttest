@@ -2,6 +2,12 @@ name: Naver SmartPlace daily statistics
 
 on:
   workflow_dispatch:
+    inputs:
+      upload_diagnostics:
+        description: "Upload rendered SmartPlace screens and text for parser diagnostics"
+        type: boolean
+        required: false
+        default: false
   schedule:
     # 00:10 UTC = 09:10 KST. 전날 통계 반영 지연을 피하기 위해 오전에 실행합니다.
     - cron: "10 0 * * *"
@@ -51,8 +57,8 @@ jobs:
           done
       - name: Collect SmartPlace statistics
         run: python scripts/naver_place_collector.py
-      - name: Upload diagnostic screenshot on failure
-        if: failure()
+      - name: Upload diagnostics when requested or on failure
+        if: failure() || (github.event_name == 'workflow_dispatch' && inputs.upload_diagnostics)
         uses: actions/upload-artifact@v6
         with:
           name: naver-place-diagnostic

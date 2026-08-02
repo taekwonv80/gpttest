@@ -616,7 +616,9 @@ def render_place_statistics() -> None:
     period = st.selectbox("통계 기간", ["최근 7일", "최근 30일", "전체"], index=1)
     limit = {"최근 7일": 7, "최근 30일": 30}.get(period)
     visible = history[-limit:] if limit else history
-    dates = [str(row.get("collected_date", ""))[5:] for row in visible]
+    # Keep short date labels categorical. Plotly otherwise parses values such as
+    # "08-02" as 2008-02-01 in the browser (especially under Stlite/Pyodide).
+    dates = [str(row.get("collected_date", ""))[5:].replace("-", ".") for row in visible]
 
     st.subheader("일별 유입트렌드")
     trend = go.Figure()
@@ -637,6 +639,9 @@ def render_place_statistics() -> None:
             )
         )
     trend.update_yaxes(rangemode="tozero", showgrid=True, gridcolor="#edf0ee")
+    trend.update_xaxes(
+        type="category", categoryorder="array", categoryarray=dates, showgrid=False
+    )
     st.plotly_chart(plot_layout(trend, 350), use_container_width=True, config={"displayModeBar": False})
 
     channel_counts = json_counts(PLACE_LATEST.get("channels_json"))
@@ -703,6 +708,9 @@ def render_place_statistics() -> None:
             )
         )
     reservation_trend.update_yaxes(rangemode="tozero", showgrid=True, gridcolor="#edf0ee")
+    reservation_trend.update_xaxes(
+        type="category", categoryorder="array", categoryarray=dates, showgrid=False
+    )
     reservation_left, reservation_right = st.columns([1.4, 1])
     with reservation_left:
         st.markdown("**예약 유입트렌드**")

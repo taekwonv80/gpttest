@@ -147,6 +147,27 @@ def channel_value(
     return None
 
 
+def is_ranked_name(name: str) -> bool:
+    """Reject UI chrome and adjacent demographic values from ranked lists."""
+    if name in {
+        "도움말",
+        "지난 주",
+        "이번 주",
+        "유입",
+        "신청",
+        "이용완료",
+        "이용 완료",
+        "취소",
+        "확정",
+    }:
+        return False
+    if re.fullmatch(r"[\d,.]+%?", name):
+        return False
+    if re.fullmatch(r"(?:남자|여자|\d+대)", name):
+        return False
+    return True
+
+
 def parse_ranked_section(text: str, start: str, end: str) -> dict[str, MetricNumber]:
     match = re.search(rf"(?:{start})(?P<section>.*?)(?:{end}|$)", text, flags=re.DOTALL)
     section = match.group("section") if match else ""
@@ -156,13 +177,13 @@ def parse_ranked_section(text: str, start: str, end: str) -> dict[str, MetricNum
         section,
     ):
         cleaned = re.sub(r"\s+", " ", name).strip(" -")
-        if cleaned and cleaned not in {"지난 주", "이번 주"}:
+        if cleaned and is_ranked_name(cleaned):
             values[cleaned] = metric_number(raw_value)
     lines = [re.sub(r"\s+", " ", line).strip() for line in section.splitlines() if line.strip()]
     for name, raw_value in zip(lines, lines[1:]):
         value_match = re.fullmatch(r"([\d,.]+)\s*(?:%|회|건|명)?", raw_value)
         cleaned = re.sub(r"^\d+[.)]?\s+", "", name).strip(" -")
-        if value_match and cleaned and not re.fullmatch(r"[\d,]+", cleaned):
+        if value_match and cleaned and is_ranked_name(cleaned):
             values.setdefault(cleaned, metric_number(value_match.group(1)))
     return values
 
@@ -181,7 +202,7 @@ def parse_keywords(text: str) -> dict[str, MetricNumber]:
     return parse_ranked_section(
         text,
         r"유입\s*키워드",
-        r"한 주간 리뷰|스마트콜 통화|예약[·・/]주문|방문 후 지표",
+        r"성별|연령|유입\s*고객|한 주간 리뷰|스마트콜 통화|예약[·・/]주문|방문 후 지표",
     )
 
 
@@ -281,6 +302,11 @@ def parse_review_text(text: str) -> dict[str, int | str]:
         normalized,
         ("리뷰 등록 수", "리뷰 등록", "신규 리뷰", "등록된 리뷰", "새 리뷰", "리뷰 수", "리뷰수"),
     )
+    if value is None:
+        review_types = ("영수증", "POS", "Npay커넥트", "예약", "주문", "결제내역")
+        values = [number_after(normalized, (label,)) for label in review_types]
+        if any(item is not None for item in values):
+            value = sum(item or 0 for item in values)
     return {"reviews_weekly": value if value is not None else ""}
 
 
@@ -292,7 +318,6 @@ def parse_reservation_text(text: str) -> dict[str, Any]:
     instead of being misreported as zero.
     """
     normalized = re.sub(r"[ \t]+", " ", text)
-    summary = re.split(r"유입\s*(?:채널|경로)|유입\s*트렌드", normalized, maxsplit=1)[0]
     channels = parse_ranked_section(
         normalized,
         r"유입\s*(?:채널|경로)",
@@ -300,16 +325,16 @@ def parse_reservation_text(text: str) -> dict[str, Any]:
     )
     metrics = {
         "reservation_inflows_weekly": number_after(
-            summary, ("예약 페이지 유입", "예약 유입", "유입")
+            normalized, ("예약 페이지 유입", "예약 유입", "유입")
         ),
         "reservation_applications_weekly": number_after(
-            summary, ("예약 신청", "신청")
+            normalized, ("예약 신청", "신청")
         ),
         "reservation_cancellations_weekly": number_after(
-            summary, ("예약 취소", "취소")
+            normalized, ("예약 취소", "취소")
         ),
         "reservation_completions_weekly": number_after(
-            summary, ("이용 완료", "예약 완료", "완료")
+            normalized, ("이용 완료", "이용완료", "예약 완료", "완료")
         ),
     }
     return {

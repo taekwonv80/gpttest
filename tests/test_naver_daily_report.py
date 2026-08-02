@@ -21,17 +21,29 @@ class ReportTests(unittest.TestCase):
         )
 
     def test_campaign_classification(self) -> None:
-        self.assertEqual(
-            report.classify_campaign({"campaignTp": "PLACE", "name": "매장"}),
-            "플레이스 검색광고",
-        )
-        self.assertEqual(
-            report.classify_campaign({"campaignTp": 6, "name": "지역 홍보"}),
-            "지역소상공인 광고",
+        self.assertIsNone(
+            report.classify_campaign({"campaignTp": "PLACE", "name": "매장"})
         )
         self.assertEqual(
             report.classify_campaign({"campaignTp": "WEB_SITE", "name": "브랜드"}),
             "파워링크",
+        )
+
+    def test_place_adgroups_are_classified_by_official_type(self) -> None:
+        self.assertEqual(
+            report.classify_place_adgroup(
+                {"adgroupType": "PLACE", "name": "지역소상공인 이름"}
+            ),
+            "플레이스 검색광고",
+        )
+        self.assertEqual(
+            report.classify_place_adgroup(
+                {"adgroupType": "LOCAL_AD", "name": "플레이스검색 이름"}
+            ),
+            "지역소상공인 광고",
+        )
+        self.assertIsNone(
+            report.classify_place_adgroup({"adgroupType": "DOOH", "name": "플레이스검색"})
         )
 
     def test_dashboard_payload_has_five_selectable_weeks(self) -> None:
@@ -89,15 +101,32 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(captured["params"]["timeIncrement"], "allDays")
         self.assertEqual(rows[0]["clkCnt"], 5)
 
+    def test_adgroups_are_requested_for_the_place_campaign(self) -> None:
+        captured = {}
+
+        class RecordingClient(report.NaverSearchAdClient):
+            def get(self, uri, params=None):
+                captured["uri"] = uri
+                captured["params"] = params
+                return [{"nccAdgroupId": "group-test", "adgroupType": "LOCAL_AD"}]
+
+        groups = RecordingClient("1", "api", "secret").adgroups("campaign-test")
+
+        self.assertEqual(captured["uri"], "/ncc/adgroups")
+        self.assertEqual(captured["params"]["nccCampaignId"], "campaign-test")
+        self.assertEqual(captured["params"]["recordSize"], 1000)
+        self.assertEqual(groups[0]["adgroupType"], "LOCAL_AD")
+
     def test_query_string_repeats_bulk_ids(self) -> None:
         self.assertEqual(
             report.query_string({"ids": ["cmp-one", "cmp-two"], "timeIncrement": "allDays"}),
             "ids=cmp-one&ids=cmp-two&timeIncrement=allDays",
         )
 
-    def test_collect_daily_metrics_batches_campaigns_by_day(self) -> None:
+    def test_collect_daily_metrics_uses_place_adgroups_and_excludes_dooh(self) -> None:
         class BatchClient:
-            calls = []
+            def __init__(self):
+                self.calls = []
 
             def campaigns(self):
                 return [
@@ -105,20 +134,33 @@ class ReportTests(unittest.TestCase):
                     {"nccCampaignId": "power", "campaignTp": "WEB_SITE", "name": "검색"},
                 ]
 
-            def summary_stats(self, campaign_ids, since, until):
-                self.calls.append((campaign_ids, since, until))
+            def adgroups(self, campaign_id):
+                self.assert_campaign_id = campaign_id
                 return [
-                    {"id": "place", "impCnt": 100, "clkCnt": 10, "salesAmt": 1000},
-                    {"id": "power", "impCnt": 200, "clkCnt": 20, "salesAmt": 3000},
+                    {"nccAdgroupId": "place-search", "adgroupType": "PLACE"},
+                    {"nccAdgroupId": "local-ad", "adgroupType": "LOCAL_AD"},
+                    {"nccAdgroupId": "outdoor", "adgroupType": "DOOH"},
                 ]
+
+            def summary_stats(self, entity_ids, since, until):
+                self.calls.append((entity_ids, since, until))
+                stats = {
+                    "place-search": {"impCnt": 100, "clkCnt": 10, "salesAmt": 1000},
+                    "local-ad": {"impCnt": 300, "clkCnt": 3, "salesAmt": 5000},
+                    "power": {"impCnt": 200, "clkCnt": 20, "salesAmt": 3000},
+                }
+                return [{"id": entity_id, **stats[entity_id]} for entity_id in entity_ids]
 
         client = BatchClient()
         daily, matched = report.collect_daily_metrics(client, date(2026, 7, 31), weeks=1)
 
-        self.assertEqual(len(client.calls), 5)
-        self.assertEqual(client.calls[0][0], ["place", "power"])
+        self.assertEqual(len(client.calls), 10)
+        self.assertEqual(client.calls[0][0], ["place-search", "local-ad"])
+        self.assertEqual(client.calls[1][0], ["power"])
+        self.assertTrue(all("outdoor" not in call[0] for call in client.calls))
         self.assertEqual(len(matched), 2)
         self.assertEqual(daily[date(2026, 7, 31)]["플레이스 검색광고"]["clicks"], 10)
+        self.assertEqual(daily[date(2026, 7, 31)]["지역소상공인 광고"]["spend"], 5000)
         self.assertEqual(daily[date(2026, 7, 31)]["파워링크"]["spend"], 3000)
 
 

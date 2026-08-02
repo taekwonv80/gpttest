@@ -105,13 +105,22 @@ class NaverSearchAdClient:
             raise IntegrationError("네이버 캠페인 응답 형식이 예상과 다릅니다.")
         return [item for item in result if isinstance(item, dict)]
 
+    def adgroups(self, campaign_id: str) -> list[dict[str, Any]]:
+        result = self.get(
+            "/ncc/adgroups",
+            {"nccCampaignId": campaign_id, "recordSize": 1000},
+        )
+        if not isinstance(result, list):
+            raise IntegrationError("네이버 광고그룹 응답 형식이 예상과 다릅니다.")
+        return [item for item in result if isinstance(item, dict)]
+
     def summary_stats(
-        self, campaign_ids: list[str], since: date, until: date
+        self, entity_ids: list[str], since: date, until: date
     ) -> list[dict[str, Any]]:
         result = self.get(
             "/stats",
             {
-                "ids": campaign_ids,
+                "ids": entity_ids,
                 "fields": json.dumps(FIELDS, separators=(",", ":")),
                 "timeRange": json.dumps(
                     {"since": since.isoformat(), "until": until.isoformat()},
@@ -164,21 +173,51 @@ def classify_campaign(campaign: dict[str, Any]) -> str | None:
     ).upper()
     name = str(campaign.get("name") or campaign.get("campaignName") or "")
 
-    if "PLACE" in campaign_type or "플레이스" in name:
-        return "플레이스 검색광고"
-    if (
-        campaign_type == "6"
-        or "LOCAL" in campaign_type
-        or "SMB" in campaign_type
-        or "소상공인" in name
-    ):
-        return "지역소상공인 광고"
-    if (
-        campaign_type in {"1", "WEB_SITE", "WEBSITE"}
-        or "파워링크" in name
-        or "사이트검색" in name
-    ):
+    if campaign_type in {"1", "WEB_SITE", "WEBSITE"}:
         return "파워링크"
+    if not campaign_type and ("파워링크" in name or "사이트검색" in name):
+        return "파워링크"
+    return None
+
+
+def is_place_campaign(campaign: dict[str, Any]) -> bool:
+    campaign_type = str(
+        campaign.get("campaignTp")
+        or campaign.get("campaignType")
+        or campaign.get("type")
+        or ""
+    ).upper()
+    name = str(campaign.get("name") or campaign.get("campaignName") or "")
+    if campaign_type:
+        return "PLACE" in campaign_type
+    return "플레이스" in name
+
+
+def classify_place_adgroup(adgroup: dict[str, Any]) -> str | None:
+    """Classify a Place campaign's adgroup using Naver's official type value."""
+    adgroup_type = str(
+        adgroup.get("adgroupType")
+        or adgroup.get("adGroupType")
+        or adgroup.get("type")
+        or ""
+    ).upper()
+    name = str(adgroup.get("name") or adgroup.get("adgroupName") or "")
+
+    if adgroup_type:
+        if adgroup_type in {"DOOH", "DIGITAL_OUTDOOR"}:
+            return None
+        if adgroup_type in {"LOCAL_AD", "LOCAL", "SMB"}:
+            return "지역소상공인 광고"
+        if adgroup_type in {"PLACE", "PLACE_SEARCH"}:
+            return "플레이스 검색광고"
+        return None
+
+    if "옥외" in name:
+        return None
+    if "소상공인" in name:
+        return "지역소상공인 광고"
+    if "플레이스검색" in name:
+        return "플레이스 검색광고"
     return None
 
 
@@ -232,14 +271,32 @@ def collect_daily_metrics(
 
     campaigns = client.campaigns()
     matched: list[dict[str, Any]] = []
-    category_by_id: dict[str, str] = {}
+    adgroup_category_by_id: dict[str, str] = {}
+    campaign_category_by_id: dict[str, str] = {}
+    excluded_place_adgroups = 0
     for campaign in campaigns:
-        category = classify_campaign(campaign)
         campaign_id = str(campaign.get("nccCampaignId") or campaign.get("id") or "")
-        if not category or not campaign_id:
+        if not campaign_id:
             continue
-        matched.append(campaign)
-        category_by_id[campaign_id] = category
+
+        if is_place_campaign(campaign):
+            place_campaign_matched = False
+            for adgroup in client.adgroups(campaign_id):
+                adgroup_id = str(adgroup.get("nccAdgroupId") or adgroup.get("id") or "")
+                category = classify_place_adgroup(adgroup)
+                if not category or not adgroup_id:
+                    excluded_place_adgroups += 1
+                    continue
+                adgroup_category_by_id[adgroup_id] = category
+                place_campaign_matched = True
+            if place_campaign_matched:
+                matched.append(campaign)
+            continue
+
+        category = classify_campaign(campaign)
+        if category:
+            matched.append(campaign)
+            campaign_category_by_id[campaign_id] = category
 
     if not matched:
         available = ", ".join(
@@ -255,29 +312,43 @@ def collect_daily_metrics(
             f"계정의 캠페인 유형: {available or '없음'}"
         )
 
-    campaign_ids = list(category_by_id)
+    target_maps = (adgroup_category_by_id, campaign_category_by_id)
     batches = [
-        campaign_ids[start : start + STATS_BATCH_SIZE]
-        for start in range(0, len(campaign_ids), STATS_BATCH_SIZE)
+        (category_by_id, entity_ids[start : start + STATS_BATCH_SIZE])
+        for category_by_id in target_maps
+        for entity_ids in [list(category_by_id)]
+        for start in range(0, len(entity_ids), STATS_BATCH_SIZE)
     ]
+    target_count = sum(len(category_by_id) for category_by_id in target_maps)
     for target_day in sorted(daily):
-        for batch in batches:
+        for category_by_id, batch in batches:
             try:
                 rows = client.summary_stats(batch, target_day, target_day)
             except IntegrationError as exc:
                 raise IntegrationError(
-                    f"{target_day.isoformat()} 캠페인 통계 묶음 조회 실패: {exc}"
+                    f"{target_day.isoformat()} 광고 통계 묶음 조회 실패: {exc}"
                 ) from None
             for row in rows:
-                campaign_id = str(row.get("id") or row.get("nccCampaignId") or "")
-                category = category_by_id.get(campaign_id)
+                entity_id = str(
+                    row.get("id")
+                    or row.get("nccAdgroupId")
+                    or row.get("nccCampaignId")
+                    or ""
+                )
+                category = category_by_id.get(entity_id)
                 if category:
                     add_row(daily[target_day][category], row)
             time.sleep(0.2)
         print(
             f"네이버 통계 수집: {target_day.isoformat()} "
-            f"({len(campaign_ids)}개 캠페인, {len(batches)}개 묶음)"
+            f"({target_count}개 통계 대상, {len(batches)}개 묶음)"
         )
+    print(
+        "플레이스 광고그룹 분류: "
+        f"플레이스검색 {sum(value == '플레이스 검색광고' for value in adgroup_category_by_id.values())}개, "
+        f"지역소상공인 {sum(value == '지역소상공인 광고' for value in adgroup_category_by_id.values())}개, "
+        f"제외 {excluded_place_adgroups}개"
+    )
     return daily, matched
 
 

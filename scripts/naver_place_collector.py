@@ -454,10 +454,11 @@ def upsert_row(
         target["week_start"] = daily.get("week_start", target.get("week_start", ""))
         for _, delta_key in DAILY_METRIC_PAIRS:
             value = daily.get(delta_key, "")
-            if value not in (None, ""):
+            if daily_date == row["collected_date"]:
                 target[delta_key] = value
-                if daily_date == row["collected_date"]:
-                    row[delta_key] = value
+                row[delta_key] = value
+            elif value not in (None, ""):
+                target[delta_key] = value
     rows = sorted(by_date.values(), key=lambda item: item["collected_date"])
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:

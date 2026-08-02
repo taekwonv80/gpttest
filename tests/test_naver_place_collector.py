@@ -144,6 +144,14 @@ down
 1회 입니다.
 """
 
+REPORT_NARRATIVE_SAMPLE = """
+한 주간 플레이스 유입은 703회,
+일 평균 117회 입니다.
+한 주간 예약·주문 신청은 5회,
+한 주간 스마트콜 통화는 11회,
+한 주간 리뷰는 7회,
+"""
+
 DAILY_BOOKING_SAMPLE = """
 예약 지표
 유입 28회
@@ -207,6 +215,13 @@ class CollectorTests(unittest.TestCase):
     def test_daily_review_uses_narrative_after_trend_percentage(self) -> None:
         metrics = collector.parse_summary_metrics(DAILY_REPORT_WITH_TREND_SAMPLE)
         self.assertEqual(metrics["reviews_weekly"], 1)
+
+    def test_report_narrative_accepts_comma_after_count(self) -> None:
+        metrics = collector.parse_summary_metrics(REPORT_NARRATIVE_SAMPLE)
+        self.assertEqual(metrics["place_visits_weekly"], 703)
+        self.assertEqual(metrics["booking_orders_weekly"], 5)
+        self.assertEqual(metrics["smartcall_weekly"], 11)
+        self.assertEqual(metrics["reviews_weekly"], 7)
 
     def test_report_can_supply_place_visits_when_place_tab_has_no_card(self) -> None:
         place_only = "유입채널\n네이버 검색\n197\n유입키워드\n"

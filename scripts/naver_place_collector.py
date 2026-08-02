@@ -66,6 +66,14 @@ class CollectionError(RuntimeError):
     pass
 
 
+MetricNumber = int | float
+
+
+def metric_number(raw_value: str) -> MetricNumber:
+    normalized = raw_value.replace(",", "")
+    return float(normalized) if "." in normalized else int(normalized)
+
+
 def is_smartplace_url(url: str) -> bool:
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
@@ -98,12 +106,16 @@ def number_after(text: str, labels: tuple[str, ...]) -> int | None:
     return None
 
 
-def channel_number(text: str, label: str) -> int | None:
-    match = re.search(rf"{re.escape(label)}\s*([\d,]+)\s*회", text)
-    return int(match.group(1).replace(",", "")) if match else None
+def channel_number(text: str, label: str) -> MetricNumber | None:
+    match = re.search(
+        rf"{re.escape(label)}\s*([\d,.]+)\s*(?:%|회|건|명)?(?=\s|$)", text
+    )
+    return metric_number(match.group(1)) if match else None
 
 
-def channel_value(channels: dict[str, int], text: str, *labels: str) -> int | None:
+def channel_value(
+    channels: dict[str, MetricNumber], text: str, *labels: str
+) -> MetricNumber | None:
     for label in labels:
         if label in channels:
             return channels[label]
@@ -114,27 +126,27 @@ def channel_value(channels: dict[str, int], text: str, *labels: str) -> int | No
     return None
 
 
-def parse_ranked_section(text: str, start: str, end: str) -> dict[str, int]:
+def parse_ranked_section(text: str, start: str, end: str) -> dict[str, MetricNumber]:
     match = re.search(rf"(?:{start})(?P<section>.*?)(?:{end}|$)", text, flags=re.DOTALL)
     section = match.group("section") if match else ""
-    values: dict[str, int] = {}
+    values: dict[str, MetricNumber] = {}
     for name, raw_value in re.findall(
-        r"(?:^|\n)\s*(?:\d+[.)]?\s+)?([^\n\d][^\n]*?)\s+([\d,]+)\s*(?:회|건|명)?\s*(?=\n|$)",
+        r"(?:^|\n)\s*(?:\d+[.)]?\s+)?([^\n\d][^\n]*?)\s+([\d,.]+)\s*(?:%|회|건|명)?\s*(?=\n|$)",
         section,
     ):
         cleaned = re.sub(r"\s+", " ", name).strip(" -")
         if cleaned and cleaned not in {"지난 주", "이번 주"}:
-            values[cleaned] = int(raw_value.replace(",", ""))
+            values[cleaned] = metric_number(raw_value)
     lines = [re.sub(r"\s+", " ", line).strip() for line in section.splitlines() if line.strip()]
     for name, raw_value in zip(lines, lines[1:]):
-        value_match = re.fullmatch(r"([\d,]+)\s*(?:회|건|명)?", raw_value)
+        value_match = re.fullmatch(r"([\d,.]+)\s*(?:%|회|건|명)?", raw_value)
         cleaned = re.sub(r"^\d+[.)]?\s+", "", name).strip(" -")
         if value_match and cleaned and not re.fullmatch(r"[\d,]+", cleaned):
-            values.setdefault(cleaned, int(value_match.group(1).replace(",", "")))
+            values.setdefault(cleaned, metric_number(value_match.group(1)))
     return values
 
 
-def parse_channels(text: str) -> dict[str, int]:
+def parse_channels(text: str) -> dict[str, MetricNumber]:
     """Read every ranked channel shown between the channel and keyword tabs."""
     return parse_ranked_section(
         text,
@@ -143,8 +155,8 @@ def parse_channels(text: str) -> dict[str, int]:
     )
 
 
-def parse_keywords(text: str) -> dict[str, int]:
-    """Read ranked Place inflow keywords and their displayed inflow counts."""
+def parse_keywords(text: str) -> dict[str, MetricNumber]:
+    """Read ranked Place inflow keywords and their displayed ratios."""
     return parse_ranked_section(
         text,
         r"유입\s*키워드",
@@ -165,6 +177,8 @@ def parse_summary_metrics(text: str) -> dict[str, int | str]:
                 "플레이스 유입 수",
                 "플레이스 유입수",
                 "플레이스 유입",
+                "유입 수·매출액",
+                "유입수·매출액",
                 "유입 수",
                 "유입수",
             ),

@@ -69,8 +69,30 @@ ACTUAL_LABEL_SAMPLE = """
 누적 통화 연결 11회
 """
 
+PLACE_RATIO_SAMPLE = """
+유입 채널
+1 네이버지도 40.98%
+2 네이버검색 30.12%
+3 인스타그램 11.77%
+유입 키워드
+1 장현동 맛집 52.25%
+2 시흥 조개전골 25.50%
+한 주간 리뷰
+"""
+
 
 class CollectorTests(unittest.TestCase):
+    def test_place_channel_and_keyword_ratios(self) -> None:
+        channels = collector.parse_channels(PLACE_RATIO_SAMPLE)
+        keywords = collector.parse_keywords(PLACE_RATIO_SAMPLE)
+        self.assertEqual(channels["네이버지도"], 40.98)
+        self.assertEqual(channels["네이버검색"], 30.12)
+        self.assertEqual(keywords["장현동 맛집"], 52.25)
+
+    def test_place_sales_card_label(self) -> None:
+        metrics = collector.parse_summary_metrics("유입 수·매출액 703회")
+        self.assertEqual(metrics["place_visits_weekly"], 703)
+
     def test_actual_smartplace_metric_labels(self) -> None:
         metrics = collector.parse_summary_metrics(ACTUAL_LABEL_SAMPLE)
         self.assertEqual(metrics["place_visits_weekly"], 703)

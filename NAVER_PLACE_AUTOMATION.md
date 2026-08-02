@@ -13,13 +13,24 @@ gh auth login
 python scripts/setup_naver_place_session.py
 ```
 
-열린 브라우저에서 네이버 로그인 → 대상 업체 → **통계** 화면으로 이동한 후 터미널에서 Enter를 누릅니다. 이어서 **예약/주문 → 예약 통계** 화면으로 이동해 다시 Enter를 누릅니다. 예약 서비스를 사용하지 않으면 `skip`을 입력할 수 있습니다.
+열린 브라우저에서 네이버 로그인 → 대상 업체 → **통계** 화면으로 이동한 후 터미널 안내에 맞춰 다음 5개 탭을 차례로 엽니다.
+
+1. 리포트
+2. 플레이스
+3. 스마트콜
+4. 예약주문
+5. 리뷰
+
+각 탭을 연 뒤 터미널에서 Enter를 누르면 해당 주소가 등록됩니다.
 
 다음 Repository Secret이 자동 등록됩니다.
 
 - `NAVER_PLACE_STORAGE_STATE_B64`: 로그인 쿠키가 포함된 브라우저 세션
-- `NAVER_PLACE_STATS_URL`: 대상 업체의 통계 화면 주소
-- `NAVER_PLACE_RESERVATION_STATS_URL`: 예약 유입·신청·취소·유입채널 통계 화면 주소
+- `NAVER_PLACE_REPORT_URL`: 전체 핵심 지표 리포트 화면 주소
+- `NAVER_PLACE_STATS_URL`: 플레이스 유입·채널·키워드 화면 주소
+- `NAVER_PLACE_SMARTCALL_STATS_URL`: 스마트콜 통계 화면 주소
+- `NAVER_PLACE_RESERVATION_STATS_URL`: 예약주문 유입·신청·취소·유입채널 화면 주소
+- `NAVER_PLACE_REVIEW_STATS_URL`: 리뷰 통계 화면 주소
 
 비밀번호는 저장하지 않습니다. 세션 데이터에는 로그인 쿠키가 포함되며 base64는 암호화가 아니라 전송용 인코딩입니다. 인코딩된 값은 GitHub Actions의 암호화된 Secret으로만 보관되고 로컬 임시 파일은 등록 직후 삭제됩니다. 이 세션은 계정 접근 권한을 가지므로 저장소 관리자 외에는 Secrets 접근 권한을 주지 마세요.
 
@@ -27,7 +38,7 @@ python scripts/setup_naver_place_session.py
 
 GitHub 저장소의 **Actions → Naver SmartPlace daily statistics → Run workflow**에서 최초 실행을 시험합니다.
 
-- `data/naver_place_daily.csv`: 날짜별 누적 수치 및 전일 대비 증가분. 플레이스 유입·예약/주문 신청·스마트콜·리뷰, 유입채널·유입키워드, 예약 유입·신청·취소·완료·유입채널이 누적됩니다.
+- `data/naver_place_daily.csv`: 5개 통계 탭에서 수집한 날짜별 누적 수치 및 전일 대비 증가분. 플레이스 유입·예약/주문 신청·스마트콜·리뷰, 유입채널·유입키워드, 예약 유입·신청·취소·완료·유입채널이 누적됩니다.
 - `data/naver_place_latest.json`: 마지막 수집 결과
 
 로그인 만료나 화면 변경으로 실패하면 실행 페이지의 `naver-place-diagnostic` 파일에서 3일 동안 진단 캡처를 받을 수 있습니다. 로그인 세션이 만료되면 위 설정 스크립트를 다시 한 번 실행합니다.

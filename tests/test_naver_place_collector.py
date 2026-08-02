@@ -50,6 +50,18 @@ RESERVATION_SAMPLE = """
 유입트렌드
 """
 
+SMARTCALL_SAMPLE = """
+스마트콜 통계
+통화 연결 18회
+부재중 전화 3회
+"""
+
+REVIEW_SAMPLE = """
+리뷰 통계
+신규 리뷰 7건
+방문자 리뷰
+"""
+
 
 class CollectorTests(unittest.TestCase):
     def test_parse_screenshot_text(self) -> None:
@@ -75,6 +87,18 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(row["reservation_cancellations_weekly"], 2)
         self.assertEqual(row["reservation_completions_weekly"], 9)
         self.assertIn('"네이버 검색":51', row["reservation_channels_json"])
+
+    def test_parse_smartcall_and_review_tabs(self) -> None:
+        self.assertEqual(
+            collector.parse_smartcall_text(SMARTCALL_SAMPLE)["smartcall_weekly"], 18
+        )
+        self.assertEqual(collector.parse_review_text(REVIEW_SAMPLE)["reviews_weekly"], 7)
+
+    def test_merge_present_does_not_erase_valid_values(self) -> None:
+        row = {"smartcall_weekly": 11, "channels_json": '{"네이버지도":10}'}
+        collector.merge_present(row, {"smartcall_weekly": "", "channels_json": "{}"})
+        self.assertEqual(row["smartcall_weekly"], 11)
+        self.assertEqual(row["channels_json"], '{"네이버지도":10}')
 
     def test_daily_delta_uses_previous_cumulative_total(self) -> None:
         row = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))

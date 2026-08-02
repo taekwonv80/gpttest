@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T15:43:41+09:00",
+  "generated_at": "2026-08-02T16:18:56+09:00",
   "collected_date": "2026-08-02",
   "week_start": "2026-07-27",
   "place_visits_weekly": 703,
@@ -17,7 +17,7 @@
   "website_weekly": 5.5,
   "channels_json": "{\"네이버지도\":40.98,\"네이버검색\":30.12,\"인스타그램\":11.77,\"네이버 플레이스광고\":11.62,\"웹사이트\":5.5}",
   "keywords_json": "{\"택이네조개전골\":74.51,\"맛집\":6.86,\"택이네조개전골장현\":6.86,\"시흥장현맛집\":5.88,\"장현동맛집\":5.88}",
-  "reservation_inflows_weekly": 203,
+  "reservation_inflows_weekly": 206,
   "reservation_applications_weekly": 5,
   "reservation_cancellations_weekly": 1,
   "reservation_completions_weekly": 3,
@@ -25,7 +25,7 @@
   "booking_orders_daily_delta": 5,
   "smartcall_daily_delta": 12,
   "reviews_daily_delta": 7,
-  "reservation_inflows_daily_delta": 203,
+  "reservation_inflows_daily_delta": 206,
   "reservation_applications_daily_delta": 5,
   "reservation_cancellations_daily_delta": 1,
   "reservation_completions_daily_delta": 3

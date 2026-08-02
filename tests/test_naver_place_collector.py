@@ -100,6 +100,48 @@ ACTUAL_BOOKING_ORDER_SAMPLE = """
 유입 트렌드
 """
 
+ACTUAL_BOOKING_CHANNEL_SAMPLE = """
+예약 지표
+유입 206회
+신청 5회
+이용완료 3회
+취소 1회
+유입 채널
+도움말
+서비스키워드
+네이버 플레이스
+64.56%
+네이버 지도
+28.16%
+웹사이트
+2.91%
+네이버
+2.91%
+네이버 예약
+0.49%
+플레이스광고
+0.49%
+네이버 지역소상공인광고
+0.49%
+고객분석
+"""
+
+DAILY_REPORT_SAMPLE = """
+리포트
+플레이스 유입 95회
+예약·주문 신청 2회
+스마트콜 통화 3회
+리뷰 등록 1회
+"""
+
+DAILY_BOOKING_SAMPLE = """
+예약 지표
+유입 28회
+신청 2회
+이용완료 1회
+취소 0회
+"""
+
 NOISY_PLACE_RATIO_SAMPLE = """
 유입 채널
 도움말 1
@@ -171,6 +213,18 @@ class CollectorTests(unittest.TestCase):
         self.assertIn("endDate=2026-08-02", moved)
         self.assertIn("menu=reports", moved)
 
+    def test_statistics_url_moves_to_single_day(self) -> None:
+        url = (
+            "https://new.smartplace.naver.com/bizes/place/1/statistics?"
+            "menu=reports&startDate=2026-07-27&endDate=2026-08-02&term=weekly"
+        )
+        moved = collector.statistics_range_url(
+            url, date(2026, 7, 29), date(2026, 7, 29), "daily"
+        )
+        self.assertIn("startDate=2026-07-29", moved)
+        self.assertIn("endDate=2026-07-29", moved)
+        self.assertIn("term=daily", moved)
+
     def test_smartcall_subdomain_is_allowed(self) -> None:
         self.assertTrue(
             collector.is_smartplace_url(
@@ -220,11 +274,34 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(row["reservation_cancellations_weekly"], 1)
         self.assertEqual(row["reservation_channels_json"], "{}")
 
+    def test_booking_channel_ratios_parse_from_channel_section(self) -> None:
+        row = collector.parse_reservation_text(ACTUAL_BOOKING_CHANNEL_SAMPLE)
+        self.assertIn('"네이버 플레이스":64.56', row["reservation_channels_json"])
+        self.assertIn(
+            '"네이버 지역소상공인광고":0.49', row["reservation_channels_json"]
+        )
+
     def test_merge_present_does_not_erase_valid_values(self) -> None:
         row = {"smartcall_weekly": 11, "channels_json": '{"네이버지도":10}'}
         collector.merge_present(row, {"smartcall_weekly": "", "channels_json": "{}"})
         self.assertEqual(row["smartcall_weekly"], 11)
         self.assertEqual(row["channels_json"], '{"네이버지도":10}')
+
+    def test_report_metric_stays_authoritative_over_detail_tab(self) -> None:
+        row = {"smartcall_weekly": 11}
+        collector.merge_missing(row, {"smartcall_weekly": 12})
+        self.assertEqual(row["smartcall_weekly"], 11)
+
+    def test_builds_exact_daily_history_row(self) -> None:
+        row = collector.build_daily_history_row(
+            DAILY_REPORT_SAMPLE, DAILY_BOOKING_SAMPLE, date(2026, 7, 29)
+        )
+        self.assertEqual(row["collected_date"], "2026-07-29")
+        self.assertEqual(row["place_visits_daily_delta"], 95)
+        self.assertEqual(row["booking_orders_daily_delta"], 2)
+        self.assertEqual(row["smartcall_daily_delta"], 3)
+        self.assertEqual(row["reviews_daily_delta"], 1)
+        self.assertEqual(row["reservation_inflows_daily_delta"], 28)
 
     def test_daily_delta_uses_previous_cumulative_total(self) -> None:
         row = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))
@@ -256,6 +333,19 @@ class CollectorTests(unittest.TestCase):
             rows = collector.load_rows(path)
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["place_visits_weekly"], "710")
+
+    def test_upsert_backfills_daily_rows_without_faking_weekly_totals(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "daily.csv"
+            weekly = collector.parse_rendered_text(SAMPLE, date(2026, 8, 1))
+            daily = collector.build_daily_history_row(
+                DAILY_REPORT_SAMPLE, DAILY_BOOKING_SAMPLE, date(2026, 7, 29)
+            )
+            collector.upsert_row(weekly, path, [daily])
+            rows = collector.load_rows(path)
+            historical = next(row for row in rows if row["collected_date"] == "2026-07-29")
+            self.assertEqual(historical["place_visits_daily_delta"], "95")
+            self.assertEqual(historical["place_visits_weekly"], "")
 
 
 if __name__ == "__main__":

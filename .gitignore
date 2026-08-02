@@ -10,3 +10,4 @@ __pycache__/
 .naver-place-session.json
 playwright-report/
 test-results/
+.tmp-place-automation/

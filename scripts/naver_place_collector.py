@@ -122,15 +122,26 @@ def parse_keywords(text: str) -> dict[str, int]:
     )
 
 
+def parse_summary_metrics(text: str) -> dict[str, int | str]:
+    normalized = re.sub(r"[ \t]+", " ", text)
+    metrics = {
+        "place_visits_weekly": number_after(normalized, ("플레이스 유입",)),
+        "booking_orders_weekly": number_after(
+            normalized,
+            ("예약·주문 신청", "예약・주문 신청", "예약/주문 신청", "예약 신청"),
+        ),
+        "smartcall_weekly": number_after(normalized, ("스마트콜 통화", "통화 연결")),
+        "reviews_weekly": number_after(normalized, ("리뷰 등록", "신규 리뷰")),
+    }
+    return {key: value if value is not None else "" for key, value in metrics.items()}
+
+
 def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
     normalized = re.sub(r"[ \t]+", " ", text)
     channels = parse_channels(normalized)
     keywords = parse_keywords(normalized)
     metrics = {
-        "place_visits_weekly": number_after(normalized, ("플레이스 유입",)),
-        "booking_orders_weekly": number_after(normalized, ("예약·주문 신청", "예약・주문 신청", "예약/주문 신청")),
-        "smartcall_weekly": number_after(normalized, ("스마트콜 통화",)),
-        "reviews_weekly": number_after(normalized, ("리뷰 등록", "리뷰")),
+        **parse_summary_metrics(normalized),
         "naver_map_weekly": channel_value(channels, normalized, "네이버지도", "네이버 지도"),
         "naver_search_weekly": channel_value(channels, normalized, "네이버검색", "네이버 검색"),
         "naver_blog_weekly": channel_value(channels, normalized, "네이버블로그", "네이버 블로그"),
@@ -149,7 +160,7 @@ def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
         "website_weekly": channel_value(channels, normalized, "웹사이트"),
     }
     required = ("place_visits_weekly",)
-    missing = [name for name in required if metrics[name] is None]
+    missing = [name for name in required if metrics[name] in (None, "")]
     if missing:
         raise CollectionError("필수 통계 항목을 찾지 못했습니다: " + ", ".join(missing))
 
@@ -162,6 +173,24 @@ def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
         "channels_json": json.dumps(channels, ensure_ascii=False, separators=(",", ":")),
         "keywords_json": json.dumps(keywords, ensure_ascii=False, separators=(",", ":")),
     }
+
+
+def parse_smartcall_text(text: str) -> dict[str, int | str]:
+    normalized = re.sub(r"[ \t]+", " ", text)
+    value = number_after(
+        normalized,
+        ("스마트콜 통화", "통화 연결", "연결된 통화", "총 통화"),
+    )
+    return {"smartcall_weekly": value if value is not None else ""}
+
+
+def parse_review_text(text: str) -> dict[str, int | str]:
+    normalized = re.sub(r"[ \t]+", " ", text)
+    value = number_after(
+        normalized,
+        ("리뷰 등록", "신규 리뷰", "등록된 리뷰", "새 리뷰"),
+    )
+    return {"reviews_weekly": value if value is not None else ""}
 
 
 def parse_reservation_text(text: str) -> dict[str, Any]:
@@ -198,6 +227,13 @@ def parse_reservation_text(text: str) -> dict[str, Any]:
             channels, ensure_ascii=False, separators=(",", ":")
         ),
     }
+
+
+def merge_present(row: dict[str, Any], values: dict[str, Any]) -> None:
+    """Merge a tab result without erasing valid values with missing fields."""
+    for key, value in values.items():
+        if value not in (None, "", "{}"):
+            row[key] = value
 
 
 def load_rows(path: Path = DATA_PATH) -> list[dict[str, str]]:
@@ -253,7 +289,7 @@ def session_from_env() -> None:
         raise CollectionError("로그인 세션 Secret 형식이 올바르지 않습니다.") from exc
 
 
-def collect_page_text(page: "Page", url: str, markers: tuple[str, ...]) -> str:
+def collect_page_text(page: "Page", url: str, markers: tuple[str, ...], tab_name: str) -> str:
     page.goto(url, wait_until="domcontentloaded", timeout=90_000)
     page.wait_for_timeout(8_000)
     if "nid.naver.com" in page.url or "login" in page.url.lower():
@@ -261,7 +297,7 @@ def collect_page_text(page: "Page", url: str, markers: tuple[str, ...]) -> str:
     text = page.locator("body").inner_text(timeout=30_000)
     if not any(marker in text for marker in markers):
         raise CollectionError(
-            "통계 화면이 열리지 않았습니다. 저장된 화면 URL 또는 업체 선택 상태를 확인해주세요."
+            f"{tab_name} 통계 화면이 열리지 않았습니다. 저장된 URL 또는 업체 선택 상태를 확인해주세요."
         )
     return text
 
@@ -269,12 +305,23 @@ def collect_page_text(page: "Page", url: str, markers: tuple[str, ...]) -> str:
 def main() -> None:
     from playwright.sync_api import sync_playwright
 
-    stats_url = os.environ.get("NAVER_PLACE_STATS_URL", "").strip()
-    reservation_url = os.environ.get("NAVER_PLACE_RESERVATION_STATS_URL", "").strip()
-    if not stats_url.startswith("https://new.smartplace.naver.com/"):
-        raise CollectionError("NAVER_PLACE_STATS_URL에는 스마트플레이스 통계 화면 주소가 필요합니다.")
-    if reservation_url and not reservation_url.startswith("https://new.smartplace.naver.com/"):
-        raise CollectionError("NAVER_PLACE_RESERVATION_STATS_URL 형식이 올바르지 않습니다.")
+    tab_urls = {
+        "리포트": os.environ.get("NAVER_PLACE_REPORT_URL", "").strip(),
+        "플레이스": os.environ.get("NAVER_PLACE_STATS_URL", "").strip(),
+        "스마트콜": os.environ.get("NAVER_PLACE_SMARTCALL_STATS_URL", "").strip(),
+        "예약주문": os.environ.get("NAVER_PLACE_RESERVATION_STATS_URL", "").strip(),
+        "리뷰": os.environ.get("NAVER_PLACE_REVIEW_STATS_URL", "").strip(),
+    }
+    missing_urls = [name for name, url in tab_urls.items() if not url]
+    if missing_urls:
+        raise CollectionError("통계 탭 URL Secret이 없습니다: " + ", ".join(missing_urls))
+    invalid_urls = [
+        name
+        for name, url in tab_urls.items()
+        if not url.startswith("https://new.smartplace.naver.com/")
+    ]
+    if invalid_urls:
+        raise CollectionError("통계 탭 URL 형식이 올바르지 않습니다: " + ", ".join(invalid_urls))
     session_from_env()
     today = datetime.now(SEOUL).date()
     DEBUG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -283,21 +330,56 @@ def main() -> None:
         context = browser.new_context(storage_state=str(SESSION_PATH), locale="ko-KR", timezone_id="Asia/Seoul")
         page = context.new_page()
         try:
-            text = collect_page_text(page, stats_url, ("플레이스 유입",))
-            row = parse_rendered_text(text, today)
-            if reservation_url:
-                reservation_text = collect_page_text(
-                    page,
-                    reservation_url,
-                    ("유입트렌드", "유입 트렌드", "예약 통계", "예약통계"),
+            report_text = collect_page_text(
+                page,
+                tab_urls["리포트"],
+                ("리포트", "플레이스 유입", "방문 전 지표"),
+                "리포트",
+            )
+            place_text = collect_page_text(
+                page,
+                tab_urls["플레이스"],
+                ("플레이스 유입", "유입채널", "유입 채널", "유입키워드"),
+                "플레이스",
+            )
+            smartcall_text = collect_page_text(
+                page,
+                tab_urls["스마트콜"],
+                ("스마트콜", "통화 연결", "통화내역"),
+                "스마트콜",
+            )
+            reservation_text = collect_page_text(
+                page,
+                tab_urls["예약주문"],
+                ("유입트렌드", "유입 트렌드", "예약 통계", "예약통계", "예약주문"),
+                "예약주문",
+            )
+            review_text = collect_page_text(
+                page,
+                tab_urls["리뷰"],
+                ("리뷰", "방문자 리뷰", "블로그 리뷰"),
+                "리뷰",
+            )
+
+            row = parse_rendered_text(place_text, today)
+            merge_present(row, parse_summary_metrics(report_text))
+            merge_present(row, parse_smartcall_text(smartcall_text))
+            reservation_values = parse_reservation_text(reservation_text)
+            merge_present(row, reservation_values)
+            if not row.get("booking_orders_weekly"):
+                row["booking_orders_weekly"] = reservation_values.get(
+                    "reservation_applications_weekly", ""
                 )
-                row.update(parse_reservation_text(reservation_text))
+            merge_present(row, parse_review_text(review_text))
             upsert_row(row)
             SNAPSHOT_PATH.write_text(
                 json.dumps({"generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"), **row}, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
-            print(f"스마트플레이스 수집 완료: {today.isoformat()} · 유입 {row['place_visits_weekly']}회")
+            print(
+                f"스마트플레이스 5개 탭 수집 완료: {today.isoformat()} · "
+                f"유입 {row['place_visits_weekly']}회"
+            )
         except Exception:
             page.screenshot(path=str(DEBUG_PATH), full_page=True)
             raise

@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""Collect the signed-in owner's Naver SmartPlace weekly statistics.
+
+The collector reads only rendered text from the statistics page.  A Playwright
+storage-state secret is used for authentication; the Naver password is never
+stored in this repository.
+"""
+
+from __future__ import annotations
+
+import base64
+import csv
+import json
+import os
+import re
+from datetime import date, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
+
+if TYPE_CHECKING:
+    from playwright.sync_api import Page
+
+
+SEOUL = ZoneInfo("Asia/Seoul")
+DATA_PATH = Path("data/naver_place_daily.csv")
+SNAPSHOT_PATH = Path("data/naver_place_latest.json")
+DEBUG_PATH = Path("artifacts/naver-place-debug.png")
+SESSION_PATH = Path(".naver-place-session.json")
+FIELDS = (
+    "collected_date",
+    "week_start",
+    "place_visits_weekly",
+    "booking_orders_weekly",
+    "smartcall_weekly",
+    "reviews_weekly",
+    "place_visits_daily_delta",
+    "booking_orders_daily_delta",
+    "smartcall_daily_delta",
+    "reviews_daily_delta",
+    "naver_map_weekly",
+    "naver_search_weekly",
+    "naver_blog_weekly",
+    "instagram_weekly",
+    "facebook_weekly",
+    "place_ads_weekly",
+    "local_smb_ads_weekly",
+    "naver_talktalk_weekly",
+    "website_weekly",
+    "channels_json",
+    "keywords_json",
+    "reservation_inflows_weekly",
+    "reservation_applications_weekly",
+    "reservation_cancellations_weekly",
+    "reservation_completions_weekly",
+    "reservation_inflows_daily_delta",
+    "reservation_applications_daily_delta",
+    "reservation_cancellations_daily_delta",
+    "reservation_completions_daily_delta",
+    "reservation_channels_json",
+)
+
+
+class CollectionError(RuntimeError):
+    pass
+
+
+def number_after(text: str, labels: tuple[str, ...]) -> int | None:
+    for label in labels:
+        pattern = rf"{re.escape(label)}\s*(?:은|는|이|가)?\s*([\d,]+)\s*(?:회|건|명)"
+        match = re.search(pattern, text)
+        if match:
+            return int(match.group(1).replace(",", ""))
+    return None
+
+
+def channel_number(text: str, label: str) -> int | None:
+    match = re.search(rf"{re.escape(label)}\s*([\d,]+)\s*회", text)
+    return int(match.group(1).replace(",", "")) if match else None
+
+
+def channel_value(channels: dict[str, int], text: str, *labels: str) -> int | None:
+    for label in labels:
+        if label in channels:
+            return channels[label]
+    for label in labels:
+        value = channel_number(text, label)
+        if value is not None:
+            return value
+    return None
+
+
+def parse_ranked_section(text: str, start: str, end: str) -> dict[str, int]:
+    match = re.search(rf"(?:{start})(?P<section>.*?)(?:{end}|$)", text, flags=re.DOTALL)
+    section = match.group("section") if match else ""
+    values: dict[str, int] = {}
+    for name, raw_value in re.findall(
+        r"(?:^|\n)\s*(?:\d+[.)]?\s+)?([^\n\d][^\n]*?)\s+([\d,]+)\s*(?:회|건|명)\s*(?=\n|$)",
+        section,
+    ):
+        cleaned = re.sub(r"\s+", " ", name).strip(" -")
+        if cleaned and cleaned not in {"지난 주", "이번 주"}:
+            values[cleaned] = int(raw_value.replace(",", ""))
+    return values
+
+
+def parse_channels(text: str) -> dict[str, int]:
+    """Read every ranked channel shown between the channel and keyword tabs."""
+    return parse_ranked_section(
+        text,
+        r"유입\s*채널",
+        r"유입\s*키워드|한 주간 리뷰|스마트콜 통화|예약[·・/]주문",
+    )
+
+
+def parse_keywords(text: str) -> dict[str, int]:
+    """Read ranked Place inflow keywords and their displayed inflow counts."""
+    return parse_ranked_section(
+        text,
+        r"유입\s*키워드",
+        r"한 주간 리뷰|스마트콜 통화|예약[·・/]주문|방문 후 지표",
+    )
+
+
+def parse_rendered_text(text: str, collected_date: date) -> dict[str, Any]:
+    normalized = re.sub(r"[ \t]+", " ", text)
+    channels = parse_channels(normalized)
+    keywords = parse_keywords(normalized)
+    metrics = {
+        "place_visits_weekly": number_after(normalized, ("플레이스 유입",)),
+        "booking_orders_weekly": number_after(normalized, ("예약·주문 신청", "예약・주문 신청", "예약/주문 신청")),
+        "smartcall_weekly": number_after(normalized, ("스마트콜 통화",)),
+        "reviews_weekly": number_after(normalized, ("리뷰 등록", "리뷰")),
+        "naver_map_weekly": channel_value(channels, normalized, "네이버지도", "네이버 지도"),
+        "naver_search_weekly": channel_value(channels, normalized, "네이버검색", "네이버 검색"),
+        "naver_blog_weekly": channel_value(channels, normalized, "네이버블로그", "네이버 블로그"),
+        "instagram_weekly": channel_value(channels, normalized, "인스타그램"),
+        "facebook_weekly": channel_value(channels, normalized, "페이스북"),
+        "place_ads_weekly": channel_value(channels, normalized, "네이버 플레이스광고", "네이버플레이스광고"),
+        "local_smb_ads_weekly": channel_value(
+            channels,
+            normalized,
+            "네이버 지역소상공인광고",
+            "네이버지역소상공인광고",
+            "지역소상공인광고",
+            "지역소상공인 광고",
+        ),
+        "naver_talktalk_weekly": channel_value(channels, normalized, "네이버톡톡", "네이버 톡톡"),
+        "website_weekly": channel_value(channels, normalized, "웹사이트"),
+    }
+    required = ("place_visits_weekly",)
+    missing = [name for name in required if metrics[name] is None]
+    if missing:
+        raise CollectionError("필수 통계 항목을 찾지 못했습니다: " + ", ".join(missing))
+
+    return {
+        "collected_date": collected_date.isoformat(),
+        "week_start": collected_date.fromordinal(
+            collected_date.toordinal() - collected_date.weekday()
+        ).isoformat(),
+        **{key: value if value is not None else "" for key, value in metrics.items()},
+        "channels_json": json.dumps(channels, ensure_ascii=False, separators=(",", ":")),
+        "keywords_json": json.dumps(keywords, ensure_ascii=False, separators=(",", ":")),
+    }
+
+
+def parse_reservation_text(text: str) -> dict[str, Any]:
+    """Parse the owner's booking/order statistics page.
+
+    SmartPlace labels have changed over time, so each metric accepts the labels
+    used by both the booking and order views. Missing optional metrics stay blank
+    instead of being misreported as zero.
+    """
+    normalized = re.sub(r"[ \t]+", " ", text)
+    summary = re.split(r"유입\s*(?:채널|경로)|유입\s*트렌드", normalized, maxsplit=1)[0]
+    channels = parse_ranked_section(
+        normalized,
+        r"유입\s*(?:채널|경로)",
+        r"유입\s*트렌드|검색\s*키워드|예약\s*현황|$",
+    )
+    metrics = {
+        "reservation_inflows_weekly": number_after(
+            summary, ("예약 페이지 유입", "예약 유입", "유입")
+        ),
+        "reservation_applications_weekly": number_after(
+            summary, ("예약 신청", "신청")
+        ),
+        "reservation_cancellations_weekly": number_after(
+            summary, ("예약 취소", "취소")
+        ),
+        "reservation_completions_weekly": number_after(
+            summary, ("이용 완료", "예약 완료", "완료")
+        ),
+    }
+    return {
+        **{key: value if value is not None else "" for key, value in metrics.items()},
+        "reservation_channels_json": json.dumps(
+            channels, ensure_ascii=False, separators=(",", ":")
+        ),
+    }
+
+
+def load_rows(path: Path = DATA_PATH) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def add_daily_deltas(row: dict[str, Any], previous: dict[str, str] | None) -> None:
+    pairs = (
+        ("place_visits_weekly", "place_visits_daily_delta"),
+        ("booking_orders_weekly", "booking_orders_daily_delta"),
+        ("smartcall_weekly", "smartcall_daily_delta"),
+        ("reviews_weekly", "reviews_daily_delta"),
+        ("reservation_inflows_weekly", "reservation_inflows_daily_delta"),
+        ("reservation_applications_weekly", "reservation_applications_daily_delta"),
+        ("reservation_cancellations_weekly", "reservation_cancellations_daily_delta"),
+        ("reservation_completions_weekly", "reservation_completions_daily_delta"),
+    )
+    same_week = previous and previous.get("week_start") == row["week_start"]
+    for total_key, delta_key in pairs:
+        if row.get(total_key, "") in (None, ""):
+            row[delta_key] = ""
+            continue
+        current = int(row[total_key])
+        prior = int(previous.get(total_key) or 0) if same_week else 0
+        row[delta_key] = max(0, current - prior)
+
+
+def upsert_row(row: dict[str, Any], path: Path = DATA_PATH) -> None:
+    rows = load_rows(path)
+    previous = next((item for item in reversed(rows) if item["collected_date"] < row["collected_date"]), None)
+    add_daily_deltas(row, previous)
+    rows = [item for item in rows if item.get("collected_date") != row["collected_date"]]
+    rows.append({key: row.get(key, "") for key in FIELDS})
+    rows.sort(key=lambda item: item["collected_date"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def session_from_env() -> None:
+    raw = os.environ.get("NAVER_PLACE_STORAGE_STATE_B64", "").strip()
+    if not raw:
+        raise CollectionError("GitHub Secret NAVER_PLACE_STORAGE_STATE_B64가 없습니다.")
+    try:
+        SESSION_PATH.write_bytes(base64.b64decode(raw, validate=True))
+        json.loads(SESSION_PATH.read_text(encoding="utf-8"))
+    except (ValueError, json.JSONDecodeError) as exc:
+        raise CollectionError("로그인 세션 Secret 형식이 올바르지 않습니다.") from exc
+
+
+def collect_page_text(page: "Page", url: str, markers: tuple[str, ...]) -> str:
+    page.goto(url, wait_until="domcontentloaded", timeout=90_000)
+    page.wait_for_timeout(8_000)
+    if "nid.naver.com" in page.url or "login" in page.url.lower():
+        raise CollectionError("네이버 로그인 세션이 만료되었습니다. 세션 Secret을 갱신해주세요.")
+    text = page.locator("body").inner_text(timeout=30_000)
+    if not any(marker in text for marker in markers):
+        raise CollectionError(
+            "통계 화면이 열리지 않았습니다. 저장된 화면 URL 또는 업체 선택 상태를 확인해주세요."
+        )
+    return text
+
+
+def main() -> None:
+    from playwright.sync_api import sync_playwright
+
+    stats_url = os.environ.get("NAVER_PLACE_STATS_URL", "").strip()
+    reservation_url = os.environ.get("NAVER_PLACE_RESERVATION_STATS_URL", "").strip()
+    if not stats_url.startswith("https://new.smartplace.naver.com/"):
+        raise CollectionError("NAVER_PLACE_STATS_URL에는 스마트플레이스 통계 화면 주소가 필요합니다.")
+    if reservation_url and not reservation_url.startswith("https://new.smartplace.naver.com/"):
+        raise CollectionError("NAVER_PLACE_RESERVATION_STATS_URL 형식이 올바르지 않습니다.")
+    session_from_env()
+    today = datetime.now(SEOUL).date()
+    DEBUG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        context = browser.new_context(storage_state=str(SESSION_PATH), locale="ko-KR", timezone_id="Asia/Seoul")
+        page = context.new_page()
+        try:
+            text = collect_page_text(page, stats_url, ("플레이스 유입",))
+            row = parse_rendered_text(text, today)
+            if reservation_url:
+                reservation_text = collect_page_text(
+                    page,
+                    reservation_url,
+                    ("유입트렌드", "유입 트렌드", "예약 통계", "예약통계"),
+                )
+                row.update(parse_reservation_text(reservation_text))
+            upsert_row(row)
+            SNAPSHOT_PATH.write_text(
+                json.dumps({"generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"), **row}, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            print(f"스마트플레이스 수집 완료: {today.isoformat()} · 유입 {row['place_visits_weekly']}회")
+        except Exception:
+            page.screenshot(path=str(DEBUG_PATH), full_page=True)
+            raise
+        finally:
+            context.close()
+            browser.close()
+            SESSION_PATH.unlink(missing_ok=True)
+
+
+if __name__ == "__main__":
+    main()

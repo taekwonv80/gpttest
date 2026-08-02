@@ -5,7 +5,7 @@ on:
     branches: [master, main]
   workflow_dispatch:
   workflow_run:
-    workflows: ["Naver daily marketing report"]
+    workflows: ["Naver daily marketing report", "Naver SmartPlace daily statistics"]
     types: [completed]
 
 permissions:

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "source": "naver-searchad-api",
-  "generated_at": "2026-08-06T09:27:42+09:00",
-  "report_date": "2026-08-05",
+  "generated_at": "2026-08-07T10:57:34+09:00",
+  "report_date": "2026-08-06",
   "period": {
-    "since": "2026-07-07",
-    "until": "2026-08-05"
+    "since": "2026-07-08",
+    "until": "2026-08-06"
   },
   "coverage": {
     "keywords": "최근 30일",
@@ -21,28 +21,28 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역맛집",
-      "impressions": 464,
+      "impressions": 472,
       "clicks": 6,
       "spend": 527
     },
     {
       "category": "파워링크",
-      "value": "능곡동맛집",
-      "impressions": 620,
+      "value": "물왕리맛집",
+      "impressions": 353,
       "clicks": 5,
       "spend": 440
     },
     {
       "category": "파워링크",
-      "value": "물왕리맛집",
-      "impressions": 343,
-      "clicks": 5,
-      "spend": 440
+      "value": "능곡동맛집",
+      "impressions": 609,
+      "clicks": 4,
+      "spend": 352
     },
     {
       "category": "파워링크",
       "value": "물왕저수지",
-      "impressions": 122,
+      "impressions": 129,
       "clicks": 1,
       "spend": 88
     },
@@ -56,7 +56,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡동맛집",
-      "impressions": 134,
+      "impressions": 140,
       "clicks": 1,
       "spend": 88
     },
@@ -70,14 +70,21 @@
     {
       "category": "파워링크",
       "value": "시흥물왕리맛집",
-      "impressions": 219,
+      "impressions": 221,
       "clicks": 1,
       "spend": 88
     },
     {
       "category": "파워링크",
       "value": "시흥시청맛집",
-      "impressions": 73,
+      "impressions": 64,
+      "clicks": 1,
+      "spend": 88
+    },
+    {
+      "category": "파워링크",
+      "value": "시흥시청점심",
+      "impressions": 22,
       "clicks": 1,
       "spend": 88
     },
@@ -98,14 +105,14 @@
     {
       "category": "파워링크",
       "value": "시흥장현맛집",
-      "impressions": 60,
+      "impressions": 58,
       "clicks": 1,
       "spend": 88
     },
     {
       "category": "파워링크",
       "value": "장곡동칼국수",
-      "impressions": 36,
+      "impressions": 38,
       "clicks": 1,
       "spend": 88
     },
@@ -119,35 +126,35 @@
     {
       "category": "파워링크",
       "value": "정왕동맛집",
-      "impressions": 33,
+      "impressions": 34,
       "clicks": 1,
       "spend": 88
     },
     {
       "category": "파워링크",
       "value": "물왕저수지맛집",
-      "impressions": 68,
+      "impressions": 69,
       "clicks": 1,
       "spend": 83
     },
     {
       "category": "파워링크",
       "value": "시흥능곡술집",
-      "impressions": 156,
+      "impressions": 158,
       "clicks": 1,
       "spend": 82
     },
     {
       "category": "파워링크",
       "value": "시흥닭한마리",
-      "impressions": 118,
+      "impressions": 121,
       "clicks": 1,
       "spend": 82
     },
     {
       "category": "파워링크",
       "value": "장현맛집",
-      "impressions": 92,
+      "impressions": 95,
       "clicks": 1,
       "spend": 79
     },
@@ -181,6 +188,13 @@
     },
     {
       "category": "파워링크",
+      "value": "시흥문어맛집",
+      "impressions": 2,
+      "clicks": 1,
+      "spend": 77
+    },
+    {
+      "category": "파워링크",
       "value": "시흥시장곡동닭한마리칼국수맛집",
       "impressions": 1,
       "clicks": 1,
@@ -205,112 +219,112 @@
     {
       "category": "플레이스 검색광고",
       "value": "음식점",
-      "impressions": 5402,
-      "clicks": 120,
-      "spend": 28529
+      "impressions": 5377,
+      "clicks": 118,
+      "spend": 28228
     },
     {
       "category": "플레이스 검색광고",
       "value": "맛집",
-      "impressions": 1707,
+      "impressions": 1743,
       "clicks": 30,
       "spend": 8746
     },
     {
       "category": "플레이스 검색광고",
       "value": "장현동맛집",
-      "impressions": 946,
+      "impressions": 932,
       "clicks": 21,
       "spend": 4744
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥능곡역맛집",
-      "impressions": 901,
-      "clicks": 17,
-      "spend": 4716
+      "impressions": 906,
+      "clicks": 16,
+      "spend": 4386
     },
     {
       "category": "플레이스 검색광고",
       "value": "근처맛집",
-      "impressions": 871,
-      "clicks": 11,
-      "spend": 3180
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "시흥장현맛집",
-      "impressions": 345,
+      "impressions": 893,
       "clicks": 12,
-      "spend": 2810
+      "spend": 3457
     },
     {
       "category": "플레이스 검색광고",
       "value": "식당",
-      "impressions": 876,
+      "impressions": 864,
       "clicks": 10,
       "spend": 2727
     },
     {
       "category": "플레이스 검색광고",
+      "value": "시흥장현맛집",
+      "impressions": 345,
+      "clicks": 11,
+      "spend": 2569
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "샤브샤브",
-      "impressions": 872,
+      "impressions": 878,
       "clicks": 30,
       "spend": 2310
     },
     {
       "category": "플레이스 검색광고",
       "value": "조개구이",
-      "impressions": 106,
-      "clicks": 20,
-      "spend": 2079
+      "impressions": 105,
+      "clicks": 19,
+      "spend": 2002
     },
     {
       "category": "플레이스 검색광고",
       "value": "칼국수",
-      "impressions": 845,
-      "clicks": 23,
-      "spend": 1771
+      "impressions": 840,
+      "clicks": 24,
+      "spend": 1848
     },
     {
       "category": "플레이스 검색광고",
       "value": "장현맛집",
-      "impressions": 225,
+      "impressions": 232,
       "clicks": 6,
       "spend": 1533
     },
     {
       "category": "플레이스 검색광고",
+      "value": "시흥장현동맛집",
+      "impressions": 293,
+      "clicks": 7,
+      "spend": 1250
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "생선구이",
-      "impressions": 398,
+      "impressions": 394,
       "clicks": 8,
       "spend": 1197
     },
     {
       "category": "플레이스 검색광고",
       "value": "술집",
-      "impressions": 854,
-      "clicks": 13,
-      "spend": 1109
+      "impressions": 859,
+      "clicks": 14,
+      "spend": 1186
     },
     {
       "category": "플레이스 검색광고",
       "value": "한식",
-      "impressions": 231,
+      "impressions": 235,
       "clicks": 4,
       "spend": 1064
     },
     {
       "category": "플레이스 검색광고",
-      "value": "시흥장현동맛집",
-      "impressions": 293,
-      "clicks": 6,
-      "spend": 968
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "시흥시샤브샤브",
-      "impressions": 14,
+      "impressions": 16,
       "clicks": 3,
       "spend": 725
     },
@@ -323,10 +337,24 @@
     },
     {
       "category": "플레이스 검색광고",
+      "value": "칼국수맛집",
+      "impressions": 131,
+      "clicks": 9,
+      "spend": 693
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "막국수",
-      "impressions": 633,
+      "impressions": 649,
       "clicks": 9,
       "spend": 656
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "내근처맛집",
+      "impressions": 108,
+      "clicks": 2,
+      "spend": 655
     },
     {
       "category": "플레이스 검색광고",
@@ -337,15 +365,8 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "칼국수맛집",
-      "impressions": 130,
-      "clicks": 8,
-      "spend": 616
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "시흥막국수",
-      "impressions": 116,
+      "impressions": 114,
       "clicks": 2,
       "spend": 547
     },
@@ -359,44 +380,44 @@
     {
       "category": "플레이스 검색광고",
       "value": "해물탕",
-      "impressions": 28,
+      "impressions": 26,
       "clicks": 2,
       "spend": 395
     },
     {
       "category": "플레이스 검색광고",
       "value": "바지락칼국수",
-      "impressions": 48,
+      "impressions": 51,
+      "clicks": 5,
+      "spend": 385
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "밥집",
+      "impressions": 280,
       "clicks": 5,
       "spend": 385
     },
     {
       "category": "플레이스 검색광고",
       "value": "장현지구맛집",
-      "impressions": 95,
+      "impressions": 96,
       "clicks": 5,
       "spend": 385
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥생선구이",
-      "impressions": 55,
+      "impressions": 52,
       "clicks": 2,
       "spend": 383
     },
     {
       "category": "플레이스 검색광고",
       "value": "무한리필",
-      "impressions": 64,
+      "impressions": 74,
       "clicks": 2,
       "spend": 378
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "내근처맛집",
-      "impressions": 108,
-      "clicks": 1,
-      "spend": 330
     },
     {
       "category": "플레이스 검색광고",
@@ -408,7 +429,7 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥샤브샤브",
-      "impressions": 53,
+      "impressions": 56,
       "clicks": 1,
       "spend": 327
     },
@@ -429,14 +450,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시무한리필",
-      "impressions": 8,
+      "impressions": 9,
       "clicks": 1,
       "spend": 313
     },
     {
       "category": "플레이스 검색광고",
-      "value": "밥집",
-      "impressions": 281,
+      "value": "생선구이맛집",
+      "impressions": 112,
       "clicks": 4,
       "spend": 308
     },
@@ -450,21 +471,21 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥플랑드르맛집",
-      "impressions": 42,
+      "impressions": 44,
       "clicks": 1,
       "spend": 297
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥플랑드르",
-      "impressions": 101,
+      "impressions": 113,
       "clicks": 1,
       "spend": 291
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥조개구이",
-      "impressions": 17,
+      "impressions": 13,
       "clicks": 1,
       "spend": 286
     },
@@ -485,21 +506,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "근처술집",
-      "impressions": 169,
+      "impressions": 175,
       "clicks": 3,
       "spend": 231
     },
     {
       "category": "플레이스 검색광고",
       "value": "보리밥",
-      "impressions": 73,
-      "clicks": 3,
-      "spend": 231
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "생선구이맛집",
-      "impressions": 107,
+      "impressions": 76,
       "clicks": 3,
       "spend": 231
     },
@@ -513,7 +527,7 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시청맛집",
-      "impressions": 219,
+      "impressions": 221,
       "clicks": 1,
       "spend": 213
     },
@@ -534,14 +548,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "주변맛집",
-      "impressions": 273,
+      "impressions": 286,
       "clicks": 1,
       "spend": 206
     },
     {
       "category": "플레이스 검색광고",
       "value": "해물탕집",
-      "impressions": 2,
+      "impressions": 4,
       "clicks": 1,
       "spend": 186
     },
@@ -569,14 +583,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "대하구이",
-      "impressions": 11,
+      "impressions": 12,
       "clicks": 2,
       "spend": 154
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥능곡역술집",
-      "impressions": 175,
+      "impressions": 177,
       "clicks": 2,
       "spend": 154
     },
@@ -590,14 +604,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "칼국수집",
-      "impressions": 8,
+      "impressions": 7,
       "clicks": 2,
       "spend": 154
     },
     {
       "category": "플레이스 검색광고",
       "value": "장현동술집",
-      "impressions": 56,
+      "impressions": 53,
       "clicks": 2,
       "spend": 152
     },
@@ -618,7 +632,7 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현동식당",
-      "impressions": 84,
+      "impressions": 86,
       "clicks": 1,
       "spend": 116
     },
@@ -660,21 +674,28 @@
     {
       "category": "플레이스 검색광고",
       "value": "근처밥집",
-      "impressions": 175,
+      "impressions": 170,
       "clicks": 1,
       "spend": 77
     },
     {
       "category": "플레이스 검색광고",
       "value": "내근처밥집",
-      "impressions": 33,
+      "impressions": 34,
       "clicks": 1,
       "spend": 77
     },
     {
       "category": "플레이스 검색광고",
       "value": "문어",
-      "impressions": 34,
+      "impressions": 35,
+      "clicks": 1,
+      "spend": 77
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "새우튀김",
+      "impressions": 13,
       "clicks": 1,
       "spend": 77
     },
@@ -723,7 +744,7 @@
     {
       "category": "플레이스 검색광고",
       "value": "전골",
-      "impressions": 45,
+      "impressions": 46,
       "clicks": 1,
       "spend": 77
     },
@@ -738,6 +759,13 @@
       "category": "플레이스 검색광고",
       "value": "택이네조개전골",
       "impressions": 2,
+      "clicks": 1,
+      "spend": 77
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "해물구이",
+      "impressions": 1,
       "clicks": 1,
       "spend": 77
     },
@@ -765,7 +793,7 @@
     {
       "category": "플레이스 검색광고",
       "value": "막국수맛집",
-      "impressions": 61,
+      "impressions": 59,
       "clicks": 1,
       "spend": 58
     }

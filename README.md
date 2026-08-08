@@ -4,7 +4,7 @@
 
 ## 공개 대시보드
 
-- <https://taekwonv80.github.io/gpttest>
+- <https://eklove.pages.dev>
 - 캠페인 분류: 플레이스 검색광고, 지역소상공인 광고, 파워링크
 - 광고 지표: 광고비, 노출수, 클릭수, 클릭률, 평균 CPC
 - 월요일~일요일 기준 최근 5개 주간 선택

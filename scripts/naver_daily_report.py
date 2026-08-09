@@ -16,6 +16,7 @@ import html
 import io
 import json
 import os
+import re
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -836,7 +837,20 @@ def collect_powerlink_search_term_rows(
                 )
                 with urlopen(request, timeout=60) as response:
                     text = decode_stat_report(response.read())
-            except (HTTPError, URLError, TimeoutError) as error:
+            except HTTPError as error:
+                detail = error.read().decode("utf-8", errors="replace").strip()
+                detail = re.sub(
+                    r'(?i)(authtoken["\'=:\s]+)[^&"\'\s<]+',
+                    r"\1[redacted]",
+                    detail,
+                )
+                if len(detail) > 500:
+                    detail = detail[:500] + "…"
+                suffix = f" · {detail}" if detail else ""
+                raise IntegrationError(
+                    f"EXPKEYWORD 보고서 다운로드 실패: HTTP {error.code}{suffix}"
+                ) from None
+            except (URLError, TimeoutError) as error:
                 raise IntegrationError(f"EXPKEYWORD 보고서 다운로드 실패: {error}") from None
             rows = parse_expkeyword_report(
                 text,

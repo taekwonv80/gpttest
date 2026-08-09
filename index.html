@@ -26,8 +26,13 @@
   <div id="root"></div>
   <script type="module">
     import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.95.1/build/stlite.js";
-    const appUrl = new URL("./streamlit_app.py", window.location.href).href;
-    const appResponse = await fetch(appUrl);
+    const contentVersion = Date.now().toString();
+    const versionedUrl = (path, version = contentVersion) => {
+      const url = new URL(`./${path}`, window.location.href);
+      url.searchParams.set("v", version);
+      return url;
+    };
+    const appResponse = await fetch(versionedUrl("streamlit_app.py"), { cache: "no-store" });
     if (!appResponse.ok) throw new Error(`Python app load failed: ${appResponse.status}`);
     const appSource = await appResponse.text();
 
@@ -41,9 +46,16 @@
       "data/naver_place_daily.csv",
       "data/naver_place_latest.json",
     ]) {
-      const response = await fetch(new URL(`./${path}`, window.location.href), { cache: "no-store" });
+      const response = await fetch(versionedUrl(path), { cache: "no-store" });
       if (response.ok) files[path] = await response.text();
     }
+    const loadedSyncVersion = (() => {
+      try {
+        return JSON.parse(files["data/connections.json"] || "{}").generated_at || "";
+      } catch {
+        return "";
+      }
+    })();
 
     mount(
       {
@@ -62,6 +74,24 @@
       },
       document.getElementById("root"),
     );
+
+    // A long-open dashboard keeps Stlite files in memory. Refresh it when the
+    // small connection manifest reports that a new automated collection ran.
+    window.setInterval(async () => {
+      try {
+        const response = await fetch(
+          versionedUrl("data/connections.json", Date.now().toString()),
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const latestSyncVersion = (await response.json()).generated_at || "";
+        if (loadedSyncVersion && latestSyncVersion && latestSyncVersion !== loadedSyncVersion) {
+          window.location.reload();
+        }
+      } catch {
+        // Keep the current dashboard available during a transient network error.
+      }
+    }, 5 * 60 * 1000);
   </script>
 </body>
 </html>

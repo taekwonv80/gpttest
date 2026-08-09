@@ -522,7 +522,7 @@ def render_keyword_analysis() -> None:
     with mode_column:
         mode = st.radio(
             "분석 대상",
-            ["등록 키워드", "실제 검색어"],
+            ["실제 검색어", "등록 키워드"],
             horizontal=True,
         )
     with category_column:
@@ -539,6 +539,14 @@ def render_keyword_analysis() -> None:
 
     source_key = "keywords" if mode == "등록 키워드" else "search_terms"
     raw_rows = list(KEYWORD_ANALYSIS.get(source_key) or [])
+    raw_category_rows = list(raw_rows)
+    if category != "전체":
+        raw_category_rows = [row for row in raw_rows if row.get("category") == category]
+    if mode == "실제 검색어" and category == "파워링크":
+        st.success(
+            f"파워링크 실제 검색어 {len(raw_category_rows):,}개 · "
+            f"마지막 수집 {generated_at}"
+        )
     rows = build_action_plan(raw_rows, mode)
     if category != "전체":
         rows = [row for row in rows if row.get("category") == category]

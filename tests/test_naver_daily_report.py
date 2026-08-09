@@ -218,6 +218,17 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(rows[0]["spend"], 1300)
         self.assertEqual(rows[0]["match_types"], ["확장", "일치"])
 
+    def test_report_download_url_encodes_token_and_requires_v2(self) -> None:
+        normalized = report.normalize_report_download_url(
+            "http://api.searchad.naver.com/report-download?authtoken=a+b/c&amp;other=1"
+        )
+
+        self.assertEqual(
+            normalized,
+            "https://api.searchad.naver.com/report-download?"
+            "authtoken=a%2Bb%2Fc&other=1&fileVersion=v2",
+        )
+
     def test_powerlink_search_term_days_keep_latest_ninety_days(self) -> None:
         existing = [
             {"date": "2026-07-02", "rows": []},

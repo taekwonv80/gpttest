@@ -12,6 +12,7 @@ import csv
 import gzip
 import hashlib
 import hmac
+import html
 import io
 import json
 import os
@@ -22,7 +23,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import quote, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
@@ -749,6 +750,30 @@ def decode_stat_report(content: bytes) -> str:
     return content.decode("utf-8", errors="replace")
 
 
+def normalize_report_download_url(download_url: str) -> str:
+    """Safely encode Naver's one-time token and require the current file format."""
+    parsed = urlsplit(html.unescape(download_url.strip()))
+    query_parts: list[str] = []
+    has_file_version = False
+    for part in parsed.query.split("&"):
+        if not part:
+            continue
+        key, separator, value = part.partition("=")
+        decoded_key = unquote(key)
+        has_file_version = has_file_version or decoded_key.lower() == "fileversion"
+        encoded_key = quote(decoded_key, safe="")
+        encoded_value = quote(unquote(value), safe="") if separator else ""
+        query_parts.append(
+            f"{encoded_key}={encoded_value}" if separator else encoded_key
+        )
+    if not has_file_version:
+        query_parts.append("fileVersion=v2")
+    scheme = "https" if parsed.scheme in {"", "http", "https"} else parsed.scheme
+    return urlunsplit(
+        (scheme, parsed.netloc, parsed.path, "&".join(query_parts), parsed.fragment)
+    )
+
+
 def parse_expkeyword_report(
     text: str, powerlink_adgroup_ids: set[str], powerlink_campaign_ids: set[str]
 ) -> list[dict[str, Any]]:
@@ -805,7 +830,11 @@ def collect_powerlink_search_term_rows(
         download_url = str(current.get("downloadUrl") or "").strip()
         if status == "BUILT" and download_url:
             try:
-                with urlopen(download_url, timeout=60) as response:
+                request = Request(
+                    normalize_report_download_url(download_url),
+                    headers={"Accept": "*/*", "User-Agent": "naver-report-dashboard/1.0"},
+                )
+                with urlopen(request, timeout=60) as response:
                     text = decode_stat_report(response.read())
             except (HTTPError, URLError, TimeoutError) as error:
                 raise IntegrationError(f"EXPKEYWORD 보고서 다운로드 실패: {error}") from None

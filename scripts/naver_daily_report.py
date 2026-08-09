@@ -17,6 +17,7 @@ import json
 import os
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,7 @@ CONNECTIONS_PATH = Path("data/connections.json")
 DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
 STATS_BATCH_SIZE = 100
 STATS_MAX_RANGE_DAYS = 30
+API_MAX_WORKERS = 4
 KEYWORD_RETENTION_DAYS = 90
 KEYWORD_PRIMARY_WINDOW_DAYS = 30
 KEYWORD_WINDOWS = ("7", "previous_7", "30", "90")
@@ -70,6 +72,8 @@ class NaverSearchAdClient:
         self.customer_id = customer_id
         self.api_key = api_key
         self.secret_key = secret_key
+        self._campaigns_cache: list[dict[str, Any]] | None = None
+        self._adgroups_cache: dict[str, list[dict[str, Any]]] = {}
 
     def _headers(self, method: str, uri: str) -> dict[str, str]:
         timestamp = str(round(time.time() * 1000))
@@ -128,19 +132,27 @@ class NaverSearchAdClient:
             raise IntegrationError(f"네이버 SearchAd API 연결 실패: {error}") from None
 
     def campaigns(self) -> list[dict[str, Any]]:
+        if self._campaigns_cache is not None:
+            return list(self._campaigns_cache)
         result = self.get("/ncc/campaigns")
         if not isinstance(result, list):
             raise IntegrationError("네이버 캠페인 응답 형식이 예상과 다릅니다.")
-        return [item for item in result if isinstance(item, dict)]
+        self._campaigns_cache = [item for item in result if isinstance(item, dict)]
+        return list(self._campaigns_cache)
 
     def adgroups(self, campaign_id: str) -> list[dict[str, Any]]:
+        if campaign_id in self._adgroups_cache:
+            return list(self._adgroups_cache[campaign_id])
         result = self.get(
             "/ncc/adgroups",
             {"nccCampaignId": campaign_id, "recordSize": 1000},
         )
         if not isinstance(result, list):
             raise IntegrationError("네이버 광고그룹 응답 형식이 예상과 다릅니다.")
-        return [item for item in result if isinstance(item, dict)]
+        self._adgroups_cache[campaign_id] = [
+            item for item in result if isinstance(item, dict)
+        ]
+        return list(self._adgroups_cache[campaign_id])
 
     def keywords(self, adgroup_id: str) -> list[dict[str, Any]]:
         result = self.get(
@@ -383,7 +395,8 @@ def collect_daily_metrics(
         for start in range(0, len(entity_ids), STATS_BATCH_SIZE)
     ]
     target_count = sum(len(category_by_id) for category_by_id in target_maps)
-    for target_day in sorted(daily):
+    def fetch_day(target_day: date) -> tuple[date, dict[str, dict[str, Any]]]:
+        day_metrics = {category: blank_metrics(category) for category in CATEGORIES}
         for category_by_id, batch in batches:
             try:
                 rows = client.summary_stats(batch, target_day, target_day)
@@ -400,12 +413,18 @@ def collect_daily_metrics(
                 )
                 category = category_by_id.get(entity_id)
                 if category:
-                    add_row(daily[target_day][category], row)
-            time.sleep(0.2)
-        print(
-            f"네이버 통계 수집: {target_day.isoformat()} "
-            f"({target_count}개 통계 대상, {len(batches)}개 묶음)"
-        )
+                    add_row(day_metrics[category], row)
+        return target_day, day_metrics
+
+    with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+        fetched_days = executor.map(fetch_day, sorted(daily))
+        for target_day, day_metrics in fetched_days:
+            daily[target_day] = day_metrics
+            print(
+                f"네이버 통계 수집: {target_day.isoformat()} "
+                f"({target_count}개 통계 대상, {len(batches)}개 묶음)",
+                flush=True,
+            )
     print(
         "플레이스 광고그룹 분류: "
         f"플레이스검색 {sum(value == '플레이스 검색광고' for value in adgroup_category_by_id.values())}개, "
@@ -418,6 +437,7 @@ def collect_daily_metrics(
 def collect_adgroup_catalog(client: NaverSearchAdClient) -> list[dict[str, str]]:
     """Return every reportable ad group with its dashboard category."""
     catalog: list[dict[str, str]] = []
+    candidates: list[tuple[dict[str, Any], str, str, bool, str | None]] = []
     for campaign in client.campaigns():
         campaign_id = str(campaign.get("nccCampaignId") or campaign.get("id") or "")
         if not campaign_id:
@@ -427,6 +447,15 @@ def collect_adgroup_catalog(client: NaverSearchAdClient) -> list[dict[str, str]]
         campaign_category = classify_campaign(campaign)
         if not place_campaign and not campaign_category:
             continue
+        candidates.append(
+            (campaign, campaign_id, campaign_name, place_campaign, campaign_category)
+        )
+
+    def fetch_campaign_groups(
+        candidate: tuple[dict[str, Any], str, str, bool, str | None]
+    ) -> list[dict[str, str]]:
+        _, campaign_id, campaign_name, place_campaign, campaign_category = candidate
+        groups: list[dict[str, str]] = []
         for adgroup in client.adgroups(campaign_id):
             adgroup_id = str(adgroup.get("nccAdgroupId") or adgroup.get("id") or "")
             if not adgroup_id:
@@ -434,7 +463,7 @@ def collect_adgroup_catalog(client: NaverSearchAdClient) -> list[dict[str, str]]
             category = classify_place_adgroup(adgroup) if place_campaign else campaign_category
             if not category:
                 continue
-            catalog.append(
+            groups.append(
                 {
                     "campaign_id": campaign_id,
                     "campaign_name": campaign_name,
@@ -445,6 +474,11 @@ def collect_adgroup_catalog(client: NaverSearchAdClient) -> list[dict[str, str]]
                     "category": category,
                 }
             )
+        return groups
+
+    with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+        for groups in executor.map(fetch_campaign_groups, candidates):
+            catalog.extend(groups)
     return catalog
 
 
@@ -566,19 +600,29 @@ def collect_registered_keyword_windows(
 ) -> dict[str, list[dict[str, Any]]]:
     """Collect all registered keywords once, then request metrics per window."""
     keyword_by_id: dict[str, dict[str, Any]] = {}
-    for group in catalog:
+    def fetch_group_keywords(group: dict[str, str]) -> list[tuple[str, dict[str, Any]]]:
         try:
             keywords = client.keywords(group["adgroup_id"])
         except IntegrationError as exc:
             print(f"키워드 목록 건너뜀: {group['adgroup_name']} · {exc}")
-            continue
+            return []
+        result: list[tuple[str, dict[str, Any]]] = []
         for keyword in keywords:
             keyword_id = str(keyword.get("nccKeywordId") or keyword.get("id") or "")
             value = str(keyword.get("keyword") or keyword.get("name") or "").strip()
             if keyword_id and value:
-                keyword_by_id[keyword_id] = analysis_record(
-                    group["category"], value, 0, 0, 0
+                result.append(
+                    (
+                        keyword_id,
+                        analysis_record(group["category"], value, 0, 0, 0),
+                    )
                 )
+        return result
+
+    with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+        for group_keywords in executor.map(fetch_group_keywords, catalog):
+            for keyword_id, row in group_keywords:
+                keyword_by_id[keyword_id] = row
 
     result: dict[str, list[dict[str, Any]]] = {}
     keyword_ids = list(keyword_by_id)
@@ -645,19 +689,17 @@ def attach_metric_windows(
 def collect_place_search_term_rows(
     client: NaverSearchAdClient, catalog: list[dict[str, str]]
 ) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for group in catalog:
-        if group["category"] == "파워링크":
-            continue
+    def fetch_group_terms(group: dict[str, str]) -> list[dict[str, Any]]:
         try:
             search_terms = client.place_search_terms(group["adgroup_id"])
         except IntegrationError as exc:
             print(f"플레이스 검색어 건너뜀: {group['adgroup_name']} · {exc}")
-            continue
+            return []
+        group_rows: list[dict[str, Any]] = []
         for item in search_terms:
             term = str(item.get("schKeyword") or item.get("searchKeyword") or "").strip()
             if term and term != "-":
-                rows.append(
+                group_rows.append(
                     analysis_record(
                         group["category"],
                         term,
@@ -666,7 +708,13 @@ def collect_place_search_term_rows(
                         item.get("salesAmt"),
                     )
                 )
-        time.sleep(0.1)
+        return group_rows
+
+    rows: list[dict[str, Any]] = []
+    place_groups = [group for group in catalog if group["category"] != "파워링크"]
+    with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+        for group_rows in executor.map(fetch_group_terms, place_groups):
+            rows.extend(group_rows)
     return [row for row in aggregate_analysis_rows(rows) if row["spend"] > 0]
 
 
@@ -719,7 +767,13 @@ def collect_powerlink_search_term_rows(
 ) -> list[dict[str, Any]]:
     powerlink_groups = [group for group in catalog if group["category"] == "파워링크"]
     if not powerlink_groups:
+        print("파워링크 검색어 보고서: 대상 광고그룹이 없습니다.", flush=True)
         return []
+    print(
+        f"파워링크 검색어 보고서 생성 요청: {report_date.isoformat()} "
+        f"· 광고그룹 {len(powerlink_groups)}개",
+        flush=True,
+    )
     job = client.create_stat_report("EXPKEYWORD", report_date)
     report_job_id = job.get("reportJobId")
     if not report_job_id:
@@ -735,11 +789,18 @@ def collect_powerlink_search_term_rows(
                     text = decode_stat_report(response.read())
             except (HTTPError, URLError, TimeoutError) as error:
                 raise IntegrationError(f"EXPKEYWORD 보고서 다운로드 실패: {error}") from None
-            return parse_expkeyword_report(
+            rows = parse_expkeyword_report(
                 text,
                 {group["adgroup_id"] for group in powerlink_groups},
                 {group["campaign_id"] for group in powerlink_groups},
             )
+            raw_rows = sum(1 for columns in csv.reader(io.StringIO(text), delimiter="\t") if columns)
+            print(
+                f"파워링크 검색어 보고서 완료: 원본 {raw_rows}행 "
+                f"· 유효 검색어 {len(rows)}개",
+                flush=True,
+            )
+            return rows
         if status in {"ERROR", "NONE"}:
             raise IntegrationError(f"EXPKEYWORD 보고서 생성 실패: {status}")
         time.sleep(STAT_REPORT_POLL_SECONDS)
@@ -780,7 +841,7 @@ def build_keyword_analysis_payload(
         powerlink_today = collect_powerlink_search_term_rows(client, catalog, report_date)
         powerlink_days = merge_powerlink_days(powerlink_days, report_date, powerlink_today)
     except IntegrationError as exc:
-        print(f"파워링크 검색어 보고서 건너뜀: {exc}")
+        print(f"파워링크 검색어 보고서 건너뜀: {exc}", flush=True)
 
     ranges = keyword_window_ranges(report_date)
     powerlink_windows = {

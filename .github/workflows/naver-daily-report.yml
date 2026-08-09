@@ -21,8 +21,9 @@ concurrency:
 jobs:
   collect-and-report:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
+      PYTHONUNBUFFERED: "1"
       NAVER_CUSTOMER_ID: ${{ secrets.NAVER_CUSTOMER_ID }}
       NAVER_ACCESS_LICENSE: ${{ secrets.NAVER_ACCESS_LICENSE }}
       NAVER_SECRET_KEY: ${{ secrets.NAVER_SECRET_KEY }}

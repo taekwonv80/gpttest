@@ -38,6 +38,7 @@ DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
 STATS_BATCH_SIZE = 100
 STATS_MAX_RANGE_DAYS = 30
 API_MAX_WORKERS = 4
+KEYWORD_STATS_MAX_WORKERS = 8
 KEYWORD_RETENTION_DAYS = 90
 KEYWORD_PRIMARY_WINDOW_DAYS = 30
 KEYWORD_WINDOWS = ("7", "previous_7", "30", "90")
@@ -645,7 +646,7 @@ def collect_registered_keyword_windows(
             batch, chunk_since, chunk_until = request
             return client.summary_stats(batch, chunk_since, chunk_until)
 
-        with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=KEYWORD_STATS_MAX_WORKERS) as executor:
             for rows in executor.map(fetch_keyword_stats, requests):
                 for row in rows:
                     keyword_id = str(row.get("id") or row.get("nccKeywordId") or "")

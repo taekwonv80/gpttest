@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
 from datetime import datetime, timedelta
 from html import escape
@@ -10,6 +11,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from dashboard_math import infer_ratio_counts
+from scripts.keyword_actions import ACTION_META, ACTIONS, build_action_plan
 
 
 st.set_page_config(
@@ -509,14 +511,14 @@ def render_keyword_analysis() -> None:
     generated_at = str(KEYWORD_ANALYSIS.get("generated_at") or "첫 수집 대기")
     st.markdown(
         """
-        <div class="page-heading"><span>SEARCH INTELLIGENCE</span><h1>키워드와 검색어를<br>성과로 판단합니다.</h1>
-        <p>광고주가 등록한 키워드와 고객이 실제 입력한 검색어를 분리해 CTR과 비용 효율을 비교합니다.</p></div>
+        <div class="page-heading action-heading"><span>POWERLINK ACTION CENTER</span><h1>오늘 바꿀 것만<br>바로 확인하세요.</h1>
+        <p>키워드와 실제 검색어를 확대·유지·개선·감액·중지·제외로 분류합니다. 광고 설정은 자동 변경하지 않습니다.</p></div>
         """,
         unsafe_allow_html=True,
     )
-    st.caption(f"네이버 검색광고 API · 마지막 갱신 {generated_at} · 총비용 0원 항목 제외")
+    st.caption(f"네이버 검색광고 API · 마지막 갱신 {generated_at} · 추천 전용(승인 전 변경 없음)")
 
-    mode_column, category_column, search_column = st.columns([1.2, 1.2, 1.6])
+    mode_column, category_column, action_column, search_column = st.columns([1.05, 1.05, 1.05, 1.5])
     with mode_column:
         mode = st.radio(
             "분석 대상",
@@ -524,18 +526,28 @@ def render_keyword_analysis() -> None:
             horizontal=True,
         )
     with category_column:
-        category = st.selectbox("광고그룹 유형", ["전체", *COLORS.keys()])
+        category_options = ["전체", *COLORS.keys()]
+        category = st.selectbox(
+            "광고그룹 유형",
+            category_options,
+            index=category_options.index("파워링크"),
+        )
+    with action_column:
+        selected_action = st.selectbox("추천 액션", ["전체", *ACTIONS])
     with search_column:
         search = st.text_input("키워드·검색어 찾기", placeholder="예: 장현동 맛집")
 
     source_key = "keywords" if mode == "등록 키워드" else "search_terms"
-    rows = analysis_rows(list(KEYWORD_ANALYSIS.get(source_key) or []))
-    rows = [row for row in rows if row["spend"] > 0]
+    raw_rows = list(KEYWORD_ANALYSIS.get(source_key) or [])
+    rows = build_action_plan(raw_rows, mode)
     if category != "전체":
         rows = [row for row in rows if row.get("category") == category]
     if search.strip():
         needle = search.strip().casefold()
         rows = [row for row in rows if needle in str(row.get("value") or "").casefold()]
+    summary_rows = list(rows)
+    if selected_action != "전체":
+        rows = [row for row in rows if row["action"] == selected_action]
 
     coverage = KEYWORD_ANALYSIS.get("coverage") or {}
     if mode == "등록 키워드":
@@ -549,76 +561,93 @@ def render_keyword_analysis() -> None:
     st.caption(f"데이터 범위: {coverage_note}")
 
     if not rows:
-        st.info(
-            "조건에 맞는 비용 발생 데이터가 아직 없습니다. "
-            "첫 자동 수집 후 광고그룹 유형별 키워드와 검색어가 표시됩니다."
+        message = (
+            "조건에 맞는 액션 후보가 없습니다. 필터를 바꾸거나 첫 자동 수집 완료 후 다시 확인해주세요."
+            if raw_rows
+            else "첫 자동 수집이 아직 완료되지 않았습니다. 수집 후 키워드별 추천 액션이 이 화면에 표시됩니다."
+        )
+        st.markdown(
+            f'<div class="action-empty"><b>아직 표시할 추천이 없습니다.</b><p>{escape(message)}</p></div>',
+            unsafe_allow_html=True,
         )
         return
 
-    total = totals(rows)
-    metric_columns = st.columns(5)
-    metrics = [
-        ("분석 항목", f"{len(rows):,}개"),
-        ("노출수", f"{total['impressions']:,.0f}"),
-        ("클릭수", f"{total['clicks']:,.0f}"),
-        ("클릭률", f"{total['ctr']:.2f}%"),
-        ("평균 CPC / 총비용", f"{won(total['cpc'])} / {won(total['spend'])}"),
-    ]
-    for column, (label, value) in zip(metric_columns, metrics):
-        column.metric(label, value)
-
-    top = sorted(rows, key=lambda row: (-row["ctr"], -row["clicks"], -row["spend"]))[:10]
-    bottom = sorted(rows, key=lambda row: (row["ctr"], -row["spend"], -row["impressions"]))[:10]
-    top_column, bottom_column = st.columns(2)
-    with top_column:
-        st.subheader("클릭률 상위 10개")
-        st.caption("같은 CTR이면 클릭수와 비용이 큰 항목을 우선합니다.")
-        st.plotly_chart(
-            ctr_rank_chart(top, "#03C75A"),
-            use_container_width=True,
-            config={"displayModeBar": False},
-        )
-    with bottom_column:
-        st.subheader("클릭률 하위 10개")
-        st.caption("비용이 발생했지만 반응이 낮은 개선 후보입니다.")
-        st.plotly_chart(
-            ctr_rank_chart(bottom, "#FF7657"),
-            use_container_width=True,
-            config={"displayModeBar": False},
-        )
-
-    zero_click_spend = sum(row["spend"] for row in rows if row["clicks"] == 0)
-    best = top[0]
-    improvement = max(bottom, key=lambda row: row["spend"])
+    counts = {action: sum(row["action"] == action for row in summary_rows) for action in ACTIONS}
+    urgent = counts["제외"] + counts["중지"] + counts["감액"]
+    opportunity = counts["확대"]
+    review_spend = sum(row["spend"] for row in summary_rows if row["action"] in {"제외", "감액", "중지"})
+    total = totals(summary_rows)
     st.markdown(
         f"""
-        <div class="keyword-signals">
-          <div><span>BEST SIGNAL</span><b>{escape(best['value'])}</b><p>CTR {best['ctr']:.2f}% · 클릭 {best['clicks']:,.0f}회</p></div>
-          <div><span>개선 우선</span><b>{escape(improvement['value'])}</b><p>CTR {improvement['ctr']:.2f}% · 비용 {won(improvement['spend'])}</p></div>
-          <div><span>무클릭 비용</span><b>{won(zero_click_spend)}</b><p>클릭 0회인데 발생한 비용 합계</p></div>
+        <div class="action-overview">
+          <div class="action-overview__lead"><span>NEEDS ATTENTION</span><b>{urgent:,}</b><p>우선 검토할 감액·중지·제외 후보</p></div>
+          <div><span>GROWTH</span><b>{opportunity:,}</b><p>확대 후보</p></div>
+          <div><span>REVIEW SPEND</span><b>{won(review_spend)}</b><p>정리 후보에서 발생한 비용</p></div>
+          <div><span>ALL TRAFFIC</span><b>{total['ctr']:.2f}%</b><p>CTR · 평균 CPC {won(total['cpc'])}</p></div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.subheader(f"{mode} 전체 성과")
-    table_rows = sorted(rows, key=lambda row: (-row["spend"], -row["clicks"]))[:100]
-    match_header = "<th>검색유형</th>" if mode == "실제 검색어" else ""
+    st.markdown("### 우선 처리")
+    st.caption("근거가 명확하고 우선순위가 높은 항목입니다. 추천을 확인한 뒤 네이버 광고주센터에서 승인·반영하세요.")
+    priority_rows = [row for row in rows if row["action"] != "유지"][:3] or rows[:3]
+    priority_columns = st.columns(len(priority_rows))
+    for column, row in zip(priority_columns, priority_rows):
+        meta = ACTION_META[row["action"]]
+        with column:
+            st.markdown(
+                f"""
+                <div class="action-card" style="--action:{meta['color']}">
+                  <div class="action-card__top"><span>{escape(meta['label'])}</span><i>우선순위 {row['priority']}</i></div>
+                  <h3>{escape(str(row.get('value') or '-'))}</h3>
+                  <p>{escape(row['reason'])}</p>
+                  <strong>{escape(row['proposal'])}</strong>
+                  <div class="action-card__metrics"><span>CTR {row['ctr']:.2f}%</span><span>CPC {won(row['cpc'])}</span><span>신뢰 {row['confidence']}</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("### 액션 분포")
+    distribution_columns = st.columns(6)
+    for column, action in zip(distribution_columns, ACTIONS):
+        meta = ACTION_META[action]
+        column.markdown(
+            f'<div class="action-count" style="--action:{meta["color"]}"><span>{escape(meta["label"])}</span><b>{counts[action]:,}</b></div>',
+            unsafe_allow_html=True,
+        )
+
+    export_buffer = io.StringIO()
+    export_fields = ["priority", "action", "value", "category", "intent", "impressions", "clicks", "ctr", "cpc", "spend", "confidence", "reason", "proposal"]
+    writer = csv.DictWriter(export_buffer, fieldnames=export_fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    download_column, note_column = st.columns([1, 3], vertical_alignment="center")
+    with download_column:
+        st.download_button(
+            "액션 목록 CSV 받기",
+            data="\ufeff" + export_buffer.getvalue(),
+            file_name=f"naver-keyword-actions-{datetime.now():%Y%m%d}.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+    with note_column:
+        st.caption("제외·중지·입찰 변경은 자동 실행되지 않습니다. CSV를 검토 목록으로 사용하세요.")
+
+    st.markdown(f"### {mode} 액션 목록")
+    table_rows = rows[:200]
     body = "".join(
         (
-            "<tr>"
-            + f"<td><b>{escape(str(row.get('value') or ''))}</b></td>"
-            + f"<td>{escape(str(row.get('category') or ''))}</td>"
-            + (
-                f"<td>{escape(', '.join(row.get('match_types') or []) or '-')}</td>"
-                if mode == "실제 검색어"
-                else ""
-            )
+            f'<tr><td><span class="action-chip" style="--action:{ACTION_META[row["action"]]["color"]}">{escape(row["action_label"])}</span></td>'
+            + f"<td><b>{escape(str(row.get('value') or ''))}</b><small>{escape(row['intent'])} · {escape(str(row.get('category') or ''))}</small></td>"
             + f"<td>{row['impressions']:,.0f}</td>"
             + f"<td>{row['clicks']:,.0f}</td>"
             + f"<td><strong>{row['ctr']:.2f}%</strong></td>"
             + f"<td>{won(row['cpc'])}</td>"
             + f"<td>{won(row['spend'])}</td>"
+            + f"<td class=\"action-reason\">{escape(row['reason'])}<small>{escape(row['proposal'])}</small></td>"
+            + f"<td><b>{escape(row['confidence'])}</b><small>{row['confidence_score']}점</small></td>"
             + "</tr>"
         )
         for row in table_rows
@@ -626,14 +655,28 @@ def render_keyword_analysis() -> None:
     st.markdown(
         f"""
         <div class="analysis-table-wrap"><table class="analysis-table">
-          <thead><tr><th>{mode}</th><th>광고그룹 유형</th>{match_header}<th>노출수</th><th>클릭수</th><th>클릭률</th><th>평균 CPC</th><th>총비용</th></tr></thead>
+          <thead><tr><th>추천</th><th>{mode}</th><th>노출</th><th>클릭</th><th>CTR</th><th>CPC</th><th>비용</th><th>판단 근거 / 제안</th><th>신뢰도</th></tr></thead>
           <tbody>{body}</tbody>
         </table></div>
         """,
         unsafe_allow_html=True,
     )
     if len(rows) > len(table_rows):
-        st.caption(f"비용순 상위 {len(table_rows)}개 표시 · 검색창으로 전체 {len(rows):,}개 항목을 찾을 수 있습니다.")
+        st.caption(f"우선순위 상위 {len(table_rows)}개 표시 · 검색창과 액션 필터로 전체 {len(rows):,}개 항목을 찾을 수 있습니다.")
+
+    with st.expander("판정 기준 보기"):
+        st.markdown(
+            """
+            - **제외:** 레시피·밀키트·구직·창업처럼 방문 의도가 명확히 다른 실제 검색어
+            - **중지:** 최근 분석기간 노출이 없는 등록 키워드. 브랜드·계절 키워드는 사람이 예외 확인
+            - **감액:** 충분히 노출됐지만 CTR 또는 CPC가 같은 광고유형보다 크게 불리한 항목
+            - **개선:** 방문 의도는 높지만 클릭 반응이 낮아 소재·광고그룹·랜딩 개선이 먼저인 항목
+            - **확대:** 표본이 충분하고 같은 광고유형보다 CTR이 높으며 CPC가 안정적인 항목
+            - **유지:** 표본이 부족하거나 성과가 기준 범위 안인 항목
+
+            추천은 최근 데이터에 기반한 운영 보조 신호이며 전환 실적이 연결되면 CPA를 최우선 기준으로 바꿉니다.
+            """
+        )
 
 
 def render_report(day_label: str, rows: list[dict]) -> None:
@@ -1085,6 +1128,33 @@ st.markdown(
     .keyword-signals span { display:block; margin-bottom:.8rem; color:var(--muted); font-size:.58rem; font-weight:900; letter-spacing:.08em; }
     .keyword-signals b { display:block; overflow:hidden; font-size:1.05rem; text-overflow:ellipsis; white-space:nowrap; }
     .keyword-signals p { margin:.35rem 0 0; color:var(--muted); font-size:.7rem; }
+    .action-heading { position:relative; overflow:hidden; margin-top:.8rem; padding:3rem 2.2rem 2.4rem; border-radius:28px; background:#151917; color:white; }
+    .action-heading:after { content:""; position:absolute; right:-45px; bottom:-85px; width:260px; height:260px; border-radius:50%; background:var(--lime); opacity:.95; }
+    .action-heading:before { content:"ACTION"; position:absolute; right:32px; bottom:10px; z-index:1; color:#151917; font-size:2.2rem; font-weight:950; letter-spacing:-.08em; }
+    .action-heading > * { position:relative; z-index:2; }.action-heading p{color:#aeb6b1}.action-heading > span{color:var(--lime)}
+    .action-overview { display:grid; grid-template-columns:1.25fr repeat(3,1fr); gap:.75rem; margin:1.4rem 0 2.4rem; }
+    .action-overview > div { min-height:146px; padding:1.25rem; border:1px solid var(--line); border-radius:18px; background:white; }
+    .action-overview__lead { background:var(--lime)!important; border-color:#a9ec00!important; }
+    .action-overview span { color:var(--muted); font-size:.58rem; font-weight:900; letter-spacing:.12em; }
+    .action-overview b { display:block; margin:.9rem 0 .2rem; font-size:2.15rem; line-height:1; letter-spacing:-.07em; }
+    .action-overview p { margin:0; color:var(--muted); font-size:.66rem; line-height:1.35; }
+    .action-card { min-height:245px; padding:1.25rem; border:1px solid var(--line); border-top:5px solid var(--action); border-radius:18px; background:white; }
+    .action-card__top { display:flex; align-items:center; justify-content:space-between; }
+    .action-card__top span { padding:.28rem .55rem; border-radius:999px; background:color-mix(in srgb,var(--action) 15%,white); color:var(--action); font-size:.62rem; font-weight:900; }
+    .action-card__top i { color:var(--muted); font-size:.57rem; font-style:normal; font-weight:800; }
+    .action-card h3 { margin:1.25rem 0 .5rem; overflow:hidden; font-size:1.28rem; text-overflow:ellipsis; white-space:nowrap; }
+    .action-card p { min-height:44px; margin:0 0 .8rem; color:var(--muted); font-size:.68rem; line-height:1.5; }
+    .action-card > strong { display:block; min-height:38px; color:var(--action); font-size:.73rem; line-height:1.45; }
+    .action-card__metrics { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--line); }
+    .action-card__metrics span { padding:.25rem .4rem; border-radius:6px; background:#f1f4f2; color:#505954; font-size:.58rem; font-weight:800; }
+    .action-count { margin:.5rem 0 1.5rem; padding:1rem; border:1px solid var(--line); border-bottom:4px solid var(--action); border-radius:14px; background:white; }
+    .action-count span { display:block; min-height:26px; color:var(--muted); font-size:.58rem; font-weight:850; }
+    .action-count b { display:block; margin-top:.4rem; color:var(--action); font-size:1.55rem; }
+    .action-chip { display:inline-block; padding:.3rem .5rem; border:1px solid color-mix(in srgb,var(--action) 28%,white); border-radius:999px; background:color-mix(in srgb,var(--action) 12%,white); color:var(--action); font-size:.58rem; font-weight:900; }
+    .analysis-table td small { display:block; margin-top:.25rem; color:var(--muted); font-size:.58rem; font-weight:500; }
+    .analysis-table .action-reason { min-width:280px; max-width:380px; text-align:left; white-space:normal; line-height:1.35; }
+    .action-empty { margin:1.4rem 0; padding:2rem; border:1px dashed #b9c2bd; border-radius:20px; background:white; text-align:center; }
+    .action-empty b { font-size:1.1rem; }.action-empty p { margin:.5rem 0 0; color:var(--muted); font-size:.75rem; }
     .analysis-table-wrap { overflow:auto; max-height:620px; border:1px solid var(--line); border-radius:16px; background:white; }
     .analysis-table { width:100%; border-collapse:collapse; font-size:.72rem; }
     .analysis-table thead { position:sticky; top:0; z-index:1; background:#f7f9f7; }
@@ -1107,7 +1177,8 @@ st.markdown(
       [data-testid="stRadio"] div[role="radiogroup"]{width:100%;overflow-x:auto}
       [data-testid="stRadio"] div[role="radiogroup"] label{padding:.4rem .55rem;white-space:nowrap;font-size:.72rem}
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
-      .keyword-signals{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
+      .keyword-signals,.action-overview{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
+      .action-heading{padding:2rem 1.25rem}.action-heading:after,.action-heading:before{display:none}
     }
     </style>
     <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점 바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div>

@@ -132,6 +132,25 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(captured["params"]["nccAdgroupId"], "group-test")
         self.assertEqual(keywords[0]["keyword"], "장현동 맛집")
 
+    def test_registered_keyword_collection_keeps_zero_activity_rows(self) -> None:
+        class KeywordClient:
+            def keywords(self, adgroup_id):
+                return [{"nccKeywordId": "kw-stale", "keyword": "오래된 키워드"}]
+
+            def summary_stats(self, entity_ids, since, until):
+                return []
+
+        rows = report.collect_registered_keyword_rows(
+            KeywordClient(),
+            [{"adgroup_id": "group-test", "category": "파워링크", "adgroup_name": "테스트"}],
+            date(2026, 7, 1),
+            date(2026, 7, 30),
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["value"], "오래된 키워드")
+        self.assertEqual(rows[0]["impressions"], 0)
+
     def test_place_search_terms_use_npla_stat_type(self) -> None:
         captured = {}
 

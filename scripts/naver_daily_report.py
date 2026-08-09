@@ -529,11 +529,9 @@ def collect_registered_keyword_rows(
                 target["clicks"] += round(number(row.get("clkCnt")))
                 target["spend"] += round(number(row.get("salesAmt")))
         time.sleep(0.2)
-    return [
-        row
-        for row in aggregate_analysis_rows(list(keyword_by_id.values()))
-        if row["spend"] > 0
-    ]
+    # Keep zero-cost and zero-impression registered keywords so the action
+    # board can identify stale keywords instead of hiding them.
+    return aggregate_analysis_rows(list(keyword_by_id.values()))
 
 
 def collect_place_search_term_rows(

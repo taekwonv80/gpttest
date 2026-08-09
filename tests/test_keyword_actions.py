@@ -13,9 +13,62 @@ class KeywordActionTests(unittest.TestCase):
         self.assertEqual(result["intent"], "무관 의도")
 
     def test_zero_impression_registered_keyword_is_paused(self) -> None:
-        row = {"value": "오래된 키워드", "category": "파워링크", "impressions": 0, "clicks": 0, "spend": 0}
+        row = {
+            "value": "오래된 키워드", "category": "파워링크",
+            "impressions": 0, "clicks": 0, "spend": 0,
+            "windows": {
+                "30": {"impressions": 0, "clicks": 0, "spend": 0},
+                "90": {"impressions": 0, "clicks": 0, "spend": 0},
+            },
+        }
         result = recommend(row, source="등록 키워드", cohort_ctr=1.0, cohort_cpc=120)
         self.assertEqual(result["action"], "중지")
+        self.assertEqual(result["decision_period"], "최근 90일")
+
+    def test_thirty_day_zero_does_not_pause_keyword_with_ninety_day_activity(self) -> None:
+        row = {
+            "value": "계절 키워드", "category": "파워링크",
+            "impressions": 0, "clicks": 0, "spend": 0,
+            "windows": {
+                "30": {"impressions": 0, "clicks": 0, "spend": 0},
+                "90": {"impressions": 80, "clicks": 3, "spend": 300},
+            },
+        }
+        result = recommend(row, source="등록 키워드", cohort_ctr=1.0, cohort_cpc=120)
+        self.assertEqual(result["action"], "유지")
+
+    def test_rising_seven_day_trend_holds_low_ctr_keyword(self) -> None:
+        row = {
+            "value": "일반 키워드", "category": "파워링크",
+            "windows": {
+                "7": {"impressions": 300, "clicks": 3, "spend": 300},
+                "previous_7": {"impressions": 300, "clicks": 1, "spend": 100},
+                "30": {"impressions": 1000, "clicks": 2, "spend": 300},
+                "90": {"impressions": 3000, "clicks": 12, "spend": 1200},
+            },
+        }
+        result = recommend(row, source="등록 키워드", cohort_ctr=1.0, cohort_cpc=120)
+        self.assertEqual(result["trend"], "상승")
+        self.assertEqual(result["action"], "유지")
+
+    def test_ninety_day_window_supplies_low_volume_evidence(self) -> None:
+        row = {
+            "value": "장현동 맛집", "category": "파워링크",
+            "windows": {
+                "30": {"impressions": 100, "clicks": 2, "spend": 200},
+                "90": {"impressions": 900, "clicks": 20, "spend": 2000},
+            },
+        }
+        result = recommend(
+            row,
+            source="등록 키워드",
+            cohort_ctr=1.0,
+            cohort_cpc=120,
+            cohort_ctr_90=1.0,
+            cohort_cpc_90=120,
+        )
+        self.assertEqual(result["decision_period"], "최근 90일")
+        self.assertEqual(result["action"], "확대")
 
     def test_high_intent_low_ctr_is_improved_not_removed(self) -> None:
         row = {"value": "장현동 조개전골", "category": "파워링크", "impressions": 1000, "clicks": 2, "spend": 300}

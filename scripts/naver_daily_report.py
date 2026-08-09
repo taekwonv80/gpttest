@@ -35,7 +35,10 @@ KEYWORD_DATA_PATH = Path("data/keyword_analysis.json")
 CONNECTIONS_PATH = Path("data/connections.json")
 DEFAULT_DASHBOARD_URL = "https://taekwonv80.github.io/gpttest"
 STATS_BATCH_SIZE = 100
-KEYWORD_LOOKBACK_DAYS = 30
+STATS_MAX_RANGE_DAYS = 30
+KEYWORD_RETENTION_DAYS = 90
+KEYWORD_PRIMARY_WINDOW_DAYS = 30
+KEYWORD_WINDOWS = ("7", "previous_7", "30", "90")
 STAT_REPORT_POLL_SECONDS = 2
 STAT_REPORT_MAX_POLLS = 30
 
@@ -534,6 +537,111 @@ def collect_registered_keyword_rows(
     return aggregate_analysis_rows(list(keyword_by_id.values()))
 
 
+def keyword_window_ranges(report_date: date) -> dict[str, tuple[date, date]]:
+    """Return non-overlapping trend and long-term decision ranges."""
+    return {
+        "7": (report_date - timedelta(days=6), report_date),
+        "previous_7": (report_date - timedelta(days=13), report_date - timedelta(days=7)),
+        "30": (report_date - timedelta(days=29), report_date),
+        "90": (report_date - timedelta(days=89), report_date),
+    }
+
+
+def date_range_chunks(
+    since: date, until: date, max_days: int = STATS_MAX_RANGE_DAYS
+) -> list[tuple[date, date]]:
+    chunks: list[tuple[date, date]] = []
+    current = since
+    while current <= until:
+        chunk_until = min(current + timedelta(days=max_days - 1), until)
+        chunks.append((current, chunk_until))
+        current = chunk_until + timedelta(days=1)
+    return chunks
+
+
+def collect_registered_keyword_windows(
+    client: NaverSearchAdClient,
+    catalog: list[dict[str, str]],
+    report_date: date,
+) -> dict[str, list[dict[str, Any]]]:
+    """Collect all registered keywords once, then request metrics per window."""
+    keyword_by_id: dict[str, dict[str, Any]] = {}
+    for group in catalog:
+        try:
+            keywords = client.keywords(group["adgroup_id"])
+        except IntegrationError as exc:
+            print(f"키워드 목록 건너뜀: {group['adgroup_name']} · {exc}")
+            continue
+        for keyword in keywords:
+            keyword_id = str(keyword.get("nccKeywordId") or keyword.get("id") or "")
+            value = str(keyword.get("keyword") or keyword.get("name") or "").strip()
+            if keyword_id and value:
+                keyword_by_id[keyword_id] = analysis_record(
+                    group["category"], value, 0, 0, 0
+                )
+
+    result: dict[str, list[dict[str, Any]]] = {}
+    keyword_ids = list(keyword_by_id)
+    for label, (since, until) in keyword_window_ranges(report_date).items():
+        metrics = {keyword_id: dict(row) for keyword_id, row in keyword_by_id.items()}
+        for chunk_since, chunk_until in date_range_chunks(since, until):
+            for start in range(0, len(keyword_ids), STATS_BATCH_SIZE):
+                batch = keyword_ids[start : start + STATS_BATCH_SIZE]
+                for row in client.summary_stats(batch, chunk_since, chunk_until):
+                    keyword_id = str(row.get("id") or row.get("nccKeywordId") or "")
+                    target = metrics.get(keyword_id)
+                    if target:
+                        target["impressions"] += round(number(row.get("impCnt")))
+                        target["clicks"] += round(number(row.get("clkCnt")))
+                        target["spend"] += round(number(row.get("salesAmt")))
+                time.sleep(0.2)
+        result[label] = aggregate_analysis_rows(list(metrics.values()))
+    return result
+
+
+def rows_for_date_range(
+    days: list[dict[str, Any]], since: date, until: date
+) -> list[dict[str, Any]]:
+    return aggregate_analysis_rows(
+        [
+            row
+            for day in days
+            if isinstance(day, dict)
+            and since.isoformat() <= str(day.get("date") or "") <= until.isoformat()
+            for row in day.get("rows", [])
+            if isinstance(row, dict)
+        ]
+    )
+
+
+def attach_metric_windows(
+    primary_rows: list[dict[str, Any]],
+    window_rows: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """Attach available period metrics without inventing unavailable windows."""
+    indexes = {
+        label: {
+            (str(row.get("category") or ""), str(row.get("value") or "")): row
+            for row in rows
+        }
+        for label, rows in window_rows.items()
+    }
+    result: list[dict[str, Any]] = []
+    for primary in primary_rows:
+        key = (str(primary.get("category") or ""), str(primary.get("value") or ""))
+        windows: dict[str, dict[str, int]] = {}
+        for label, index in indexes.items():
+            row = index.get(key)
+            if row is not None:
+                windows[label] = {
+                    "impressions": round(number(row.get("impressions"))),
+                    "clicks": round(number(row.get("clicks"))),
+                    "spend": round(number(row.get("spend"))),
+                }
+        result.append({**primary, "windows": windows})
+    return result
+
+
 def collect_place_search_term_rows(
     client: NaverSearchAdClient, catalog: list[dict[str, str]]
 ) -> list[dict[str, Any]]:
@@ -643,7 +751,7 @@ def merge_powerlink_days(
     report_date: date,
     rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    cutoff = report_date - timedelta(days=KEYWORD_LOOKBACK_DAYS - 1)
+    cutoff = report_date - timedelta(days=KEYWORD_RETENTION_DAYS - 1)
     merged = [
         item
         for item in existing_days
@@ -662,8 +770,9 @@ def build_keyword_analysis_payload(
 ) -> dict[str, Any]:
     existing = existing or {}
     catalog = collect_adgroup_catalog(client)
-    since = report_date - timedelta(days=KEYWORD_LOOKBACK_DAYS - 1)
-    keywords = collect_registered_keyword_rows(client, catalog, since, report_date)
+    since = report_date - timedelta(days=KEYWORD_RETENTION_DAYS - 1)
+    keyword_windows = collect_registered_keyword_windows(client, catalog, report_date)
+    keywords = attach_metric_windows(keyword_windows["30"], keyword_windows)
     place_terms = collect_place_search_term_rows(client, catalog)
 
     powerlink_days = list(existing.get("powerlink_days") or [])
@@ -673,24 +782,25 @@ def build_keyword_analysis_payload(
     except IntegrationError as exc:
         print(f"파워링크 검색어 보고서 건너뜀: {exc}")
 
-    powerlink_terms = aggregate_analysis_rows(
-        [
-            row
-            for day in powerlink_days
-            if isinstance(day, dict)
-            for row in day.get("rows", [])
-            if isinstance(row, dict)
-        ]
-    )
+    ranges = keyword_window_ranges(report_date)
+    powerlink_windows = {
+        label: rows_for_date_range(powerlink_days, window_since, window_until)
+        for label, (window_since, window_until) in ranges.items()
+    }
+    search_term_windows = {
+        **powerlink_windows,
+        "30": aggregate_analysis_rows(place_terms + powerlink_windows["30"]),
+    }
+    search_terms = attach_metric_windows(search_term_windows["30"], search_term_windows)
     coverage_dates = [str(day.get("date")) for day in powerlink_days if day.get("date")]
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "source": "naver-searchad-api",
         "generated_at": datetime.now(SEOUL).isoformat(timespec="seconds"),
         "report_date": report_date.isoformat(),
         "period": {"since": since.isoformat(), "until": report_date.isoformat()},
         "coverage": {
-            "keywords": "최근 30일",
+            "keywords": "최근 7일·직전 7일·30일·90일 비교",
             "place_search_terms": "네이버 제공 최근 30일",
             "powerlink_search_terms": (
                 f"{coverage_dates[0]} ~ {coverage_dates[-1]} · {len(coverage_dates)}일 누적"
@@ -698,12 +808,16 @@ def build_keyword_analysis_payload(
                 else "첫 수집 대기"
             ),
         },
+        "decision_windows": {
+            label: {"since": window_since.isoformat(), "until": window_until.isoformat()}
+            for label, (window_since, window_until) in ranges.items()
+        },
         "adgroup_counts": {
             category: sum(group["category"] == category for group in catalog)
             for category in CATEGORIES
         },
         "keywords": keywords,
-        "search_terms": aggregate_analysis_rows(place_terms + powerlink_terms),
+        "search_terms": search_terms,
         "powerlink_days": powerlink_days,
     }
 

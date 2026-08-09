@@ -4,6 +4,7 @@ import importlib.util
 import unittest
 from datetime import date, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).parents[1] / "scripts" / "naver_daily_report.py"
@@ -151,6 +152,35 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(rows[0]["value"], "오래된 키워드")
         self.assertEqual(rows[0]["impressions"], 0)
 
+    def test_registered_keyword_windows_fetch_catalog_once(self) -> None:
+        class WindowClient:
+            def __init__(self):
+                self.keyword_calls = 0
+                self.stat_ranges = []
+
+            def keywords(self, adgroup_id):
+                self.keyword_calls += 1
+                return [{"nccKeywordId": "kw-one", "keyword": "장현동 맛집"}]
+
+            def summary_stats(self, entity_ids, since, until):
+                self.stat_ranges.append((since, until))
+                days = (until - since).days + 1
+                return [{"id": "kw-one", "impCnt": days * 10, "clkCnt": days, "salesAmt": days * 100}]
+
+        client = WindowClient()
+        with patch.object(report.time, "sleep"):
+            windows = report.collect_registered_keyword_windows(
+                client,
+                [{"adgroup_id": "group-test", "category": "파워링크", "adgroup_name": "테스트"}],
+                date(2026, 8, 2),
+            )
+
+        self.assertEqual(client.keyword_calls, 1)
+        self.assertEqual(len(client.stat_ranges), 6)
+        self.assertTrue(all((until - since).days < 30 for since, until in client.stat_ranges))
+        self.assertEqual(windows["7"][0]["impressions"], 70)
+        self.assertEqual(windows["90"][0]["clicks"], 90)
+
     def test_place_search_terms_use_npla_stat_type(self) -> None:
         captured = {}
 
@@ -188,7 +218,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(rows[0]["spend"], 1300)
         self.assertEqual(rows[0]["match_types"], ["확장", "일치"])
 
-    def test_powerlink_search_term_days_keep_latest_thirty_days(self) -> None:
+    def test_powerlink_search_term_days_keep_latest_ninety_days(self) -> None:
         existing = [
             {"date": "2026-07-02", "rows": []},
             {"date": "2026-07-04", "rows": [{"value": "기존"}]},
@@ -198,8 +228,28 @@ class ReportTests(unittest.TestCase):
 
         merged = report.merge_powerlink_days(existing, date(2026, 8, 2), rows)
 
-        self.assertEqual([item["date"] for item in merged], ["2026-07-04", "2026-08-02"])
+        self.assertEqual(
+            [item["date"] for item in merged],
+            ["2026-07-02", "2026-07-04", "2026-08-02"],
+        )
         self.assertEqual(merged[-1]["rows"][0]["value"], "신규")
+
+    def test_keyword_windows_include_trend_primary_and_long_term_ranges(self) -> None:
+        ranges = report.keyword_window_ranges(date(2026, 8, 2))
+
+        self.assertEqual(ranges["7"], (date(2026, 7, 27), date(2026, 8, 2)))
+        self.assertEqual(ranges["previous_7"], (date(2026, 7, 20), date(2026, 7, 26)))
+        self.assertEqual(ranges["30"][0], date(2026, 7, 4))
+        self.assertEqual(ranges["90"][0], date(2026, 5, 5))
+
+    def test_metric_windows_do_not_invent_unavailable_periods(self) -> None:
+        primary = [
+            {"category": "플레이스 검색광고", "value": "맛집", "impressions": 30, "clicks": 2, "spend": 200}
+        ]
+        attached = report.attach_metric_windows(primary, {"30": primary, "7": []})
+
+        self.assertIn("30", attached[0]["windows"])
+        self.assertNotIn("7", attached[0]["windows"])
 
     def test_query_string_repeats_bulk_ids(self) -> None:
         self.assertEqual(

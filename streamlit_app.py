@@ -557,8 +557,22 @@ def render_keyword_analysis() -> None:
     elif category in {"플레이스 검색광고", "지역소상공인 광고"}:
         coverage_note = str(coverage.get("place_search_terms") or "첫 수집 대기")
     else:
-        coverage_note = "플레이스 최근 30일 · 파워링크 일별 누적"
+        coverage_note = "플레이스 최근 30일 · 파워링크 7일·30일·90일 누적"
     st.caption(f"데이터 범위: {coverage_note}")
+
+    has_multi_window = any(isinstance(row.get("windows"), dict) for row in raw_rows)
+    availability = "실데이터 적용" if has_multi_window else "다음 자동 수집 후 적용"
+    st.markdown(
+        f"""
+        <div class="window-strip">
+          <div><span>SHORT SIGNAL</span><b>7일 ↔ 직전 7일</b><p>급격한 상승·하락과 변경 후 반응</p></div>
+          <div class="window-strip__primary"><span>PRIMARY DECISION</span><b>최근 30일</b><p>CTR·CPC·광고비 기본 판정</p></div>
+          <div><span>LONG EVIDENCE</span><b>최근 90일</b><p>저검색량 보완·무노출 중지 판정</p></div>
+          <i>{availability}</i>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if not rows:
         message = (
@@ -603,7 +617,7 @@ def render_keyword_analysis() -> None:
                   <h3>{escape(str(row.get('value') or '-'))}</h3>
                   <p>{escape(row['reason'])}</p>
                   <strong>{escape(row['proposal'])}</strong>
-                  <div class="action-card__metrics"><span>CTR {row['ctr']:.2f}%</span><span>CPC {won(row['cpc'])}</span><span>신뢰 {row['confidence']}</span></div>
+                  <div class="action-card__metrics"><span>30일 CTR {row['ctr_30']:.2f}%</span><span>7일 {escape(row['trend'])}</span><span>{escape(row['decision_period'])}</span></div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -619,7 +633,13 @@ def render_keyword_analysis() -> None:
         )
 
     export_buffer = io.StringIO()
-    export_fields = ["priority", "action", "value", "category", "intent", "impressions", "clicks", "ctr", "cpc", "spend", "confidence", "reason", "proposal"]
+    export_fields = [
+        "priority", "action", "value", "category", "intent", "decision_period", "trend",
+        "impressions_7", "clicks_7", "ctr_7",
+        "impressions_30", "clicks_30", "ctr_30", "spend_30",
+        "impressions_90", "clicks_90", "ctr_90", "spend_90",
+        "confidence", "reason", "proposal",
+    ]
     writer = csv.DictWriter(export_buffer, fieldnames=export_fields, extrasaction="ignore")
     writer.writeheader()
     writer.writerows(rows)
@@ -641,11 +661,11 @@ def render_keyword_analysis() -> None:
         (
             f'<tr><td><span class="action-chip" style="--action:{ACTION_META[row["action"]]["color"]}">{escape(row["action_label"])}</span></td>'
             + f"<td><b>{escape(str(row.get('value') or ''))}</b><small>{escape(row['intent'])} · {escape(str(row.get('category') or ''))}</small></td>"
-            + f"<td>{row['impressions']:,.0f}</td>"
-            + f"<td>{row['clicks']:,.0f}</td>"
-            + f"<td><strong>{row['ctr']:.2f}%</strong></td>"
-            + f"<td>{won(row['cpc'])}</td>"
-            + f"<td>{won(row['spend'])}</td>"
+            + f"<td>{row['impressions_30']:,.0f}</td>"
+            + f"<td>{row['clicks_30']:,.0f}</td>"
+            + f"<td><strong>{row['ctr_30']:.2f}%</strong></td>"
+            + f"<td><span class=\"trend-chip trend-chip--{escape(row['trend'])}\">{escape(row['trend'])}</span><small>{row['ctr_7']:.2f}%</small></td>"
+            + f"<td><b>{escape(row['decision_period'])}</b><small>{('90일 클릭 {:,.0f}'.format(row['clicks_90']) if row['has_90_window'] else '90일 수집 대기')}</small></td>"
             + f"<td class=\"action-reason\">{escape(row['reason'])}<small>{escape(row['proposal'])}</small></td>"
             + f"<td><b>{escape(row['confidence'])}</b><small>{row['confidence_score']}점</small></td>"
             + "</tr>"
@@ -655,7 +675,7 @@ def render_keyword_analysis() -> None:
     st.markdown(
         f"""
         <div class="analysis-table-wrap"><table class="analysis-table">
-          <thead><tr><th>추천</th><th>{mode}</th><th>노출</th><th>클릭</th><th>CTR</th><th>CPC</th><th>비용</th><th>판단 근거 / 제안</th><th>신뢰도</th></tr></thead>
+          <thead><tr><th>추천</th><th>{mode}</th><th>30일 노출</th><th>30일 클릭</th><th>30일 CTR</th><th>7일 추세</th><th>판정 구간</th><th>판단 근거 / 제안</th><th>신뢰도</th></tr></thead>
           <tbody>{body}</tbody>
         </table></div>
         """,
@@ -667,14 +687,16 @@ def render_keyword_analysis() -> None:
     with st.expander("판정 기준 보기"):
         st.markdown(
             """
-            - **제외:** 레시피·밀키트·구직·창업처럼 방문 의도가 명확히 다른 실제 검색어
-            - **중지:** 최근 분석기간 노출이 없는 등록 키워드. 브랜드·계절 키워드는 사람이 예외 확인
-            - **감액:** 충분히 노출됐지만 CTR 또는 CPC가 같은 광고유형보다 크게 불리한 항목
-            - **개선:** 방문 의도는 높지만 클릭 반응이 낮아 소재·광고그룹·랜딩 개선이 먼저인 항목
-            - **확대:** 표본이 충분하고 같은 광고유형보다 CTR이 높으며 CPC가 안정적인 항목
-            - **유지:** 표본이 부족하거나 성과가 기준 범위 안인 항목
+            - **기본 구간:** 최근 30일을 기본으로 사용합니다. 노출 200·클릭 10 미만이면 최근 90일 표본으로 보완합니다.
+            - **7일 추세:** 최근 7일 CTR을 직전 7일과 비교합니다. 25% 이상 오르면 상승, 25% 이상 내리면 하락입니다. 표본이 작으면 추세를 확정하지 않습니다.
+            - **제외:** 레시피·밀키트·구직·창업처럼 방문 의도가 명확히 다른 실제 검색어는 기간과 무관하게 검토합니다.
+            - **중지:** 등록 키워드가 최근 90일 동안 노출 0일 때만 제안합니다. 신규 등록·광고 상태·입찰가를 먼저 확인합니다.
+            - **감액:** 충분한 표본에서 CTR 0.3% 미만, 유형 중앙값의 50% 미만 또는 CPC가 1.5배를 넘고 최근 7일 회복 신호도 없을 때 제안합니다.
+            - **개선:** 방문 의도는 높지만 클릭 반응이 낮으면 삭제·감액보다 소재·광고그룹·랜딩 개선을 우선합니다.
+            - **확대:** 표본이 충분하고 같은 유형보다 CTR이 높으며 CPC가 안정적이고 최근 7일 추세가 하락하지 않을 때 제안합니다.
+            - **유지:** 표본이 부족하거나 최근 7일 반응이 회복 중이면 성급한 감액을 보류합니다.
 
-            추천은 최근 데이터에 기반한 운영 보조 신호이며 전환 실적이 연결되면 CPA를 최우선 기준으로 바꿉니다.
+            추천은 운영 보조 신호이며 자동으로 광고 설정을 바꾸지 않습니다. 예약·전화·주문 전환이 연결되면 CTR보다 CPA·전환가치를 우선하도록 확장합니다.
             """
         )
 
@@ -1128,6 +1150,13 @@ st.markdown(
     .keyword-signals span { display:block; margin-bottom:.8rem; color:var(--muted); font-size:.58rem; font-weight:900; letter-spacing:.08em; }
     .keyword-signals b { display:block; overflow:hidden; font-size:1.05rem; text-overflow:ellipsis; white-space:nowrap; }
     .keyword-signals p { margin:.35rem 0 0; color:var(--muted); font-size:.7rem; }
+    .window-strip { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:.65rem; margin:1rem 0 1.4rem; padding:.65rem; border:1px solid var(--line); border-radius:18px; background:white; }
+    .window-strip > div { padding:1rem 1.1rem; border-radius:13px; background:#f4f6f4; }
+    .window-strip__primary { background:var(--lime)!important; }
+    .window-strip span { color:var(--muted); font-size:.55rem; font-weight:900; letter-spacing:.13em; }
+    .window-strip b { display:block; margin:.35rem 0 .2rem; font-size:.95rem; }
+    .window-strip p { margin:0; color:var(--muted); font-size:.65rem; }
+    .window-strip > i { position:absolute; right:1rem; top:-.7rem; padding:.25rem .55rem; border-radius:999px; background:#171a18; color:white; font-size:.55rem; font-style:normal; font-weight:800; }
     .action-heading { position:relative; overflow:hidden; margin-top:.8rem; padding:3rem 2.2rem 2.4rem; border-radius:28px; background:#151917; color:white; }
     .action-heading:after { content:""; position:absolute; right:-45px; bottom:-85px; width:260px; height:260px; border-radius:50%; background:var(--lime); opacity:.95; }
     .action-heading:before { content:"ACTION"; position:absolute; right:32px; bottom:10px; z-index:1; color:#151917; font-size:2.2rem; font-weight:950; letter-spacing:-.08em; }
@@ -1151,6 +1180,8 @@ st.markdown(
     .action-count span { display:block; min-height:26px; color:var(--muted); font-size:.58rem; font-weight:850; }
     .action-count b { display:block; margin-top:.4rem; color:var(--action); font-size:1.55rem; }
     .action-chip { display:inline-block; padding:.3rem .5rem; border:1px solid color-mix(in srgb,var(--action) 28%,white); border-radius:999px; background:color-mix(in srgb,var(--action) 12%,white); color:var(--action); font-size:.58rem; font-weight:900; }
+    .trend-chip { display:inline-block; padding:.26rem .48rem; border-radius:999px; background:#edf0ee; color:#4d5a55; font-size:.58rem; font-weight:900; }
+    .trend-chip--상승 { background:#dff8e9; color:#008b42; }.trend-chip--하락 { background:#ffe9e6; color:#d93c32; }
     .analysis-table td small { display:block; margin-top:.25rem; color:var(--muted); font-size:.58rem; font-weight:500; }
     .analysis-table .action-reason { min-width:280px; max-width:380px; text-align:left; white-space:normal; line-height:1.35; }
     .action-empty { margin:1.4rem 0; padding:2rem; border:1px dashed #b9c2bd; border-radius:20px; background:white; text-align:center; }
@@ -1177,7 +1208,7 @@ st.markdown(
       [data-testid="stRadio"] div[role="radiogroup"]{width:100%;overflow-x:auto}
       [data-testid="stRadio"] div[role="radiogroup"] label{padding:.4rem .55rem;white-space:nowrap;font-size:.72rem}
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
-      .keyword-signals,.action-overview{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
+      .keyword-signals,.action-overview,.window-strip{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
       .action-heading{padding:2rem 1.25rem}.action-heading:after,.action-heading:before{display:none}
     }
     </style>
@@ -1203,7 +1234,7 @@ with filter_col:
     elif page not in {"키워드 분석", "플레이스 통계", "데이터 연동"}:
         selected_week = st.selectbox("분석 주간 (월—일)", WEEK_KEYS, index=0)
     elif page == "키워드 분석":
-        st.caption("매일 08:30 자동 수집 · 최근 30일")
+        st.caption("복합 판정 · 매일 08:30")
     elif page == "플레이스 통계":
         st.caption("매일 09:10 자동 수집")
     else:

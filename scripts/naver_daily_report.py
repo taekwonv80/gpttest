@@ -623,23 +623,42 @@ def collect_registered_keyword_windows(
         for group_keywords in executor.map(fetch_group_keywords, catalog):
             for keyword_id, row in group_keywords:
                 keyword_by_id[keyword_id] = row
+    print(
+        f"등록 키워드 목록 완료: 광고그룹 {len(catalog)}개 "
+        f"· 키워드 {len(keyword_by_id)}개",
+        flush=True,
+    )
 
     result: dict[str, list[dict[str, Any]]] = {}
     keyword_ids = list(keyword_by_id)
     for label, (since, until) in keyword_window_ranges(report_date).items():
         metrics = {keyword_id: dict(row) for keyword_id, row in keyword_by_id.items()}
-        for chunk_since, chunk_until in date_range_chunks(since, until):
-            for start in range(0, len(keyword_ids), STATS_BATCH_SIZE):
-                batch = keyword_ids[start : start + STATS_BATCH_SIZE]
-                for row in client.summary_stats(batch, chunk_since, chunk_until):
+        requests = [
+            (keyword_ids[start : start + STATS_BATCH_SIZE], chunk_since, chunk_until)
+            for chunk_since, chunk_until in date_range_chunks(since, until)
+            for start in range(0, len(keyword_ids), STATS_BATCH_SIZE)
+        ]
+
+        def fetch_keyword_stats(
+            request: tuple[list[str], date, date],
+        ) -> list[dict[str, Any]]:
+            batch, chunk_since, chunk_until = request
+            return client.summary_stats(batch, chunk_since, chunk_until)
+
+        with ThreadPoolExecutor(max_workers=API_MAX_WORKERS) as executor:
+            for rows in executor.map(fetch_keyword_stats, requests):
+                for row in rows:
                     keyword_id = str(row.get("id") or row.get("nccKeywordId") or "")
                     target = metrics.get(keyword_id)
                     if target:
                         target["impressions"] += round(number(row.get("impCnt")))
                         target["clicks"] += round(number(row.get("clkCnt")))
                         target["spend"] += round(number(row.get("salesAmt")))
-                time.sleep(0.2)
         result[label] = aggregate_analysis_rows(list(metrics.values()))
+        print(
+            f"등록 키워드 {label}일 통계 완료: API 요청 {len(requests)}회",
+            flush=True,
+        )
     return result
 
 

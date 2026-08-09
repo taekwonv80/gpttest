@@ -190,6 +190,20 @@ class NaverSearchAdClient:
             raise IntegrationError("네이버 대용량 보고서 조회 응답 형식이 예상과 다릅니다.")
         return result
 
+    def download_stat_report(self, download_url: str) -> bytes:
+        normalized_url = normalize_report_download_url(download_url)
+        uri = urlsplit(normalized_url).path or "/report-download"
+        request = Request(
+            normalized_url,
+            headers={
+                **self._headers("GET", uri),
+                "Accept": "*/*",
+                "User-Agent": "naver-report-dashboard/1.0",
+            },
+        )
+        with urlopen(request, timeout=60) as response:
+            return response.read()
+
     def summary_stats(
         self, entity_ids: list[str], since: date, until: date
     ) -> list[dict[str, Any]]:
@@ -831,12 +845,7 @@ def collect_powerlink_search_term_rows(
         download_url = str(current.get("downloadUrl") or "").strip()
         if status == "BUILT" and download_url:
             try:
-                request = Request(
-                    normalize_report_download_url(download_url),
-                    headers={"Accept": "*/*", "User-Agent": "naver-report-dashboard/1.0"},
-                )
-                with urlopen(request, timeout=60) as response:
-                    text = decode_stat_report(response.read())
+                text = decode_stat_report(client.download_stat_report(download_url))
             except HTTPError as error:
                 detail = error.read().decode("utf-8", errors="replace").strip()
                 detail = re.sub(

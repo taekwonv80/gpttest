@@ -229,6 +229,38 @@ class ReportTests(unittest.TestCase):
             "authtoken=a%2Bb%2Fc&other=1&fileVersion=v2",
         )
 
+    def test_report_download_sends_searchad_auth_headers(self) -> None:
+        captured = {}
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return b"report"
+
+        def fake_urlopen(request, timeout):
+            captured["url"] = request.full_url
+            captured["headers"] = dict(request.header_items())
+            captured["timeout"] = timeout
+            return Response()
+
+        client = report.NaverSearchAdClient("123", "api-key", "secret")
+        with patch.object(report, "urlopen", side_effect=fake_urlopen):
+            content = client.download_stat_report(
+                "https://api.searchad.naver.com/report-download?authtoken=token"
+            )
+
+        header_names = {name.lower() for name in captured["headers"]}
+        self.assertEqual(content, b"report")
+        self.assertIn("x-api-key", header_names)
+        self.assertIn("x-customer", header_names)
+        self.assertIn("x-signature", header_names)
+        self.assertIn("fileVersion=v2", captured["url"])
+
     def test_powerlink_search_term_days_keep_latest_ninety_days(self) -> None:
         existing = [
             {"date": "2026-07-02", "rows": []},

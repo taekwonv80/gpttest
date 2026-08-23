@@ -1,33 +1,33 @@
 {
   "schema_version": 1,
   "source": "naver-searchad-api",
-  "generated_at": "2026-08-23T08:42:25+09:00",
-  "report_date": "2026-08-22",
+  "generated_at": "2026-08-24T08:42:33+09:00",
+  "report_date": "2026-08-23",
   "matched_campaign_count": 22,
   "weeks": [
     {
-      "label": "2026.08.17 — 08.23 · 진행 중",
+      "label": "2026.08.17 — 08.23",
       "since": "2026-08-17",
       "until": "2026-08-23",
-      "observed_until": "2026-08-22",
+      "observed_until": "2026-08-23",
       "campaigns": [
         {
           "name": "플레이스 검색광고",
-          "spend": 14047,
-          "impressions": 6360,
-          "clicks": 89
+          "spend": 18363,
+          "impressions": 7706,
+          "clicks": 117
         },
         {
           "name": "지역소상공인 광고",
-          "spend": 949,
-          "impressions": 1742,
-          "clicks": 6
+          "spend": 1132,
+          "impressions": 2076,
+          "clicks": 7
         },
         {
           "name": "파워링크",
-          "spend": 3041,
-          "impressions": 3710,
-          "clicks": 26
+          "spend": 3371,
+          "impressions": 4547,
+          "clicks": 29
         }
       ],
       "daily": [
@@ -177,25 +177,25 @@
         },
         {
           "date": "2026-08-23",
-          "available": false,
+          "available": true,
           "campaigns": [
             {
               "name": "플레이스 검색광고",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 4316,
+              "impressions": 1346,
+              "clicks": 28
             },
             {
               "name": "지역소상공인 광고",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 183,
+              "impressions": 334,
+              "clicks": 1
             },
             {
               "name": "파워링크",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 330,
+              "impressions": 837,
+              "clicks": 3
             }
           ]
         }
@@ -803,7 +803,7 @@
         },
         {
           "name": "지역소상공인 광고",
-          "spend": 2229,
+          "spend": 2230,
           "impressions": 4091,
           "clicks": 11
         },
@@ -875,7 +875,7 @@
             },
             {
               "name": "지역소상공인 광고",
-              "spend": 394,
+              "spend": 395,
               "impressions": 720,
               "clicks": 4
             },
@@ -987,6 +987,30 @@
     }
   ],
   "days": [
+    {
+      "date": "2026-08-23",
+      "label": "2026.08.23 (일)",
+      "campaigns": [
+        {
+          "name": "플레이스 검색광고",
+          "spend": 4316,
+          "impressions": 1346,
+          "clicks": 28
+        },
+        {
+          "name": "지역소상공인 광고",
+          "spend": 183,
+          "impressions": 334,
+          "clicks": 1
+        },
+        {
+          "name": "파워링크",
+          "spend": 330,
+          "impressions": 837,
+          "clicks": 3
+        }
+      ]
+    },
     {
       "date": "2026-08-22",
       "label": "2026.08.22 (토)",
@@ -1743,7 +1767,7 @@
         },
         {
           "name": "지역소상공인 광고",
-          "spend": 394,
+          "spend": 395,
           "impressions": 720,
           "clicks": 4
         },
@@ -1805,25 +1829,25 @@
     }
   ],
   "daily_report": {
-    "date": "2026-08-22",
+    "date": "2026-08-23",
     "campaigns": [
       {
         "name": "플레이스 검색광고",
-        "spend": 4109,
-        "impressions": 1334,
-        "clicks": 27
+        "spend": 4316,
+        "impressions": 1346,
+        "clicks": 28
       },
       {
         "name": "지역소상공인 광고",
-        "spend": 159,
-        "impressions": 293,
-        "clicks": 0
+        "spend": 183,
+        "impressions": 334,
+        "clicks": 1
       },
       {
         "name": "파워링크",
-        "spend": 483,
-        "impressions": 741,
-        "clicks": 5
+        "spend": 330,
+        "impressions": 837,
+        "clicks": 3
       }
     ]
   }

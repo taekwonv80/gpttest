@@ -1,33 +1,33 @@
 {
   "schema_version": 1,
   "source": "naver-searchad-api",
-  "generated_at": "2026-08-25T08:43:11+09:00",
-  "report_date": "2026-08-24",
+  "generated_at": "2026-08-26T08:45:43+09:00",
+  "report_date": "2026-08-25",
   "matched_campaign_count": 22,
   "weeks": [
     {
       "label": "2026.08.24 — 08.30 · 진행 중",
       "since": "2026-08-24",
       "until": "2026-08-30",
-      "observed_until": "2026-08-24",
+      "observed_until": "2026-08-25",
       "campaigns": [
         {
           "name": "플레이스 검색광고",
-          "spend": 1925,
-          "impressions": 964,
-          "clicks": 10
+          "spend": 3197,
+          "impressions": 1914,
+          "clicks": 22
         },
         {
           "name": "지역소상공인 광고",
-          "spend": 185,
-          "impressions": 343,
-          "clicks": 0
+          "spend": 354,
+          "impressions": 653,
+          "clicks": 1
         },
         {
           "name": "파워링크",
-          "spend": 635,
-          "impressions": 536,
-          "clicks": 5
+          "spend": 715,
+          "impressions": 976,
+          "clicks": 6
         }
       ],
       "daily": [
@@ -57,25 +57,25 @@
         },
         {
           "date": "2026-08-25",
-          "available": false,
+          "available": true,
           "campaigns": [
             {
               "name": "플레이스 검색광고",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 1272,
+              "impressions": 950,
+              "clicks": 12
             },
             {
               "name": "지역소상공인 광고",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 169,
+              "impressions": 310,
+              "clicks": 1
             },
             {
               "name": "파워링크",
-              "spend": 0,
-              "impressions": 0,
-              "clicks": 0
+              "spend": 80,
+              "impressions": 440,
+              "clicks": 1
             }
           ]
         },
@@ -988,6 +988,30 @@
   ],
   "days": [
     {
+      "date": "2026-08-25",
+      "label": "2026.08.25 (화)",
+      "campaigns": [
+        {
+          "name": "플레이스 검색광고",
+          "spend": 1272,
+          "impressions": 950,
+          "clicks": 12
+        },
+        {
+          "name": "지역소상공인 광고",
+          "spend": 169,
+          "impressions": 310,
+          "clicks": 1
+        },
+        {
+          "name": "파워링크",
+          "spend": 80,
+          "impressions": 440,
+          "clicks": 1
+        }
+      ]
+    },
+    {
       "date": "2026-08-24",
       "label": "2026.08.24 (월)",
       "campaigns": [
@@ -1685,25 +1709,25 @@
     }
   ],
   "daily_report": {
-    "date": "2026-08-24",
+    "date": "2026-08-25",
     "campaigns": [
       {
         "name": "플레이스 검색광고",
-        "spend": 1925,
-        "impressions": 964,
-        "clicks": 10
+        "spend": 1272,
+        "impressions": 950,
+        "clicks": 12
       },
       {
         "name": "지역소상공인 광고",
-        "spend": 185,
-        "impressions": 343,
-        "clicks": 0
+        "spend": 169,
+        "impressions": 310,
+        "clicks": 1
       },
       {
         "name": "파워링크",
-        "spend": 635,
-        "impressions": 536,
-        "clicks": 5
+        "spend": 80,
+        "impressions": 440,
+        "clicks": 1
       }
     ]
   }

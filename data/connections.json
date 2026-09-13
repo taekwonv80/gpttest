@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-12T10:17:48+09:00",
+  "generated_at": "2026-09-13T10:14:03+09:00",
   "naver": {
     "connected": true,
     "status": "연결됨",
-    "last_sync": "2026-09-12T10:17:48+09:00",
-    "campaign_count": 22
+    "last_sync": "2026-09-13T10:14:03+09:00",
+    "campaign_count": 24
   },
   "slack": {
     "connected": true,
     "status": "연결됨",
-    "last_delivery": "2026-09-12T10:17:48+09:00",
+    "last_delivery": "2026-09-13T10:14:03+09:00",
     "send_time": "08:30"
   }
 }

@@ -231,6 +231,19 @@ def campaign_cards(rows: list[dict]) -> None:
 def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]) -> None:
     current = totals(rows)
     previous = totals(previous_rows)
+    reservations, reservations_delta = place_week_comparison("reservation_applications_weekly")
+    reviews, reviews_delta = place_week_comparison("reviews_weekly")
+    reservation_change = "전주 비교 데이터 없음" if reservations_delta is None else f"전주 대비 {reservations_delta:+,}건"
+    review_change = "전주 비교 데이터 없음" if reviews_delta is None else f"전주 대비 {reviews_delta:+,}건"
+    st.markdown(
+        f"""
+        <div class="top-utility">
+          <div class="top-utility__metric"><span>이번 주 예약 신청</span><b>{f'{reservations:,}건' if reservations is not None else '—'}</b><small>{reservation_change}</small></div>
+          <div class="top-utility__metric"><span>이번 주 리뷰 등록</span><b>{f'{reviews:,}건' if reviews is not None else '—'}</b><small>{review_change}</small></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.markdown(
         f"""
         <div class="hero-copy">
@@ -800,6 +813,31 @@ def delta_label(value: object) -> str | None:
     return f"오늘 +{parsed:,}회" if parsed is not None else None
 
 
+def place_week_comparison(metric_key: str) -> tuple[int | None, int | None]:
+    latest_by_week: dict[str, dict[str, str]] = {}
+    for row in PLACE_DAILY:
+        week_start = str(row.get("week_start") or "")
+        collected_date = str(row.get("collected_date") or "")
+        if not week_start or not collected_date:
+            continue
+        previous = latest_by_week.get(week_start)
+        if previous is None or collected_date > str(previous.get("collected_date") or ""):
+            latest_by_week[week_start] = row
+
+    week_starts = sorted(latest_by_week)
+    if not week_starts:
+        return as_int(PLACE_LATEST.get(metric_key)), None
+
+    current_value = as_int(latest_by_week[week_starts[-1]].get(metric_key))
+    if len(week_starts) < 2:
+        return current_value, None
+
+    previous_value = as_int(latest_by_week[week_starts[-2]].get(metric_key))
+    if current_value is None or previous_value is None:
+        return current_value, None
+    return current_value, current_value - previous_value
+
+
 def counts_chart(
     values: dict[str, float],
     color: str,
@@ -1118,8 +1156,9 @@ st.markdown(
     .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--brand) !important; }
     [data-testid="stSelectbox"] label p { font-size:.68rem; font-weight:800; color:var(--muted); }
     [data-baseweb="select"] > div { background:white; border-color:var(--line); border-radius:11px; }
-    .top-utility { position:fixed; z-index:2; top:0; left:228px; right:0; height:68px; display:flex; align-items:center; justify-content:flex-end; box-sizing:border-box; padding:0 2.5rem; border-bottom:1px solid var(--line); background:rgba(255,255,255,.92); }
-    .top-utility span { padding:.72rem 1.15rem; border-radius:12px; background:var(--lime); color:var(--ink); font-size:.74rem; font-weight:900; }
+    .top-utility { position:fixed; z-index:2; top:0; left:228px; right:0; height:68px; display:flex; align-items:center; justify-content:flex-end; gap:1.7rem; box-sizing:border-box; padding:0 2.5rem; border-bottom:1px solid var(--line); background:rgba(255,255,255,.94); }
+    .top-utility__metric { display:grid; grid-template-columns:auto auto; column-gap:.55rem; align-items:baseline; }
+    .top-utility__metric span { color:var(--muted); font-size:.65rem; font-weight:800; }.top-utility__metric b { font-size:1.1rem; letter-spacing:-.04em; }.top-utility__metric small { grid-column:1 / -1; margin-top:.1rem; color:var(--brand); font-size:.58rem; font-weight:800; }
     .hero-copy { max-width:700px; margin:1.7rem auto 1.5rem; padding:2.1rem 1.5rem 1.4rem; text-align:center; }
     .page-heading { padding:2.5rem 0 1.6rem; }
     .hero-copy > span, .page-heading > span, .signal-card > span, .flow-card > span { color:var(--brand); font-size:.68rem; font-weight:900; letter-spacing:.05em; }
@@ -1222,7 +1261,7 @@ st.markdown(
     .place-empty b { font-size:1rem; }.place-empty p { margin:.65rem 0 0; color:var(--muted); font-size:.76rem; }
     .section-rule { height:1px; margin:2.2rem 0; background:var(--line); }
     @media(max-width:760px){
-      .stApp:before{display:none}.block-container{margin-left:0;padding:4.7rem 1rem 4rem}.top-brand{position:relative;width:auto;min-height:0;padding:.3rem 0 1.2rem}.top-utility{left:0;height:54px;padding:0 1rem}.top-utility span{padding:.55rem .75rem;font-size:.65rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
+      .stApp:before{display:none}.block-container{margin-left:0;padding:4.7rem 1rem 4rem}.top-brand{position:relative;width:auto;min-height:0;padding:.3rem 0 1.2rem}.top-utility{left:0;height:54px;gap:.7rem;padding:0 1rem}.top-utility__metric b{font-size:.85rem}.top-utility__metric span,.top-utility__metric small{font-size:.52rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
       .hero-copy h1,.page-heading h1{font-size:2.8rem;line-height:1.08}
       .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"]{position:relative;top:auto;left:auto;flex-direction:row;width:100%;overflow-x:auto}
@@ -1232,7 +1271,7 @@ st.markdown(
       .action-heading{padding:2rem 1.25rem}.action-heading:after,.action-heading:before{display:none}
     }
     </style>
-    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점<br>바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div><div class="top-utility"><span>이번 주 광고 보기</span></div>
+    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점<br>바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div>
     """,
     unsafe_allow_html=True,
 )

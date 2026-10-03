@@ -1104,13 +1104,13 @@ st.markdown(
     .top-brand__mark i { width:7px; height:28px; background:var(--brand); border-radius:2px; display:block; }
     .top-brand__mark i:nth-child(2) { transform:translateY(5px); }
     .top-brand__status { display:none; }
-    [data-testid="stRadio"] > label { display:none; }
-    [data-testid="stRadio"] div[role="radiogroup"] { position:fixed; z-index:3; top:6.4rem; left:1rem; display:flex; flex-direction:column; gap:.3rem; width:212px; padding:0; background:transparent; }
-    [data-testid="stRadio"] div[role="radiogroup"] label { width:100%; box-sizing:border-box; padding:.8rem .9rem; border-radius:10px; color:var(--ink); font-weight:800; }
-    [data-testid="stRadio"] div[role="radiogroup"] label > div:first-child { display:none; }
-    [data-testid="stRadio"] div[role="radiogroup"] label p { color:var(--ink) !important; }
-    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) { background:#edf4ff; color:var(--brand); }
-    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--brand) !important; }
+    .st-key-main_navigation [data-testid="stRadio"] > label { display:none; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] { position:fixed; z-index:3; top:6.4rem; left:1rem; display:flex; flex-direction:column; gap:.3rem; width:212px; padding:0; background:transparent; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label { width:100%; box-sizing:border-box; padding:.8rem .9rem; border-radius:10px; color:var(--ink); font-weight:800; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label > div:first-child { display:none; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label p { color:var(--ink) !important; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) { background:#edf4ff; color:var(--brand); }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--brand) !important; }
     [data-testid="stSelectbox"] label p { font-size:.68rem; font-weight:800; color:var(--muted); }
     [data-baseweb="select"] > div { background:white; border-color:var(--line); border-radius:11px; }
     .hero-copy { max-width:720px; margin:2rem auto 1.7rem; padding:2.6rem 1.5rem 1.4rem; text-align:center; }
@@ -1214,7 +1214,7 @@ st.markdown(
       .stApp:before{display:none}.block-container{margin-left:0;padding:1rem 1rem 4rem}.top-brand{position:relative;width:auto;padding:.3rem 0 1.2rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
       .hero-copy h1,.page-heading h1{font-size:2.8rem;line-height:1.08}
-      [data-testid="stRadio"] div[role="radiogroup"]{position:relative;top:auto;left:auto;flex-direction:row;width:100%;overflow-x:auto}
+      .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"]{position:relative;top:auto;left:auto;flex-direction:row;width:100%;overflow-x:auto}
       [data-testid="stRadio"] div[role="radiogroup"] label{padding:.4rem .55rem;white-space:nowrap;font-size:.72rem}
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
       .keyword-signals,.action-overview,.window-strip{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
@@ -1233,6 +1233,7 @@ with nav_col:
         ["대시보드", "키워드 액션", "상세 보기"],
         horizontal=True,
         label_visibility="collapsed",
+        key="main_navigation",
     )
 
 selected_week = WEEK_KEYS[0]

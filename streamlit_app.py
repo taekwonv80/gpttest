@@ -234,9 +234,9 @@ def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]
     st.markdown(
         """
         <div class="hero-copy">
-          <span>PERFORMANCE OVERVIEW</span>
-          <h1>오늘의 광고 흐름을<br><em>한눈에.</em></h1>
-          <p>세 가지 네이버 광고 유형의 핵심 성과와 다음 액션을 Python으로 계산합니다.</p>
+          <span>이번 주 광고 진단</span>
+          <h1>광고비, <em>잘 쓰이고</em><br>있을까요?</h1>
+          <p>이번 주 성과와 다음으로 확인할 광고를 한 화면에서 봅니다.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -248,10 +248,9 @@ def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]
     else:
         st.info("첫 자동 수집 전까지 샘플 데이터를 표시합니다. 비밀키는 GitHub Actions Secrets에만 저장됩니다.", icon="ℹ️")
 
-    metric_cols = st.columns(5)
+    metric_cols = st.columns(4)
     metrics = [
         ("총 광고비", won(current["spend"]), pct_change(current["spend"], previous["spend"]), "%"),
-        ("노출수", f"{current['impressions']:,}", pct_change(current["impressions"], previous["impressions"]), "%"),
         ("클릭수", f"{current['clicks']:,}", pct_change(current["clicks"], previous["clicks"]), "%"),
         ("클릭률", f"{current['ctr']:.2f}%", current["ctr"] - previous["ctr"], "%p"),
         ("평균 CPC", won(current["cpc"]), pct_change(current["cpc"], previous["cpc"]), "%"),
@@ -1093,44 +1092,46 @@ def render_connections() -> None:
 st.markdown(
     """
     <style>
-    :root { --ink:#121413; --muted:#717873; --line:#dde2df; --lime:#c9ff3d; --canvas:#f4f6f4; }
+    :root { --ink:#182230; --muted:#697386; --line:#e4e7ec; --lime:#ffdf00; --brand:#1769e0; --canvas:#f6f7fb; }
     [data-testid="stHeader"], [data-testid="stToolbar"], #MainMenu, footer { display:none !important; }
     [data-testid="stAppViewContainer"], .stApp { background:var(--canvas); color:var(--ink); }
-    .block-container { max-width:1440px; padding:1.7rem 3rem 5rem; }
+    .stApp:before { content:""; position:fixed; inset:0 auto 0 0; z-index:0; width:244px; border-right:1px solid var(--line); background:#fff; }
+    .block-container { position:relative; z-index:1; max-width:1240px; margin-left:244px; padding:1.8rem 3.5rem 5rem; }
     h1,h2,h3,p { letter-spacing:-.025em; }
-    .top-brand { display:flex; align-items:center; justify-content:space-between; padding:.3rem 0 1.25rem; border-bottom:1px solid var(--line); margin-bottom:1rem; }
+    .top-brand { position:fixed; z-index:3; top:0; left:0; width:244px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; padding:1.55rem 1.5rem; background:#fff; }
     .top-brand__name { display:flex; align-items:center; gap:.7rem; font-size:1rem; font-weight:900; line-height:1.25; }
     .top-brand__mark { display:inline-flex; gap:3px; transform:skew(-8deg); }
-    .top-brand__mark i { width:7px; height:28px; background:var(--lime); border-radius:2px; display:block; }
+    .top-brand__mark i { width:7px; height:28px; background:var(--brand); border-radius:2px; display:block; }
     .top-brand__mark i:nth-child(2) { transform:translateY(5px); }
-    .top-brand__status { padding:.45rem .7rem; border:1px solid var(--line); border-radius:999px; background:white; font-size:.67rem; font-weight:800; }
+    .top-brand__status { display:none; }
     [data-testid="stRadio"] > label { display:none; }
-    [data-testid="stRadio"] div[role="radiogroup"] { gap:.3rem; background:#171a18; padding:.3rem; border-radius:12px; width:max-content; }
-    [data-testid="stRadio"] div[role="radiogroup"] label { padding:.45rem .85rem; border-radius:8px; color:#a8afab; }
+    [data-testid="stRadio"] div[role="radiogroup"] { position:fixed; z-index:3; top:6.4rem; left:1rem; display:flex; flex-direction:column; gap:.3rem; width:212px; padding:0; background:transparent; }
+    [data-testid="stRadio"] div[role="radiogroup"] label { width:100%; box-sizing:border-box; padding:.8rem .9rem; border-radius:10px; color:var(--ink); font-weight:800; }
     [data-testid="stRadio"] div[role="radiogroup"] label > div:first-child { display:none; }
-    [data-testid="stRadio"] div[role="radiogroup"] label p { color:#a8afab !important; }
-    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) { background:var(--lime); color:var(--ink); }
-    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--ink) !important; }
+    [data-testid="stRadio"] div[role="radiogroup"] label p { color:var(--ink) !important; }
+    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) { background:#edf4ff; color:var(--brand); }
+    [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--brand) !important; }
     [data-testid="stSelectbox"] label p { font-size:.68rem; font-weight:800; color:var(--muted); }
     [data-baseweb="select"] > div { background:white; border-color:var(--line); border-radius:11px; }
-    .hero-copy, .page-heading { padding:2.5rem 0 1.6rem; }
-    .hero-copy > span, .page-heading > span, .signal-card > span, .flow-card > span { color:var(--muted); font-size:.62rem; font-weight:900; letter-spacing:.18em; }
-    .hero-copy h1, .page-heading h1 { margin:.8rem 0 .7rem; font-size:clamp(2.8rem,5vw,5.2rem); line-height:1; letter-spacing:-.065em; }
-    .hero-copy h1 em { font-style:normal; color:transparent; -webkit-text-stroke:1.4px var(--ink); }
+    .hero-copy { max-width:720px; margin:2rem auto 1.7rem; padding:2.6rem 1.5rem 1.4rem; text-align:center; }
+    .page-heading { padding:2.5rem 0 1.6rem; }
+    .hero-copy > span, .page-heading > span, .signal-card > span, .flow-card > span { color:var(--brand); font-size:.68rem; font-weight:900; letter-spacing:.05em; }
+    .hero-copy h1, .page-heading h1 { margin:.8rem 0 .7rem; font-size:clamp(2.8rem,5vw,4.5rem); line-height:1.08; letter-spacing:-.065em; }
+    .hero-copy h1 em { font-style:normal; color:var(--brand); }
     .hero-copy p, .page-heading p { color:var(--muted); font-size:.84rem; }
     [data-testid="stAlert"] { border-radius:13px; border:1px solid #cfe1d4; background:#edf6ef; }
-    [data-testid="stMetric"] { min-height:150px; padding:1.25rem; border:1px solid var(--line); border-radius:18px; background:white; }
+    [data-testid="stMetric"] { min-height:138px; padding:1.25rem; border:0; border-radius:16px; background:white; box-shadow:0 3px 15px rgba(25,42,70,.05); }
     [data-testid="stMetricLabel"] p { color:var(--muted); font-size:.72rem; font-weight:800; }
     [data-testid="stMetricValue"] { margin-top:1.6rem; font-weight:900; letter-spacing:-.055em; }
     [data-testid="stMetricDelta"] { font-size:.66rem; }
-    [data-testid="stPlotlyChart"] { padding:.8rem; border:1px solid var(--line); border-radius:20px; background:white; }
-    .campaign-card { min-height:170px; padding:1.25rem; border:1px solid var(--line); border-radius:17px; background:white; }
+    [data-testid="stPlotlyChart"] { padding:1rem; border:0; border-radius:16px; background:white; box-shadow:0 3px 15px rgba(25,42,70,.05); }
+    .campaign-card { min-height:165px; padding:1.25rem; border:0; border-radius:16px; background:white; box-shadow:0 3px 15px rgba(25,42,70,.05); }
     .campaign-card__top { display:flex; justify-content:space-between; font-size:.75rem; font-weight:850; }
     .campaign-card__top i { width:10px; height:10px; border-radius:50%; background:var(--campaign); }
     .campaign-card > strong { display:block; margin-top:1.5rem; font-size:2rem; letter-spacing:-.06em; }
     .campaign-card > p { margin:.1rem 0 .8rem; color:var(--muted); font-size:.68rem; }
     .campaign-card__meta { display:flex; justify-content:space-between; padding-top:.7rem; border-top:1px solid var(--line); color:var(--muted); font-size:.6rem; }
-    .signal-card { min-height:365px; padding:1.7rem; border:1px solid #a9ec00; border-radius:20px; background:var(--lime); }
+    .signal-card { min-height:365px; padding:1.7rem; border:0; border-radius:16px; background:#eaf3ff; }
     .signal-card h3 { margin:1.8rem 0 1.2rem; font-size:1.7rem; line-height:1.15; }
     .signal-card ol { margin:0; padding-left:1.2rem; }
     .signal-card li { padding:.75rem 0; border-top:1px solid rgba(0,0,0,.14); font-size:.75rem; line-height:1.55; }
@@ -1210,10 +1211,10 @@ st.markdown(
     .place-empty b { font-size:1rem; }.place-empty p { margin:.65rem 0 0; color:var(--muted); font-size:.76rem; }
     .section-rule { height:1px; margin:2.2rem 0; background:var(--line); }
     @media(max-width:760px){
-      .block-container{padding:1rem 1rem 4rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
+      .stApp:before{display:none}.block-container{margin-left:0;padding:1rem 1rem 4rem}.top-brand{position:relative;width:auto;padding:.3rem 0 1.2rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
       .hero-copy h1,.page-heading h1{font-size:2.8rem;line-height:1.08}
-      [data-testid="stRadio"] div[role="radiogroup"]{width:100%;overflow-x:auto}
+      [data-testid="stRadio"] div[role="radiogroup"]{position:relative;top:auto;left:auto;flex-direction:row;width:100%;overflow-x:auto}
       [data-testid="stRadio"] div[role="radiogroup"] label{padding:.4rem .55rem;white-space:nowrap;font-size:.72rem}
       [data-testid="stMetric"]{min-height:125px}.campaign-card{min-height:155px}
       .keyword-signals,.action-overview,.window-strip{grid-template-columns:1fr}.analysis-table{font-size:.66rem}
@@ -1229,7 +1230,7 @@ nav_col, filter_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
 with nav_col:
     page = st.radio(
         "메뉴",
-        ["대시보드", "캠페인 분석", "일일 분석", "키워드 분석", "플레이스 통계", "데일리 리포트", "데이터 연동"],
+        ["대시보드", "키워드 액션", "상세 보기"],
         horizontal=True,
         label_visibility="collapsed",
     )
@@ -1237,15 +1238,21 @@ with nav_col:
 selected_week = WEEK_KEYS[0]
 selected_day = DAY_KEYS[0]
 with filter_col:
-    if page in {"일일 분석", "데일리 리포트"}:
+    detail_page = ""
+    if page == "상세 보기":
+        detail_page = st.selectbox(
+            "상세 화면",
+            ["캠페인 비교", "일일 분석", "플레이스 통계", "데일리 리포트", "데이터 연동"],
+        )
+    if detail_page in {"일일 분석", "데일리 리포트"}:
         selected_day = st.selectbox("분석 일자", DAY_KEYS, index=0)
-    elif page not in {"키워드 분석", "플레이스 통계", "데이터 연동"}:
+    elif page == "대시보드" or detail_page == "캠페인 비교":
         selected_week = st.selectbox("분석 주간 (월—일)", WEEK_KEYS, index=0)
-    elif page == "키워드 분석":
+    elif page == "키워드 액션":
         st.caption("복합 판정 · 매일 08:30")
-    elif page == "플레이스 통계":
+    elif detail_page == "플레이스 통계":
         st.caption("매일 09:10 자동 수집")
-    else:
+    elif detail_page == "데이터 연동":
         st.caption("매일 08:30 자동 연동")
 
 selected_index = WEEK_KEYS.index(selected_week)
@@ -1260,15 +1267,15 @@ previous_day_rows = enrich(DAY_DATA[DAY_KEYS[previous_day_index]])
 
 if page == "대시보드":
     render_overview(selected_week, selected_rows, previous_rows)
-elif page == "캠페인 분석":
-    render_campaigns(selected_week, selected_rows)
-elif page == "일일 분석":
-    render_daily(selected_day, selected_day_rows, previous_day_rows)
-elif page == "키워드 분석":
+elif page == "키워드 액션":
     render_keyword_analysis()
-elif page == "플레이스 통계":
+elif detail_page == "캠페인 비교":
+    render_campaigns(selected_week, selected_rows)
+elif detail_page == "일일 분석":
+    render_daily(selected_day, selected_day_rows, previous_day_rows)
+elif detail_page == "플레이스 통계":
     render_place_statistics()
-elif page == "데일리 리포트":
+elif detail_page == "데일리 리포트":
     render_report(selected_day, selected_day_rows)
-else:
+elif detail_page == "데이터 연동":
     render_connections()

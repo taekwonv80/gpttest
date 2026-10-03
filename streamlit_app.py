@@ -232,11 +232,16 @@ def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]
     current = totals(rows)
     previous = totals(previous_rows)
     st.markdown(
-        """
+        f"""
         <div class="hero-copy">
           <span>이번 주 광고 진단</span>
           <h1>광고비, <em>잘 쓰이고</em><br>있을까요?</h1>
           <p>이번 주 성과와 다음으로 확인할 광고를 한 화면에서 봅니다.</p>
+          <div class="diagnosis-panel">
+            <b>이번 주 광고 성과</b>
+            <div><strong>{won(current['spend'])}</strong><span>광고비</span></div>
+            <p>클릭 {current['clicks']:,}회 · CTR {current['ctr']:.2f}% · 평균 CPC {won(current['cpc'])}</p>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1095,30 +1100,36 @@ st.markdown(
     :root { --ink:#182230; --muted:#697386; --line:#e4e7ec; --lime:#ffdf00; --brand:#1769e0; --canvas:#f6f7fb; }
     [data-testid="stHeader"], [data-testid="stToolbar"], #MainMenu, footer { display:none !important; }
     [data-testid="stAppViewContainer"], .stApp { background:var(--canvas); color:var(--ink); }
-    .stApp:before { content:""; position:fixed; inset:0 auto 0 0; z-index:0; width:244px; border-right:1px solid var(--line); background:#fff; }
-    .block-container { position:relative; z-index:1; max-width:1240px; margin-left:244px; padding:1.8rem 3.5rem 5rem; }
+    .stApp:before { content:""; position:fixed; inset:0 auto 0 0; z-index:0; width:228px; border-right:1px solid var(--line); background:#fff; }
+    .block-container { position:relative; z-index:1; max-width:1050px; margin-left:228px; padding:6.8rem 3.8rem 5rem; }
     h1,h2,h3,p { letter-spacing:-.025em; }
-    .top-brand { position:fixed; z-index:3; top:0; left:0; width:244px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; padding:1.55rem 1.5rem; background:#fff; }
+    .top-brand { position:fixed; z-index:3; top:0; left:0; width:228px; min-height:86px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; padding:1.45rem 1.35rem; background:#fff; }
     .top-brand__name { display:flex; align-items:center; gap:.7rem; font-size:1rem; font-weight:900; line-height:1.25; }
     .top-brand__mark { display:inline-flex; gap:3px; transform:skew(-8deg); }
-    .top-brand__mark i { width:7px; height:28px; background:var(--brand); border-radius:2px; display:block; }
+    .top-brand__mark i { width:6px; height:28px; background:var(--brand); border-radius:2px; display:block; }
     .top-brand__mark i:nth-child(2) { transform:translateY(5px); }
     .top-brand__status { display:none; }
     .st-key-main_navigation [data-testid="stRadio"] > label { display:none; }
-    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] { position:fixed; z-index:3; top:6.4rem; left:1rem; display:flex; flex-direction:column; gap:.3rem; width:212px; padding:0; background:transparent; }
-    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label { width:100%; box-sizing:border-box; padding:.8rem .9rem; border-radius:10px; color:var(--ink); font-weight:800; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] { position:fixed; z-index:3; top:6.2rem; left:.8rem; display:flex; flex-direction:column; gap:.45rem; width:202px; padding:0; background:transparent; }
+    .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label { width:100%; box-sizing:border-box; padding:.9rem .85rem; border-radius:11px; color:var(--ink); font-weight:800; }
     .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label > div:first-child { display:none; }
     .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label p { color:var(--ink) !important; }
     .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) { background:#edf4ff; color:var(--brand); }
     .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p { color:var(--brand) !important; }
     [data-testid="stSelectbox"] label p { font-size:.68rem; font-weight:800; color:var(--muted); }
     [data-baseweb="select"] > div { background:white; border-color:var(--line); border-radius:11px; }
-    .hero-copy { max-width:720px; margin:2rem auto 1.7rem; padding:2.6rem 1.5rem 1.4rem; text-align:center; }
+    .top-utility { position:fixed; z-index:2; top:0; left:228px; right:0; height:68px; display:flex; align-items:center; justify-content:flex-end; box-sizing:border-box; padding:0 2.5rem; border-bottom:1px solid var(--line); background:rgba(255,255,255,.92); }
+    .top-utility span { padding:.72rem 1.15rem; border-radius:12px; background:var(--lime); color:var(--ink); font-size:.74rem; font-weight:900; }
+    .hero-copy { max-width:700px; margin:1.7rem auto 1.5rem; padding:2.1rem 1.5rem 1.4rem; text-align:center; }
     .page-heading { padding:2.5rem 0 1.6rem; }
     .hero-copy > span, .page-heading > span, .signal-card > span, .flow-card > span { color:var(--brand); font-size:.68rem; font-weight:900; letter-spacing:.05em; }
-    .hero-copy h1, .page-heading h1 { margin:.8rem 0 .7rem; font-size:clamp(2.8rem,5vw,4.5rem); line-height:1.08; letter-spacing:-.065em; }
+    .hero-copy h1, .page-heading h1 { margin:.8rem 0 .7rem; font-size:clamp(2.7rem,5vw,4.25rem); line-height:1.08; letter-spacing:-.07em; }
     .hero-copy h1 em { font-style:normal; color:var(--brand); }
     .hero-copy p, .page-heading p { color:var(--muted); font-size:.84rem; }
+    .diagnosis-panel { max-width:530px; margin:2rem auto 0; padding:1.55rem 1.6rem 1.25rem; border:1px solid #e9ebef; border-radius:18px; background:white; box-shadow:0 10px 28px rgba(27,42,65,.06); text-align:left; }
+    .diagnosis-panel > b { display:block; margin-bottom:1rem; font-size:.78rem; }
+    .diagnosis-panel div { display:flex; align-items:baseline; gap:.55rem; padding:.8rem 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .diagnosis-panel strong { font-size:1.9rem; letter-spacing:-.06em; }.diagnosis-panel span { color:var(--muted); font-size:.75rem; font-weight:800; }.diagnosis-panel p { margin:.8rem 0 0; font-size:.73rem; }
     [data-testid="stAlert"] { border-radius:13px; border:1px solid #cfe1d4; background:#edf6ef; }
     [data-testid="stMetric"] { min-height:138px; padding:1.25rem; border:0; border-radius:16px; background:white; box-shadow:0 3px 15px rgba(25,42,70,.05); }
     [data-testid="stMetricLabel"] p { color:var(--muted); font-size:.72rem; font-weight:800; }
@@ -1211,7 +1222,7 @@ st.markdown(
     .place-empty b { font-size:1rem; }.place-empty p { margin:.65rem 0 0; color:var(--muted); font-size:.76rem; }
     .section-rule { height:1px; margin:2.2rem 0; background:var(--line); }
     @media(max-width:760px){
-      .stApp:before{display:none}.block-container{margin-left:0;padding:1rem 1rem 4rem}.top-brand{position:relative;width:auto;padding:.3rem 0 1.2rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
+      .stApp:before{display:none}.block-container{margin-left:0;padding:4.7rem 1rem 4rem}.top-brand{position:relative;width:auto;min-height:0;padding:.3rem 0 1.2rem}.top-utility{left:0;height:54px;padding:0 1rem}.top-utility span{padding:.55rem .75rem;font-size:.65rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
       .hero-copy h1,.page-heading h1{font-size:2.8rem;line-height:1.08}
       .st-key-main_navigation [data-testid="stRadio"] div[role="radiogroup"]{position:relative;top:auto;left:auto;flex-direction:row;width:100%;overflow-x:auto}
@@ -1221,7 +1232,7 @@ st.markdown(
       .action-heading{padding:2rem 1.25rem}.action-heading:after,.action-heading:before{display:none}
     }
     </style>
-    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점 바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div>
+    <div class="top-brand"><div class="top-brand__name"><span class="top-brand__mark"><i></i><i></i><i></i></span>택이네조개전골 장현점<br>바다를품다</div><div class="top-brand__status">● PYTHON · STLITE</div></div><div class="top-utility"><span>이번 주 광고 보기</span></div>
     """,
     unsafe_allow_html=True,
 )

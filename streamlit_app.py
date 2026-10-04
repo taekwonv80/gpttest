@@ -231,15 +231,24 @@ def campaign_cards(rows: list[dict]) -> None:
 def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]) -> None:
     current = totals(rows)
     previous = totals(previous_rows)
-    reservations, reservations_delta = place_week_comparison("reservation_applications_weekly")
-    reviews, reviews_delta = place_week_comparison("reviews_weekly")
-    reservation_change = "전주 비교 데이터 없음" if reservations_delta is None else f"전주 대비 {reservations_delta:+,}건"
-    review_change = "전주 비교 데이터 없음" if reviews_delta is None else f"전주 대비 {reviews_delta:+,}건"
+    place_updated_at = str(PLACE_LATEST.get("collected_date") or "알 수 없음")
+    if place_data_is_current():
+        reservations, reservations_delta = place_week_comparison("reservation_applications_weekly")
+        reviews, reviews_delta = place_week_comparison("reviews_weekly")
+        reservation_change = "전주 비교 데이터 없음" if reservations_delta is None else f"전주 대비 {reservations_delta:+,}건"
+        review_change = "전주 비교 데이터 없음" if reviews_delta is None else f"전주 대비 {reviews_delta:+,}건"
+        place_summary = f"""
+          <div class="top-utility__metric"><span>이번 주 예약 신청</span><b>{f'{reservations:,}건' if reservations is not None else '—'}</b><small>{reservation_change}</small></div>
+          <div class="top-utility__metric"><span>이번 주 리뷰 등록</span><b>{f'{reviews:,}건' if reviews is not None else '—'}</b><small>{review_change}</small></div>
+        """
+    else:
+        place_summary = f"""
+          <div class="top-utility__notice"><b>예약·리뷰 데이터 갱신 필요</b><span>마지막 수집 · {escape(place_updated_at)}</span></div>
+        """
     st.markdown(
         f"""
         <div class="top-utility">
-          <div class="top-utility__metric"><span>이번 주 예약 신청</span><b>{f'{reservations:,}건' if reservations is not None else '—'}</b><small>{reservation_change}</small></div>
-          <div class="top-utility__metric"><span>이번 주 리뷰 등록</span><b>{f'{reviews:,}건' if reviews is not None else '—'}</b><small>{review_change}</small></div>
+          {place_summary}
         </div>
         """,
         unsafe_allow_html=True,
@@ -838,6 +847,15 @@ def place_week_comparison(metric_key: str) -> tuple[int | None, int | None]:
     return current_value, current_value - previous_value
 
 
+def place_data_is_current() -> bool:
+    collected_date = str(PLACE_LATEST.get("collected_date") or "")
+    try:
+        age = datetime.now().date() - datetime.strptime(collected_date, "%Y-%m-%d").date()
+    except ValueError:
+        return False
+    return 0 <= age.days <= 9
+
+
 def counts_chart(
     values: dict[str, float],
     color: str,
@@ -1159,6 +1177,7 @@ st.markdown(
     .top-utility { position:fixed; z-index:2; top:0; left:228px; right:0; height:68px; display:flex; align-items:center; justify-content:flex-end; gap:1.7rem; box-sizing:border-box; padding:0 2.5rem; border-bottom:1px solid var(--line); background:rgba(255,255,255,.94); }
     .top-utility__metric { display:grid; grid-template-columns:auto auto; column-gap:.55rem; align-items:baseline; }
     .top-utility__metric span { color:var(--muted); font-size:.65rem; font-weight:800; }.top-utility__metric b { font-size:1.1rem; letter-spacing:-.04em; }.top-utility__metric small { grid-column:1 / -1; margin-top:.1rem; color:var(--brand); font-size:.58rem; font-weight:800; }
+    .top-utility__notice { display:grid; gap:.12rem; padding:.45rem .8rem; border-radius:10px; background:#fff5e8; }.top-utility__notice b { color:#9a5312; font-size:.68rem; }.top-utility__notice span { color:#8b6d4f; font-size:.58rem; font-weight:700; }
     .hero-copy { max-width:700px; margin:1.7rem auto 1.5rem; padding:2.1rem 1.5rem 1.4rem; text-align:center; }
     .page-heading { padding:2.5rem 0 1.6rem; }
     .hero-copy > span, .page-heading > span, .signal-card > span, .flow-card > span { color:var(--brand); font-size:.68rem; font-weight:900; letter-spacing:.05em; }

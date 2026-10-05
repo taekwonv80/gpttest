@@ -6,6 +6,7 @@
   <meta name="description" content="택이네조개전골 장현점 바다를품다 순위 트래커">
   <title>택이네조개전골 장현점 · 순위 트래커</title>
   <link rel="stylesheet" href="tracker.css">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
   <main class="tracker-page">
@@ -30,7 +31,29 @@
         <p class="insight"><b>피크</b> 이 키워드는 <strong>12월에 가장 많이 찾아요</strong> (평균의 1.1배)</p><p class="insight"><b class="mint">타이밍</b> 피크 준비는 <strong>10월부터가 좋아요.</strong> 시즌 포인트 알고리즘이 이어서 챙겨드려요.</p><p class="ai-note"><b>AI 마케터:</b> 5위 안이에요. 아주 좋습니다. 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글과 소식 1건처럼 부담 작은 관리만 챙겨보세요.</p>
       </section>
     </details>
+
+    <section class="demo-banner" id="demo-banner"><span>예시 가게 화면이에요. 멤버십을 시작하면 사장님 가게가 이렇게 보여요.</span><a href="#membership">멤버십 알아보기 ›</a><button type="button" class="icon-button" data-dismiss="demo-banner" aria-label="배너 닫기">×</button></section>
+    <section class="today-title"><div><p>플레이스비서 · 오늘의 대시보드</p><h1>사장님, 오늘도 애쓰고 계시네요</h1></div><button type="button" class="text-button" id="guide-open">사용법 보기</button></section>
+    <section class="report-strip" id="report-strip"><a href="#reports">「장현동맛집」 이번 주 리포트가 도착했어요 <b>플레이스비서 주간 리포트</b></a><button type="button" data-dismiss="report-strip" aria-label="리포트 알림 닫기">×</button></section>
+
+    <section class="mission-card" id="mission">
+      <p class="section-label">오늘 할 일</p><h2>상세설명 보완하기</h2><p>상세설명 120자: 방문 직전 손님의 망설임을 없애줄 분량이 아직 부족해요.</p>
+      <details><summary>근거 보기 <span>자세히</span></summary><p class="evidence">최근 검색어에서 메뉴·주차·대표 서비스에 대한 질문이 반복됐어요. 첫 문단에 핵심 정보를 먼저 적어보세요.</p></details>
+      <div class="mission-actions"><a href="#ai-work">AI로 상세설명 만들기 <small>· 5분</small></a><button type="button" id="mission-done">했어요, 기록해 주세요</button></div>
+      <div class="feedback"><span>도움됐어요?</span><button type="button" data-feedback="good">👍 도움됐어요</button><button type="button" data-feedback="bad">👎 도움안돼요</button></div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="doing-well"><p class="section-label">잘하고 있는 것</p><p>· 이번 주 직접 바꾼 것 2가지: 소식 올렸어요, 리뷰 답글 3개 달았어요</p><p>· 기록 5일 연속</p></article>
+      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>겨울 가족 외식 <em>D-16</em></h2><p class="muted">12월 7일 시작 · 연말 모임 전, 예약과 대표 메뉴를 먼저 준비해요.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 1 / 7</b> · 다음에 하실 것 체험단 모집·예약 오픈</p><label class="check-row"><input type="checkbox" id="season-check"> 체험단 모집·예약 오픈 했어요로 표시</label><details><summary>준비 순서 전체 보기</summary><ol><li>대표 메뉴 사진 정리</li><li>연말 예약 문구 업데이트</li><li>체험단 모집·예약 오픈</li></ol></details></article>
+    </section>
+
+    <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">1</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"><li>소식 발행했어요</li></ul><p class="community-note">오늘 동료 사장님들이 가게를 <b>14가지</b> 바꾸고, 새 배지를 <b>3개</b> 받았어요</p></section>
+
+    <p class="more-label">여기까지가 오늘 볼 것 · 아래는 필요할 때만</p><section class="more-links" id="reports"><h2>플레이스비서 자세히 보기</h2><a href="#weekly"><b>주간 리포트</b><span>월요일 발행 · 새로 도착</span>›</a><a href="#rival"><b>라이벌 리포트</b><span>화요일 발행</span>›</a><a href="#review"><b>리뷰 리포트</b><span>목요일 발행</span>›</a><a href="#performance"><b>우리 가게 성과</b><span>최근 30일 순위·리뷰·저장과 내가 한 일</span>›</a><a href="#season"><b>대목 고르기</b><span>달력에서 기회 날짜와 준비 순서</span>›</a></section>
   </main>
+  <aside class="side-nav"><strong>플레이스비서<br><small>은코치</small></strong><a href="#main-keyword">오늘의 순위</a><a href="#mission">오늘 할 일</a><a href="#reports">주간 리포트</a><a href="#performance">우리 가게 성과</a><a href="#season">대목 고르기</a></aside>
+  <dialog id="guide-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">사용 방법</p><h2>매일 3분이면 충분해요.</h2><ol><li>오늘 순위를 확인해요.</li><li>오늘 할 일 하나를 해요.</li><li>한 줄로 기록을 남겨요.</li></ol></dialog>
   <script src="tracker.js"></script>
 </body>
 </html>

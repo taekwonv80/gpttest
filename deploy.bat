@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 
-git add -A -- . ":(exclude)AGENTS.md"
+git add -A
 git diff --cached --quiet
 if errorlevel 1 (
   git commit -m "chore: deploy dashboard updates"

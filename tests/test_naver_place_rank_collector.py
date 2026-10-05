@@ -21,6 +21,12 @@ class NaverPlaceRankCollectorTests(unittest.TestCase):
         self.assertEqual(result["rank"], 2)
         self.assertFalse(result["is_ad"])
 
+    def test_find_rank_can_use_results_below_first_viewport(self):
+        cards = [f"다른 식당 {index}" for index in range(12)]
+        cards.append("택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처\n조개요리")
+        result = collector.find_rank(cards, ["택이네조개전골 장현지구점"])
+        self.assertEqual(result["rank"], 13)
+
     def test_history_appends_measurement(self):
         history = {"schema_version": 1, "measurements": []}
         measurement = {

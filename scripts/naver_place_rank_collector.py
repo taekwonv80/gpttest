@@ -159,7 +159,7 @@ async def public_result_cards(keyword: str) -> list[str]:
                     cards = frame.locator("li.UEzoS")
                     try:
                         await cards.first.wait_for(timeout=5_000)
-                        texts = [text.strip() for text in await cards.all_inner_texts() if text.strip()]
+                        texts = await collect_scrolled_cards(frame)
                         if texts:
                             return texts
                     except Exception:
@@ -169,6 +169,36 @@ async def public_result_cards(keyword: str) -> list[str]:
             await context.close()
             await browser.close()
     raise RankCollectionError(f"검색 결과를 읽지 못했습니다: {keyword}")
+
+
+async def collect_scrolled_cards(frame: Any) -> list[str]:
+    """Accumulate virtualized Map result cards instead of only the first viewport."""
+    cards = frame.locator("li.UEzoS")
+    seen: list[str] = []
+    seen_texts: set[str] = set()
+    unchanged_rounds = 0
+
+    for _ in range(30):
+        texts = [text.strip() for text in await cards.all_inner_texts() if text.strip()]
+        before = len(seen)
+        for text in texts:
+            if text not in seen_texts:
+                seen_texts.add(text)
+                seen.append(text)
+
+        # Naver Map virtualizes the list: moving the last rendered row into view
+        # loads the next rows while older rows can disappear from the DOM.
+        try:
+            await cards.last.scroll_into_view_if_needed(timeout=5_000)
+        except Exception:
+            break
+        await frame.wait_for_timeout(700)
+
+        unchanged_rounds = unchanged_rounds + 1 if len(seen) == before else 0
+        if unchanged_rounds >= 3:
+            break
+
+    return seen
 
 
 async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:

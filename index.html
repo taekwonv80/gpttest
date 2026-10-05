@@ -7,6 +7,7 @@
   <title>택이네조개전골 장현점 · 순위 트래커</title>
   <link rel="stylesheet" href="tracker.css">
   <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="pending.css">
 </head>
 <body>
   <main class="tracker-page">
@@ -14,8 +15,8 @@
       <p class="eyebrow" id="main-keyword">거점키워드 · 장현동맛집 · 검색량 측정 대기</p>
       <div class="rank-title"><strong>—</strong><span>위</span><em>첫 측정 대기</em></div>
       <p class="rank-time">GitHub Actions에서 첫 순위를 측정합니다</p>
-      <svg class="sparkline" viewBox="0 0 570 143" role="img" aria-label="최근 14일 장현동맛집 순위 변화"><path class="grid" d="M16 63H553M16 117H553"/><polyline points="16,127 54,127 92,86 130,105 168,117 206,117 244,128 282,117 320,128 358,138 396,35 434,35 472,45 510,55"/><circle cx="510" cy="55" r="8"/></svg>
-      <div class="date-row"><span>최근 14일 · 9월 21일 · 12위</span><span>오늘 · 5위</span></div>
+      <div class="chart-pending">첫 순위 측정 후 최근 14일 추이가 표시됩니다.</div>
+      <div class="date-row"><span>최근 14일 · 측정 대기</span><span>오늘 · —</span></div>
     </section>
     <details class="keyword-fold" open>
       <summary>추적키워드 5개 보기 <span>⌃</span></summary>
@@ -23,19 +24,19 @@
       <div id="keyword-list"></div>
       <div class="keyword-delete-line"><button type="button" id="keyword-delete">이 키워드 삭제</button><span>지금까지 순위 기록은 그대로 남아요</span></div>
       <section class="keyword-panel" aria-label="장현동맛집 순위 상세">
-        <div class="panel-heading"><strong>5위 <small>보합</small></strong><p>시작 <b>15위</b>　 최고 <b>3위</b> (10/1)　 최저 <b>17위</b> (9/7)</p></div>
+        <div class="panel-heading"><strong>측정 대기 <small>첫 수집 후 표시</small></strong><p>시작 —　 최고 —　 최저 —</p></div>
         <div class="range-tabs" role="tablist" aria-label="순위 기간"><button class="active" data-period="1주" role="tab" aria-selected="true">1주</button><button data-period="1개월" role="tab">1개월</button><button data-period="3개월" role="tab">3개월</button><button data-period="전체" role="tab">전체</button></div>
-        <div class="chart-notes"><b id="peak-note">최고 3위 (10/1)</b><span id="low-note">최저 13위 (9/30)</span></div>
-        <svg class="detail-chart" viewBox="0 0 570 164" preserveAspectRatio="none" role="img" aria-label="장현동맛집 1주 순위 변화"><defs><linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd7d1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient></defs><path class="grid" d="M0 22H570M0 75H570M0 128H570"/><path class="chart-area" d="M0 124L95 135L190 28L380 28L570 52L570 155L0 155Z"/><polyline class="chart-line" points="0,124 95,135 190,28 380,28 570,52"/><circle class="peak" cx="190" cy="28" r="4"/><circle class="low" cx="285" cy="155" r="4"/><text x="8" y="21">1</text><text x="8" y="155">15</text></svg>
-        <p class="record-note">◇ 내가 기록한 날, 순위 변화와 함께 보세요</p>
-        <section class="search-volume"><div class="volume-head"><b>검색량</b><span>월간 <strong>1,350회</strong> · 모바일 1,220 / PC 130</span></div><div class="bars" aria-label="월별 검색량"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="outlined"></i><i></i><i class="now"></i></div><div class="months"><span>1월</span><span>2월</span><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span><span>8월</span><span>9월</span><span>10월</span><span>11월</span><b>12월</b></div></section>
-        <p class="insight"><b>피크</b> 이 키워드는 <strong>12월에 가장 많이 찾아요</strong> (평균의 1.1배)</p><p class="insight"><b class="mint">타이밍</b> 피크 준비는 <strong>10월부터가 좋아요.</strong> 시즌 포인트 알고리즘이 이어서 챙겨드려요.</p><p class="ai-note"><b>AI 마케터:</b> 5위 안이에요. 아주 좋습니다. 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글과 소식 1건처럼 부담 작은 관리만 챙겨보세요.</p>
+        <div class="chart-notes"><b id="peak-note">최고 —</b><span id="low-note">최저 —</span></div>
+        <div class="chart-pending detail-pending">첫 순위 측정 후 기간별 추이가 표시됩니다.</div>
+        <p class="record-note">◇ 기록을 남기면 순위 변화와 함께 볼 수 있어요.</p>
+        <section class="search-volume"><div class="volume-head"><b>검색량</b><span>월간 <strong>측정 대기</strong> · 모바일 — / PC —</span></div><div class="volume-pending">네이버 검색광고 API에서 실제 검색량을 수집합니다.</div></section>
+        <p class="insight"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p><p class="insight"><b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색량을 기준으로 안내합니다.</p><p class="ai-note"><b>AI 마케터:</b> 첫 순위와 검색량을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</p>
       </section>
     </details>
 
     <section class="demo-banner" id="demo-banner"><span>예시 가게 화면이에요. 멤버십을 시작하면 사장님 가게가 이렇게 보여요.</span><a href="#membership">멤버십 알아보기 ›</a><button type="button" class="icon-button" data-dismiss="demo-banner" aria-label="배너 닫기">×</button></section>
     <section class="today-title"><div><p>플레이스비서 · 오늘의 대시보드</p><h1>사장님, 오늘도 애쓰고 계시네요</h1></div><button type="button" class="text-button" id="guide-open">사용법 보기</button></section>
-    <section class="report-strip" id="report-strip"><a href="#reports">「장현동맛집」 이번 주 리포트가 도착했어요 <b>플레이스비서 주간 리포트</b></a><button type="button" data-dismiss="report-strip" aria-label="리포트 알림 닫기">×</button></section>
+    <section class="report-strip" id="report-strip"><a href="#reports">첫 순위 데이터를 수집하면 주간 리포트가 발행됩니다. <b>플레이스비서 주간 리포트</b></a><button type="button" data-dismiss="report-strip" aria-label="리포트 알림 닫기">×</button></section>
 
     <section class="mission-card" id="mission">
       <p class="section-label">오늘 할 일</p><h2>상세설명 보완하기</h2><p>상세설명 120자: 방문 직전 손님의 망설임을 없애줄 분량이 아직 부족해요.</p>
@@ -45,11 +46,11 @@
     </section>
 
     <section class="summary-grid">
-      <article class="doing-well"><p class="section-label">잘하고 있는 것</p><p>· 이번 주 직접 바꾼 것 2가지: 소식 올렸어요, 리뷰 답글 3개 달았어요</p><p>· 기록 5일 연속</p></article>
-      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>겨울 가족 외식 <em>D-16</em></h2><p class="muted">12월 7일 시작 · 연말 모임 전, 예약과 대표 메뉴를 먼저 준비해요.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 1 / 7</b> · 다음에 하실 것 체험단 모집·예약 오픈</p><label class="check-row"><input type="checkbox" id="season-check"> 체험단 모집·예약 오픈 했어요로 표시</label><details><summary>준비 순서 전체 보기</summary><ol><li>대표 메뉴 사진 정리</li><li>연말 예약 문구 업데이트</li><li>체험단 모집·예약 오픈</li></ol></details></article>
+      <article class="doing-well"><p class="section-label">잘하고 있는 것</p><p>첫 기록이 쌓이면 이번 주 완료한 관리 활동을 요약합니다.</p></article>
+      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>시즌 일정 설정 대기 <em>—</em></h2><p class="muted">시즌을 설정하면 준비 순서와 진행률을 안내합니다.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 —</b></p><label class="check-row"><input type="checkbox" id="season-check" disabled> 시즌 준비를 설정한 뒤 체크할 수 있어요</label></article>
     </section>
 
-    <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">1</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"><li>소식 발행했어요</li></ul><p class="community-note">오늘 동료 사장님들이 가게를 <b>14가지</b> 바꾸고, 새 배지를 <b>3개</b> 받았어요</p></section>
+    <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">0</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"></ul><p class="community-note">동료 사장님 활동 통계는 연결 후 표시됩니다.</p></section>
 
     <p class="more-label">여기까지가 오늘 볼 것 · 아래는 필요할 때만</p><section class="more-links" id="reports"><h2>플레이스비서 자세히 보기</h2><a href="#weekly"><b>주간 리포트</b><span>월요일 발행 · 새로 도착</span>›</a><a href="#rival"><b>라이벌 리포트</b><span>화요일 발행</span>›</a><a href="#review"><b>리뷰 리포트</b><span>목요일 발행</span>›</a><a href="#performance"><b>우리 가게 성과</b><span>최근 30일 순위·리뷰·저장과 내가 한 일</span>›</a><a href="#season"><b>대목 고르기</b><span>달력에서 기회 날짜와 준비 순서</span>›</a></section>
   </main>

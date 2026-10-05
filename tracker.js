@@ -1,6 +1,11 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: '—', volume: '측정 대기' }];
-let trackedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null') || DEFAULT_KEYWORDS;
+const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
+let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
+  !keyword.measuredAt && keyword.value === '장현동맛집' && keyword.rank === 5 && keyword.volume === '1,350'
+    ? { ...DEFAULT_KEYWORDS[0] }
+    : keyword
+));
 let selectedKeyword = trackedKeywords[0]?.value || '';
 
 function saveKeywords() {
@@ -38,7 +43,14 @@ function updateKeywordHeading(keyword) {
   document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== '—'
     ? `${keyword.rank}위 <small>보합</small>`
     : `측정 대기 <small>첫 수집 후 표시</small>`;
-  document.querySelector('.detail-chart').setAttribute('aria-label', `${value} 순위 변화`);
+  const detailChart = document.querySelector('.detail-chart');
+  if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
+  document.querySelector('#rank-chart-pending').textContent = isMeasured
+    ? '순위 이력이 쌓이면 최근 14일 추이가 표시됩니다.'
+    : '첫 순위 측정 후 최근 14일 추이가 표시됩니다.';
+  document.querySelector('#detail-chart-pending').textContent = isMeasured
+    ? '측정 이력을 기준으로 기간별 추이가 표시됩니다.'
+    : '첫 순위 측정 후 기간별 추이가 표시됩니다.';
 }
 
 async function loadServerTracker() {
@@ -118,18 +130,9 @@ document.querySelector('#keyword-delete').addEventListener('click', () => {
 document.querySelectorAll('.dialog-close').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
 
 const tabs = document.querySelectorAll('[data-period]');
-const configs = {
-  '1주': ['최고 3위 (10/1)', '최저 13위 (9/30)'],
-  '1개월': ['최고 3위 (10/1)', '최저 15위 (9/7)'],
-  '3개월': ['최고 3위 (10/1)', '최저 17위 (9/7)'],
-  '전체': ['최고 3위 (10/1)', '최저 17위 (9/7)'],
-};
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   tabs.forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
   tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
-  document.querySelector('#peak-note').textContent = configs[tab.dataset.period][0];
-  document.querySelector('#low-note').textContent = configs[tab.dataset.period][1];
-  document.querySelector('.detail-chart').setAttribute('aria-label', `${selectedKeyword} ${tab.dataset.period} 순위 변화`);
 }));
 
 document.querySelectorAll('[data-dismiss]').forEach((button) => button.addEventListener('click', () => {

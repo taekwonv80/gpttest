@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "place_id": "1827896507",
-  "updated_at": "2026-10-05T17:23:42+09:00",
+  "updated_at": "2026-10-05T19:42:36+09:00",
   "measurements": [
     {
       "keyword": "장현동맛집",
@@ -51,6 +51,71 @@
       "monthly_pc_searches": 130,
       "monthly_mobile_searches": 1190,
       "monthly_searches": 1320
+    },
+    {
+      "keyword": "장현동맛집",
+      "measured_at": "2026-10-05T19:42:36+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": 130,
+      "monthly_mobile_searches": 1190,
+      "monthly_searches": 1320
+    },
+    {
+      "keyword": "시흥능곡샤브샤브",
+      "measured_at": "2026-10-05T19:42:36+09:00",
+      "source": "naver-map-public-search",
+      "rank": 6,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 170,
+      "monthly_searches": 180
+    },
+    {
+      "keyword": "장곡동샤브샤브",
+      "measured_at": "2026-10-05T19:42:36+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 7,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 180,
+      "monthly_searches": 190
+    },
+    {
+      "keyword": "능곡동칼국수",
+      "measured_at": "2026-10-05T19:42:36+09:00",
+      "source": "naver-map-public-search",
+      "rank": null,
+      "matched_name": null,
+      "is_ad": null,
+      "visible_result_count": 9,
+      "status": "not_found_in_visible_results",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 40,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "장곡동점심맛집",
+      "measured_at": "2026-10-05T19:42:36+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 30,
+      "monthly_searches": null
     }
   ]
 }

@@ -19,8 +19,9 @@
     </section>
     <details class="keyword-fold" open>
       <summary>추적키워드 5개 보기 <span>⌃</span></summary>
-      <p class="fold-help">키워드를 눌러보세요 · 그 키워드 순위가 어떻게 움직였는지 펼쳐져요</p>
-      <button class="keyword-row" type="button" aria-expanded="true"><b class="keyword-rank">5<small>위</small></b><span class="star">★</span><strong>장현동맛집</strong><em>가장 중요한 거점키워드</em><span class="volume">월 1,350회</span><i>⌃</i></button>
+      <div class="keyword-tools"><p class="fold-help">키워드를 눌러보세요 · 그 키워드 순위가 어떻게 움직였는지 펼쳐져요</p><button type="button" id="keyword-add-open">+ 키워드 등록</button></div>
+      <div id="keyword-list"></div>
+      <div class="keyword-delete-line"><button type="button" id="keyword-delete">이 키워드 삭제</button><span>지금까지 순위 기록은 그대로 남아요</span></div>
       <section class="keyword-panel" aria-label="장현동맛집 순위 상세">
         <div class="panel-heading"><strong>5위 <small>보합</small></strong><p>시작 <b>15위</b>　 최고 <b>3위</b> (10/1)　 최저 <b>17위</b> (9/7)</p></div>
         <div class="range-tabs" role="tablist" aria-label="순위 기간"><button class="active" data-period="1주" role="tab" aria-selected="true">1주</button><button data-period="1개월" role="tab">1개월</button><button data-period="3개월" role="tab">3개월</button><button data-period="전체" role="tab">전체</button></div>
@@ -54,6 +55,7 @@
   </main>
   <aside class="side-nav"><strong>플레이스비서<br><small>은코치</small></strong><a href="#main-keyword">오늘의 순위</a><a href="#mission">오늘 할 일</a><a href="#reports">주간 리포트</a><a href="#performance">우리 가게 성과</a><a href="#season">대목 고르기</a></aside>
   <dialog id="guide-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">사용 방법</p><h2>매일 3분이면 충분해요.</h2><ol><li>오늘 순위를 확인해요.</li><li>오늘 할 일 하나를 해요.</li><li>한 줄로 기록을 남겨요.</li></ol></dialog>
+  <dialog id="keyword-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">추적키워드 등록</p><h2>매일 확인할 키워드를 적어주세요.</h2><p class="dialog-copy">등록하면 다음 순위 측정부터 기록됩니다.</p><form id="keyword-form"><label for="keyword-input">키워드</label><input id="keyword-input" maxlength="40" autocomplete="off" placeholder="예: 장현동 맛집" required><button type="submit">등록하기</button></form></dialog>
   <script src="tracker.js"></script>
 </body>
 </html>

@@ -12,6 +12,17 @@
 - 일별 클릭 추이, 캠페인 비교, Slack 일일 리포트 미리보기
 - 파워링크 등록 키워드·실제 검색어 액션 보드
 
+## 네이버 지도 키워드 순위 추적
+
+`.github/workflows/naver-place-rank.yml`은 매일 오전 9시 15분(KST)에
+`data/tracker_config.json`의 키워드를 네이버 지도 공개 검색 결과에서 측정합니다.
+결과는 `data/rank_history.json`에 누적하고, `SLACK_WEBHOOK_URL`이 설정되어 있으면
+순위·전일 대비를 Slack으로 전송합니다. 이 수집은 로그인이나 네이버 계정 정보를 사용하지 않습니다.
+
+추적 키워드는 `data/tracker_config.json`의 `keywords` 배열에서 관리합니다. 웹 화면에서
+등록한 키워드는 현재 브라우저에 저장되는 즉시 확인용 기능이며, 자동 측정 대상에 반영하려면
+같은 키워드를 설정 파일에도 추가해 커밋해야 합니다.
+
 첫 자동 수집이 성공하기 전에는 `data/campaign_weekly.json`의 샘플 데이터가 표시됩니다. 성공 후에는 네이버 SearchAd API 집계 데이터로 자동 교체됩니다.
 
 ## 자동화 흐름

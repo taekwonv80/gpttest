@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "place": {
+    "id": "1827896507",
+    "url": "https://map.naver.com/p/entry/place/1827896507",
+    "name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+    "aliases": [
+      "택이네조개전골 장현지구점",
+      "택이네조개전골 장현점",
+      "바다를품다"
+    ]
+  },
+  "keywords": [
+    "장현동맛집"
+  ],
+  "schedule": {
+    "timezone": "Asia/Seoul",
+    "daily_measurement_time": "09:15"
+  }
+}

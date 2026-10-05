@@ -2,6 +2,8 @@ name: Naver Place keyword rank
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [tracker-config-updated]
   schedule:
     # 00:15 UTC = 09:15 KST
     - cron: "15 0 * * *"

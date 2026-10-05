@@ -1,9 +1,11 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
+const KEYWORD_SYNC_KEY_STORAGE = 'taekine-keyword-sync-key';
 const PENDING_VOLUME = '검색량(측정대기)';
 const PENDING_RANK = '-';
 const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대기)']);
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume: PENDING_VOLUME }];
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
+let keywordSyncEndpoint = '';
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -15,6 +17,41 @@ let selectedKeyword = trackedKeywords[0]?.value || '';
 
 function saveKeywords() {
   localStorage.setItem(KEYWORD_STORAGE_KEY, JSON.stringify(trackedKeywords));
+}
+
+function setKeywordSyncStatus(message) {
+  const status = document.querySelector('#keyword-sync-status');
+  if (status) status.textContent = message;
+}
+
+function applyConfiguredKeywords(keywords) {
+  const existing = new Map(trackedKeywords.map((keyword) => [keyword.value, keyword]));
+  trackedKeywords = keywords.map((value) => existing.get(value) || {
+    value,
+    rank: PENDING_RANK,
+    volume: PENDING_VOLUME,
+  });
+  selectedKeyword = trackedKeywords.some((keyword) => keyword.value === selectedKeyword)
+    ? selectedKeyword
+    : trackedKeywords[0]?.value || '';
+}
+
+async function syncKeywords(keywords) {
+  if (!keywordSyncEndpoint) throw new Error('키워드 동기화 서버가 아직 연결되지 않았습니다.');
+  const adminKey = sessionStorage.getItem(KEYWORD_SYNC_KEY_STORAGE) || window.prompt('키워드 동기화키를 입력해 주세요.');
+  if (!adminKey) throw new Error('동기화키 입력이 취소되었습니다.');
+  const response = await fetch(`${keywordSyncEndpoint}/keywords`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-tracker-key': adminKey },
+    body: JSON.stringify({ keywords }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !Array.isArray(payload.keywords)) {
+    if (response.status === 401) sessionStorage.removeItem(KEYWORD_SYNC_KEY_STORAGE);
+    throw new Error(payload.error || '키워드 파일 저장에 실패했습니다.');
+  }
+  sessionStorage.setItem(KEYWORD_SYNC_KEY_STORAGE, adminKey);
+  return payload;
 }
 
 function selectedKeywordData() {
@@ -60,17 +97,26 @@ function updateKeywordHeading(keyword) {
 
 async function loadServerTracker() {
   try {
-    const [configResponse, historyResponse] = await Promise.all([
+    const [configResponse, historyResponse, syncResponse] = await Promise.all([
       fetch('data/tracker_config.json', { cache: 'no-store' }),
       fetch('data/rank_history.json', { cache: 'no-store' }),
+      fetch('data/keyword_sync.json', { cache: 'no-store' }),
     ]);
-    const config = configResponse.ok ? await configResponse.json() : {};
+    let config = configResponse.ok ? await configResponse.json() : {};
     const history = historyResponse.ok ? await historyResponse.json() : {};
-    for (const value of config.keywords || []) {
-      if (!trackedKeywords.some((keyword) => keyword.value === value)) {
-        trackedKeywords.push({ value, rank: PENDING_RANK, volume: PENDING_VOLUME });
+    const sync = syncResponse.ok ? await syncResponse.json() : {};
+    keywordSyncEndpoint = typeof sync.endpoint === 'string' ? sync.endpoint.replace(/\/$/, '') : '';
+    if (keywordSyncEndpoint) {
+      try {
+        const response = await fetch(`${keywordSyncEndpoint}/keywords`, { cache: 'no-store' });
+        const source = response.ok ? await response.json() : {};
+        if (Array.isArray(source.keywords)) config = { ...config, keywords: source.keywords };
+      } catch {
+        setKeywordSyncStatus('파일 동기화 서버에 연결하지 못했어요. 저장된 설정을 표시합니다.');
       }
     }
+    const configured = Array.isArray(config.keywords) ? config.keywords : [];
+    applyConfiguredKeywords(configured);
     const latest = {};
     for (const measurement of history.measurements || []) {
       const prior = latest[measurement.keyword];
@@ -92,8 +138,11 @@ async function loadServerTracker() {
     });
     saveKeywords();
     renderKeywords();
+    setKeywordSyncStatus(keywordSyncEndpoint
+      ? '키워드 파일과 동기화됨 · 등록 또는 삭제하면 바로 순위 측정을 요청합니다.'
+      : '자동동기화 서버를 연결하면 등록·삭제가 파일에 저장됩니다.');
   } catch {
-    // Keep the dashboard usable with its locally cached keywords offline.
+    setKeywordSyncStatus('키워드 설정을 불러오지 못했어요.');
   }
 }
 
@@ -110,7 +159,7 @@ document.querySelector('#keyword-add-open').addEventListener('click', () => {
   document.querySelector('#keyword-input').focus();
 });
 
-document.querySelector('#keyword-form').addEventListener('submit', (event) => {
+document.querySelector('#keyword-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const input = document.querySelector('#keyword-input');
   const value = input.value.trim().replace(/\s+/g, ' ');
@@ -120,21 +169,34 @@ document.querySelector('#keyword-form').addEventListener('submit', (event) => {
     return;
   }
   input.setCustomValidity('');
-  trackedKeywords.push({ value, rank: PENDING_RANK, volume: PENDING_VOLUME });
-  selectedKeyword = value;
-  saveKeywords();
-  renderKeywords();
-  input.value = '';
-  keywordDialog.close();
+  try {
+    setKeywordSyncStatus('키워드 파일에 저장하고 순위 측정을 요청하는 중이에요.');
+    const result = await syncKeywords([...trackedKeywords.map((keyword) => keyword.value), value]);
+    applyConfiguredKeywords(result.keywords);
+    selectedKeyword = value;
+    saveKeywords();
+    renderKeywords();
+    input.value = '';
+    keywordDialog.close();
+    setKeywordSyncStatus('키워드 파일에 저장됐어요 · 순위 측정을 요청했습니다.');
+  } catch (error) {
+    setKeywordSyncStatus(error.message);
+  }
 });
 
-document.querySelector('#keyword-delete').addEventListener('click', () => {
+document.querySelector('#keyword-delete').addEventListener('click', async () => {
   const current = selectedKeywordData();
   if (!current || !confirm(`“${current.value}” 키워드 추적을 중단할까요?\n지금까지 기록된 순위 데이터는 유지됩니다.`)) return;
-  trackedKeywords = trackedKeywords.filter((keyword) => keyword.value !== current.value);
-  selectedKeyword = trackedKeywords[0]?.value || '';
-  saveKeywords();
-  renderKeywords();
+  try {
+    setKeywordSyncStatus('키워드 파일을 갱신하는 중이에요.');
+    const result = await syncKeywords(trackedKeywords.filter((keyword) => keyword.value !== current.value).map((keyword) => keyword.value));
+    applyConfiguredKeywords(result.keywords);
+    saveKeywords();
+    renderKeywords();
+    setKeywordSyncStatus('키워드 파일에서 삭제됐어요 · 순위 측정을 요청했습니다.');
+  } catch (error) {
+    setKeywordSyncStatus(error.message);
+  }
 });
 
 document.querySelectorAll('.dialog-close').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));

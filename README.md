@@ -20,9 +20,30 @@
 순위·전일 대비·월간 검색량을 Slack으로 전송합니다. 검색량은 기존 SearchAd API Secret을 사용하며,
 지도 순위 수집은 로그인이나 네이버 계정 정보를 사용하지 않습니다.
 
-추적 키워드는 `data/tracker_config.json`의 `keywords` 배열에서 관리합니다. 웹 화면에서
-등록한 키워드는 현재 브라우저에 저장되는 즉시 확인용 기능이며, 자동 측정 대상에 반영하려면
-같은 키워드를 설정 파일에도 추가해 커밋해야 합니다.
+추적 키워드의 기준 데이터는 `data/tracker_config.json`의 `keywords` 배열입니다. 화면에서
+등록·삭제하면 동기화 Worker가 이 파일을 GitHub에 커밋하고 즉시 순위 측정을 요청합니다.
+따라서 화면, 설정 파일, GitHub Actions가 항상 같은 키워드 목록을 사용합니다.
+
+### 키워드 동기화 Worker 설정
+
+`worker/`는 GitHub Pages가 직접 쓸 수 없는 `data/tracker_config.json`을 안전하게 갱신하는
+Cloudflare Worker입니다. Worker에는 다음 두 Secret만 등록합니다.
+
+```powershell
+cd worker
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ADMIN_KEY
+npx wrangler deploy
+```
+
+- `GITHUB_TOKEN`: `taekwonv80/gpttest` 저장소만 대상으로 만든 GitHub fine-grained 토큰입니다.
+  Repository permissions에서 **Contents: Read and write**를 부여합니다.
+- `ADMIN_KEY`: 화면에서 키워드를 등록·삭제할 때 입력하는 별도 동기화키입니다. GitHub 토큰과
+  같은 값으로 쓰지 마세요.
+
+배포 명령이 출력한 Worker 주소를 `data/keyword_sync.json`의 `endpoint`에 넣고 `deploy.bat`으로
+배포합니다. 이후 화면 등록·삭제는 브라우저 저장소가 아닌 설정 파일에 저장되며, Worker가
+`tracker-config-updated` 이벤트로 순위 측정을 바로 실행합니다.
 
 첫 자동 수집이 성공하기 전에는 `data/campaign_weekly.json`의 샘플 데이터가 표시됩니다. 성공 후에는 네이버 SearchAd API 집계 데이터로 자동 교체됩니다.
 

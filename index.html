@@ -12,11 +12,11 @@
 <body>
   <main class="tracker-page">
     <section class="rank-card" aria-labelledby="main-keyword">
-      <p class="eyebrow" id="main-keyword">거점키워드 · 장현동맛집 · 검색량(측정 대기)</p>
-      <div class="rank-title"><strong>-</strong><span>위</span><em>순위(측정 대기)</em></div>
+      <p class="eyebrow" id="main-keyword">거점키워드 · 장현동맛집 · 검색량(측정대기)</p>
+      <div class="rank-title"><strong>-</strong><span>위</span><em>순위(측정대기)</em></div>
       <p class="rank-time">GitHub Actions에서 첫 순위를 측정합니다</p>
       <div class="chart-pending" id="rank-chart-pending">첫 순위 측정 후 최근 14일 추이가 표시됩니다.</div>
-      <div class="date-row"><span>최근 14일 · 순위 추이(측정 대기)</span><span>오늘 · -</span></div>
+      <div class="date-row"><span>최근 14일 · 순위추이(측정대기)</span><span>오늘 · -</span></div>
     </section>
     <details class="keyword-fold" open>
       <summary>추적키워드 보기 <span>⌃</span></summary>
@@ -24,12 +24,12 @@
       <div id="keyword-list"></div>
       <div class="keyword-delete-line"><button type="button" id="keyword-delete">이 키워드 삭제</button><span>지금까지 순위 기록은 그대로 남아요</span></div>
       <section class="keyword-panel" aria-label="장현동맛집 순위 상세">
-        <div class="panel-heading"><strong>순위(측정 대기) <small>첫 수집 후 표시</small></strong><p>시작 -　 최고 -　 최저 -</p></div>
+        <div class="panel-heading"><strong>순위(측정대기) <small>첫 수집 후 표시</small></strong><p>시작 -　 최고 -　 최저 -</p></div>
         <div class="range-tabs" role="tablist" aria-label="순위 기간"><button class="active" data-period="1주" role="tab" aria-selected="true">1주</button><button data-period="1개월" role="tab">1개월</button><button data-period="3개월" role="tab">3개월</button><button data-period="전체" role="tab">전체</button></div>
         <div class="chart-notes"><b id="peak-note">최고 -</b><span id="low-note">최저 -</span></div>
         <div class="chart-pending detail-pending" id="detail-chart-pending">첫 순위 측정 후 기간별 추이가 표시됩니다.</div>
         <p class="record-note">◇ 기록을 남기면 순위 변화와 함께 볼 수 있어요.</p>
-        <section class="search-volume"><div class="volume-head"><b>검색량</b><span><strong>검색량(측정 대기)</strong> · 모바일 - / PC -</span></div><div class="volume-pending">네이버 검색광고 API에서 실제 검색량을 수집합니다.</div></section>
+        <section class="search-volume"><div class="volume-head"><b>검색량</b><span><strong>검색량(측정대기)</strong> · 모바일 - / PC -</span></div><div class="volume-pending">네이버 검색광고 API에서 실제 검색량을 수집합니다.</div></section>
         <p class="insight"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p><p class="insight"><b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색량을 기준으로 안내합니다.</p><p class="ai-note"><b>AI 마케터:</b> 검색량과 순위 이력을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</p>
       </section>
     </details>
@@ -47,7 +47,7 @@
 
     <section class="summary-grid">
       <article class="doing-well"><p class="section-label">잘하고 있는 것</p><p>첫 기록이 쌓이면 이번 주 완료한 관리 활동을 요약합니다.</p></article>
-      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>시즌 일정(설정 대기) <em>-</em></h2><p class="muted">시즌을 설정하면 준비 순서와 진행률을 안내합니다.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 -</b></p><label class="check-row"><input type="checkbox" id="season-check" disabled> 시즌 준비를 설정한 뒤 체크할 수 있어요</label></article>
+      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>시즌일정(설정대기) <em>-</em></h2><p class="muted">시즌을 설정하면 준비 순서와 진행률을 안내합니다.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 -</b></p><label class="check-row"><input type="checkbox" id="season-check" disabled> 시즌 준비를 설정한 뒤 체크할 수 있어요</label></article>
     </section>
 
     <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">0</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"></ul><p class="community-note">동료 사장님 활동 통계는 연결 후 표시됩니다.</p></section>

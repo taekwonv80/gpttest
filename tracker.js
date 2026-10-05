@@ -1,12 +1,13 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
-const PENDING_VOLUME = '검색량(측정 대기)';
+const PENDING_VOLUME = '검색량(측정대기)';
 const PENDING_RANK = '-';
+const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대기)']);
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume: PENDING_VOLUME }];
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
-    : keyword.volume === '측정 대기'
+    : LEGACY_PENDING_VOLUMES.has(keyword.volume)
       ? { ...keyword, volume: PENDING_VOLUME }
       : keyword
 ));
@@ -42,11 +43,11 @@ function updateKeywordHeading(keyword) {
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
   document.querySelector('.rank-title strong').textContent = keyword?.rank && keyword.rank !== PENDING_RANK ? keyword.rank : PENDING_RANK;
   const isMeasured = Boolean(keyword?.rank && keyword.rank !== PENDING_RANK);
-  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '순위(측정 대기)';
+  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '순위(측정대기)';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== PENDING_RANK
     ? `${keyword.rank}위 <small>측정 결과</small>`
-    : `순위(측정 대기) <small>첫 수집 후 표시</small>`;
+    : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
   document.querySelector('#rank-chart-pending').textContent = isMeasured
@@ -163,7 +164,7 @@ document.querySelectorAll('[data-feedback]').forEach((button) => button.addEvent
 
 const seasonCheck = document.querySelector('#season-check');
 seasonCheck.addEventListener('change', () => {
-  document.querySelector('#season-count').textContent = '끝낸 준비 설정 대기';
+  document.querySelector('#season-count').textContent = '끝낸 준비(설정대기)';
   document.querySelector('#season-progress').style.width = '0%';
 });
 

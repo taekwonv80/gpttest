@@ -233,10 +233,10 @@ def render_rank_tracker() -> None:
     st.markdown(
         """
         <section class="rank-hero">
-          <p class="rank-hero__keyword">거점키워드 · 장현동맛집 · 검색량(측정 대기)</p>
-          <div class="rank-hero__score"><strong>-</strong><span>위</span><b>순위(측정 대기)</b></div>
+          <p class="rank-hero__keyword">거점키워드 · 장현동맛집 · 검색량(측정대기)</p>
+          <div class="rank-hero__score"><strong>-</strong><span>위</span><b>순위(측정대기)</b></div>
           <p class="rank-hero__time">실제 순위 수집 후 표시됩니다.</p>
-          <div class="rank-hero__dates"><span>순위 추이(측정 대기)</span><span>오늘 · -</span></div>
+          <div class="rank-hero__dates"><span>순위추이(측정대기)</span><span>오늘 · -</span></div>
         </section>
         """,
         unsafe_allow_html=True,
@@ -249,14 +249,14 @@ def render_rank_tracker() -> None:
             <div class="tracked-keyword">
               <div class="tracked-keyword__rank">-<small>위</small></div>
               <div class="tracked-keyword__name">★ <b>장현동맛집</b> <span>가장 중요한 거점키워드</span></div>
-              <b class="tracked-keyword__volume">검색량(측정 대기)</b><i>⌃</i>
+              <b class="tracked-keyword__volume">검색량(측정대기)</b><i>⌃</i>
             </div>
             <section class="keyword-detail">
-              <div class="keyword-detail__top"><strong>순위(측정 대기) <small>첫 수집 후 표시</small></strong><p>시작 -　 최고 -　 최저 -</p></div>
+              <div class="keyword-detail__top"><strong>순위(측정대기) <small>첫 수집 후 표시</small></strong><p>시작 -　 최고 -　 최저 -</p></div>
               <div class="period-pills"><button class="is-selected">1주</button><button>1개월</button><button>3개월</button><button>전체</button></div>
               <div class="rank-chart-labels"><b>최고 -</b><span>최저 -</span></div>
               <p class="chart-note">순위 이력이 쌓이면 변화 추이가 표시됩니다.</p>
-              <div class="search-bars"><div class="search-bars__header"><b>검색량</b><span><strong>검색량(측정 대기)</strong> · 모바일 - / PC -</span></div></div>
+              <div class="search-bars"><div class="search-bars__header"><b>검색량</b><span><strong>검색량(측정대기)</strong> · 모바일 - / PC -</span></div></div>
               <p class="keyword-insight"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p>
               <p class="keyword-insight"><b class="teal">타이밍</b> 수집된 검색량을 기준으로 안내합니다.</p>
               <div class="ai-message"><b>AI 마케터:</b> 실제 순위와 검색량을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</div>

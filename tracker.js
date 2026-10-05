@@ -58,16 +58,28 @@ function selectedKeywordData() {
   return trackedKeywords.find((keyword) => keyword.value === selectedKeyword) || trackedKeywords[0];
 }
 
+function rankPresentation(keyword) {
+  if (Number.isInteger(keyword?.rank)) return { value: keyword.rank, suffix: '위', label: `${keyword.rank}위`, measured: true };
+  if (keyword?.status === 'outside_top_100') return { value: 100, suffix: '위 밖', label: '100위 밖', measured: true };
+  if (keyword?.status === 'not_found_in_visible_results' && Number.isInteger(keyword.visibleResultCount)) {
+    return { value: keyword.visibleResultCount, suffix: '위 밖', label: `${keyword.visibleResultCount}위 밖`, measured: true };
+  }
+  return { value: null, suffix: '', label: PENDING_RANK, measured: false };
+}
+
 function renderKeywords() {
   const list = document.querySelector('#keyword-list');
   const current = selectedKeywordData();
   selectedKeyword = current?.value || '';
-  list.innerHTML = trackedKeywords.map((keyword) => `
+  list.innerHTML = trackedKeywords.map((keyword) => {
+    const presentation = rankPresentation(keyword);
+    return `
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
-      <b class="keyword-rank">${keyword.rank && keyword.rank !== PENDING_RANK ? `${keyword.rank}<small>위</small>` : PENDING_RANK}</b><span class="star">★</span><strong>${keyword.value}</strong>
+      <b class="keyword-rank">${presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star">★</span><strong>${keyword.value}</strong>
       <em>${keyword.value === DEFAULT_KEYWORDS[0].value ? '가장 중요한 거점키워드' : '새로 등록한 추적키워드'}</em>
       <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
-    </button>`).join('');
+    </button>`;
+  }).join('');
   const deleteLine = document.querySelector('.keyword-delete-line');
   deleteLine.hidden = !current;
   document.querySelector('#keyword-delete').disabled = trackedKeywords.length === 0;
@@ -77,21 +89,22 @@ function renderKeywords() {
 function updateKeywordHeading(keyword) {
   const value = keyword?.value || '추적 키워드';
   const volume = keyword?.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword?.volume || PENDING_RANK}회`;
+  const presentation = rankPresentation(keyword);
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
-  const isMeasured = Boolean(keyword?.rank && keyword.rank !== PENDING_RANK);
-  document.querySelector('.rank-title strong').textContent = isMeasured ? keyword.rank : PENDING_RANK;
-  document.querySelector('.rank-title span').hidden = !isMeasured;
-  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '순위(측정대기)';
+  document.querySelector('.rank-title strong').textContent = presentation.value ?? PENDING_RANK;
+  document.querySelector('.rank-title span').textContent = presentation.suffix;
+  document.querySelector('.rank-title span').hidden = !presentation.measured;
+  document.querySelector('.rank-title em').textContent = presentation.measured ? '최근 측정 결과' : '순위(측정대기)';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
-  document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== PENDING_RANK
-    ? `${keyword.rank}위 <small>측정 결과</small>`
+  document.querySelector('.panel-heading > strong').innerHTML = presentation.measured
+    ? `${presentation.label} <small>측정 결과</small>`
     : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
-  document.querySelector('#rank-chart-pending').textContent = isMeasured
+  document.querySelector('#rank-chart-pending').textContent = presentation.measured
     ? '순위 이력이 쌓이면 최근 14일 추이가 표시됩니다.'
     : '첫 순위 측정 후 최근 14일 추이가 표시됩니다.';
-  document.querySelector('#detail-chart-pending').textContent = isMeasured
+  document.querySelector('#detail-chart-pending').textContent = presentation.measured
     ? '측정 이력을 기준으로 기간별 추이가 표시됩니다.'
     : '첫 순위 측정 후 기간별 추이가 표시됩니다.';
 }
@@ -129,6 +142,8 @@ async function loadServerTracker() {
         ...keyword,
         rank: measurement.rank ?? PENDING_RANK,
         measuredAt: measurement.measured_at,
+        status: measurement.status,
+        visibleResultCount: Number.isInteger(measurement.visible_result_count) ? measurement.visible_result_count : null,
         // 검색량 값이 응답에 실제로 있을 때만 화면에 표시한다.
         // 과거 브라우저에 남은 예시값을 실측값처럼 보여주면 안 된다.
         monthlySearches: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches : null,

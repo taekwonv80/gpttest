@@ -29,6 +29,7 @@ CONFIG_PATH = Path("data/tracker_config.json")
 HISTORY_PATH = Path("data/rank_history.json")
 MAP_SEARCH_URL = "https://map.naver.com/p/search/{query}"
 MAX_HISTORY = 3650
+MAX_TRACKED_RANK = 100
 
 
 class RankCollectionError(RuntimeError):
@@ -70,6 +71,14 @@ def find_rank(card_texts: list[str], target_names: list[str]) -> dict[str, Any] 
                 "visible_result_count": len(card_texts),
             }
     return None
+
+
+def rank_status(match: dict[str, Any] | None, checked_count: int) -> str:
+    if match:
+        return "found"
+    if checked_count >= MAX_TRACKED_RANK:
+        return "outside_top_100"
+    return "not_found_in_visible_results"
 
 
 def numeric_volume(value: Any) -> int | None:
@@ -178,7 +187,7 @@ async def collect_scrolled_cards(frame: Any) -> list[str]:
     seen_texts: set[str] = set()
     unchanged_rounds = 0
 
-    for _ in range(30):
+    for _ in range(40):
         texts = [text.strip() for text in await cards.all_inner_texts() if text.strip()]
         before = len(seen)
         for text in texts:
@@ -214,7 +223,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
     volumes = collect_keyword_volumes(keywords)
     measurements = []
     for keyword in keywords:
-        cards = await public_result_cards(keyword)
+        cards = (await public_result_cards(keyword))[:MAX_TRACKED_RANK]
         match = find_rank(cards, targets)
         measurements.append(
             {
@@ -225,7 +234,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
                 "matched_name": match["matched_name"] if match else None,
                 "is_ad": match["is_ad"] if match else None,
                 "visible_result_count": match["visible_result_count"] if match else len(cards),
-                "status": "found" if match else "not_found_in_visible_results",
+                "status": rank_status(match, len(cards)),
                 **volumes[keyword],
             }
         )
@@ -261,7 +270,9 @@ def slack_payload(measurements: list[dict[str, Any]], previous: dict[str, Any], 
     for item in measurements:
         rank = item["rank"]
         prior = previous_rank(previous, item["keyword"])
-        if rank is None:
+        if item.get("status") == "outside_top_100":
+            result = "100위 밖"
+        elif rank is None:
             result = "상위 공개 결과에서 찾지 못함"
         elif prior is None:
             result = f"{rank}위 · 첫 측정"

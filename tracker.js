@@ -1,5 +1,5 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
-const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: 5, volume: '1,350' }];
+const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: '—', volume: '측정 대기' }];
 let trackedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null') || DEFAULT_KEYWORDS;
 let selectedKeyword = trackedKeywords[0]?.value || '';
 
@@ -32,6 +32,9 @@ function updateKeywordHeading(keyword) {
   const volume = keyword?.volume === '측정 대기' ? '측정 대기' : `월 ${keyword?.volume || '—'}회`;
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
   document.querySelector('.rank-title strong').textContent = keyword?.rank && keyword.rank !== '—' ? keyword.rank : '—';
+  const isMeasured = Boolean(keyword?.rank && keyword.rank !== '—');
+  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '첫 측정 대기';
+  document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== '—'
     ? `${keyword.rank}위 <small>보합</small>`
     : `측정 대기 <small>첫 수집 후 표시</small>`;
@@ -58,7 +61,12 @@ async function loadServerTracker() {
     }
     trackedKeywords = trackedKeywords.map((keyword) => {
       const measurement = latest[keyword.value];
-      return measurement ? { ...keyword, rank: measurement.rank ?? '—', measuredAt: measurement.measured_at } : keyword;
+      return measurement ? {
+        ...keyword,
+        rank: measurement.rank ?? '—',
+        measuredAt: measurement.measured_at,
+        volume: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches.toLocaleString('ko-KR') : keyword.volume,
+      } : keyword;
     });
     saveKeywords();
     renderKeywords();

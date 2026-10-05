@@ -32,6 +32,18 @@ class NaverPlaceRankCollectorTests(unittest.TestCase):
         self.assertEqual(saved["place_id"], "1827896507")
         self.assertEqual(saved["measurements"][0]["rank"], 8)
 
+    def test_search_volume_uses_exact_keyword_row(self):
+        result = collector.search_volume(
+            [
+                {"relKeyword": "장현동맛집 추천", "monthlyPcQcCnt": 900, "monthlyMobileQcCnt": 1200},
+                {"relKeyword": "장현동맛집", "monthlyPcQcCnt": "130", "monthlyMobileQcCnt": "1220"},
+            ],
+            "장현동맛집",
+        )
+        self.assertEqual(result["monthly_pc_searches"], 130)
+        self.assertEqual(result["monthly_mobile_searches"], 1220)
+        self.assertEqual(result["monthly_searches"], 1350)
+
 
 if __name__ == "__main__":
     unittest.main()

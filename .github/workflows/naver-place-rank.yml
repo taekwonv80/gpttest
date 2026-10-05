@@ -19,6 +19,9 @@ jobs:
     timeout-minutes: 15
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      NAVER_CUSTOMER_ID: ${{ secrets.NAVER_CUSTOMER_ID }}
+      NAVER_ACCESS_LICENSE: ${{ secrets.NAVER_ACCESS_LICENSE }}
+      NAVER_SECRET_KEY: ${{ secrets.NAVER_SECRET_KEY }}
       DASHBOARD_URL: https://taekwonv80.github.io/gpttest
     steps:
       - uses: actions/checkout@v6

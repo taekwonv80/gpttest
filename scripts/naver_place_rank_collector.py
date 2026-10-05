@@ -72,6 +72,54 @@ def find_rank(card_texts: list[str], target_names: list[str]) -> dict[str, Any] 
     return None
 
 
+def numeric_volume(value: Any) -> int | None:
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str) and re.fullmatch(r"[\d,]+", value.strip()):
+        return int(value.replace(",", ""))
+    return None
+
+
+def search_volume(rows: list[dict[str, Any]], keyword: str) -> dict[str, int | None]:
+    """Pick the exact Keyword Tool row rather than a related-keyword suggestion."""
+    match = next(
+        (row for row in rows if normalize(str(row.get("relKeyword") or "")) == normalize(keyword)),
+        None,
+    )
+    if not match:
+        return {"monthly_pc_searches": None, "monthly_mobile_searches": None, "monthly_searches": None}
+    pc = numeric_volume(match.get("monthlyPcQcCnt"))
+    mobile = numeric_volume(match.get("monthlyMobileQcCnt"))
+    return {
+        "monthly_pc_searches": pc,
+        "monthly_mobile_searches": mobile,
+        "monthly_searches": pc + mobile if pc is not None and mobile is not None else None,
+    }
+
+
+def collect_keyword_volumes(keywords: list[str]) -> dict[str, dict[str, int | None]]:
+    """Use the existing signed SearchAd credentials, never expose them to Pages."""
+    from scripts.naver_daily_report import IntegrationError, NaverSearchAdClient, required_env
+
+    client = NaverSearchAdClient(
+        customer_id=required_env("NAVER_CUSTOMER_ID"),
+        api_key=required_env("NAVER_ACCESS_LICENSE"),
+        secret_key=required_env("NAVER_SECRET_KEY"),
+    )
+    volumes = {}
+    for index, keyword in enumerate(keywords):
+        try:
+            volumes[keyword] = search_volume(client.keyword_tool(keyword), keyword)
+        except IntegrationError as error:
+            print(f"검색량 수집 건너뜀: {keyword} · {error}")
+            volumes[keyword] = {"monthly_pc_searches": None, "monthly_mobile_searches": None, "monthly_searches": None}
+        if index < len(keywords) - 1:
+            # Keyword Tool has a lower rate limit than other SearchAd APIs.
+            import time
+            time.sleep(3)
+    return volumes
+
+
 async def public_result_cards(keyword: str) -> list[str]:
     from playwright.async_api import async_playwright
 
@@ -117,6 +165,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
         raise RankCollectionError("tracker_config.json에 업체명과 키워드를 등록해 주세요.")
 
     measured_at = datetime.now(SEOUL).isoformat(timespec="seconds")
+    volumes = collect_keyword_volumes(keywords)
     measurements = []
     for keyword in keywords:
         cards = await public_result_cards(keyword)
@@ -131,6 +180,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
                 "is_ad": match["is_ad"] if match else None,
                 "visible_result_count": match["visible_result_count"] if match else len(cards),
                 "status": "found" if match else "not_found_in_visible_results",
+                **volumes[keyword],
             }
         )
     return measurements
@@ -173,7 +223,9 @@ def slack_payload(measurements: list[dict[str, Any]], previous: dict[str, Any], 
             change = prior - rank
             result = f"{rank}위 · {'▲' if change > 0 else '▼' if change < 0 else '—'} {abs(change)}단계"
         ad_mark = " · 광고" if item.get("is_ad") else ""
-        lines.append(f"• *{item['keyword']}* — {result}{ad_mark}")
+        volume = item.get("monthly_searches")
+        volume_mark = f" · 월 검색량 {volume:,}" if isinstance(volume, int) else " · 검색량 확인 중"
+        lines.append(f"• *{item['keyword']}* — {result}{ad_mark}{volume_mark}")
     return {
         "text": "네이버 플레이스 키워드 순위 리포트",
         "blocks": [

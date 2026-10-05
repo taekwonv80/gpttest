@@ -175,6 +175,13 @@ class NaverSearchAdClient:
             raise IntegrationError("네이버 플레이스 검색어 응답 형식이 예상과 다릅니다.")
         return [item for item in result if isinstance(item, dict)]
 
+    def keyword_tool(self, keyword: str) -> list[dict[str, Any]]:
+        """Return Naver Keyword Tool search-volume rows for one hint keyword."""
+        result = self.get("/keywordstool", {"hintKeywords": keyword, "showDetail": 1})
+        if not isinstance(result, dict) or not isinstance(result.get("keywordList"), list):
+            raise IntegrationError("네이버 키워드 도구 응답 형식이 예상과 다릅니다.")
+        return [item for item in result["keywordList"] if isinstance(item, dict)]
+
     def create_stat_report(self, report_type: str, stat_date: date) -> dict[str, Any]:
         result = self.post(
             "/stat-reports",

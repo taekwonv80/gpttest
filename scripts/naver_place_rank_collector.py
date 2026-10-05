@@ -187,7 +187,9 @@ async def collect_scrolled_cards(frame: Any) -> list[str]:
     seen_texts: set[str] = set()
     unchanged_rounds = 0
 
-    for _ in range(40):
+    # Keep requesting additional virtualized rows until the tracked top-100
+    # range is filled. Map can delay list loading after a scroll.
+    for _ in range(80):
         texts = [text.strip() for text in await cards.all_inner_texts() if text.strip()]
         before = len(seen)
         for text in texts:
@@ -195,16 +197,21 @@ async def collect_scrolled_cards(frame: Any) -> list[str]:
                 seen_texts.add(text)
                 seen.append(text)
 
+        if len(seen) >= MAX_TRACKED_RANK:
+            return seen[:MAX_TRACKED_RANK]
+
         # Naver Map virtualizes the list: moving the last rendered row into view
         # loads the next rows while older rows can disappear from the DOM.
         try:
             await cards.last.scroll_into_view_if_needed(timeout=5_000)
         except Exception:
             break
-        await frame.wait_for_timeout(700)
+        await frame.wait_for_timeout(1_000)
 
         unchanged_rounds = unchanged_rounds + 1 if len(seen) == before else 0
-        if unchanged_rounds >= 3:
+        # Only conclude that the list ended after several full seconds without
+        # any new row. This avoids mistaking delayed lazy-loading for the end.
+        if unchanged_rounds >= 8:
             break
 
     return seen

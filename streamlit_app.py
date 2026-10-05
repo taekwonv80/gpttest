@@ -233,46 +233,33 @@ def render_rank_tracker() -> None:
     st.markdown(
         """
         <section class="rank-hero">
-          <p class="rank-hero__keyword">거점키워드 · 장현동맛집 · 월 1,350회</p>
-          <div class="rank-hero__score"><strong>5</strong><span>위</span><b>직전 측정과 같아요</b></div>
-          <p class="rank-hero__time">지금 순위 · 오후 1:56 확인</p>
-          <svg class="rank-sparkline" viewBox="0 0 560 150" aria-label="최근 14일 장현동맛집 순위 추이" role="img">
-            <path class="rank-grid" d="M16 52H544M16 106H544" />
-            <polyline points="16,117 54,117 92,76 130,96 168,107 206,107 244,118 282,107 320,118 358,128 396,24 434,24 472,34 510,44" />
-            <circle cx="510" cy="44" r="8" />
-          </svg>
-          <div class="rank-hero__dates"><span>최근 14일 · 9월 21일 · 12위</span><span>오늘 · 5위</span></div>
+          <p class="rank-hero__keyword">거점키워드 · 장현동맛집 · 검색량 측정 대기</p>
+          <div class="rank-hero__score"><strong>—</strong><span>위</span><b>첫 측정 대기</b></div>
+          <p class="rank-hero__time">실제 순위 수집 후 표시됩니다.</p>
+          <div class="rank-hero__dates"><span>순위 추이 측정 대기</span><span>오늘 · —</span></div>
         </section>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.expander("추적키워드 5개 보기", expanded=True):
+    with st.expander("추적키워드 보기", expanded=True):
         st.caption("키워드를 눌러보세요 · 그 키워드 순위가 어떻게 움직였는지 펼쳐져요")
         st.markdown(
             """
             <div class="tracked-keyword">
-              <div class="tracked-keyword__rank">5<small>위</small></div>
+              <div class="tracked-keyword__rank">—<small>위</small></div>
               <div class="tracked-keyword__name">★ <b>장현동맛집</b> <span>가장 중요한 거점키워드</span></div>
-              <b class="tracked-keyword__volume">월 1,350회</b><i>⌃</i>
+              <b class="tracked-keyword__volume">검색량 측정 대기</b><i>⌃</i>
             </div>
             <section class="keyword-detail">
-              <div class="keyword-detail__top"><strong>5위 <small>보합</small></strong><p>시작 <b>15위</b>　 최고 <b>3위</b> (10/1)　 최저 <b>17위</b> (9/7)</p></div>
+              <div class="keyword-detail__top"><strong>측정 대기 <small>첫 수집 후 표시</small></strong><p>시작 —　 최고 —　 최저 —</p></div>
               <div class="period-pills"><button class="is-selected">1주</button><button>1개월</button><button>3개월</button><button>전체</button></div>
-              <div class="rank-chart-labels"><b>최고 3위 (10/1)</b><span>최저 13위 (9/30)</span></div>
-              <svg class="keyword-rank-chart" viewBox="0 0 620 164" preserveAspectRatio="none" role="img" aria-label="장현동맛집 1주 순위 차트">
-                <defs><linearGradient id="rank-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd8d2"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/></linearGradient></defs>
-                <path class="rank-grid" d="M0 18H620M0 70H620M0 122H620"/>
-                <path fill="url(#rank-fill)" d="M0 122 L105 132 L210 25 L410 25 L620 48 L620 155 L0 155Z"/>
-                <polyline points="0,122 105,132 210,25 410,25 620,48"/>
-                <circle class="peak" cx="210" cy="25" r="4"/><circle class="lowest" cx="315" cy="155" r="4"/>
-                <text x="8" y="18">1</text><text x="8" y="155">15</text>
-              </svg>
-              <p class="chart-note">◇ 내가 기록한 날, 순위 변화와 함께 보세요</p>
-              <div class="search-bars"><div class="search-bars__header"><b>검색량</b><span>월간 <strong>1,350회</strong> · 모바일 1,220 / PC 130</span></div><div class="search-bars__items"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="outlined"></i><i></i><i class="current"></i></div><div class="search-bars__months"><span>1월</span><span>2월</span><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span><span>8월</span><span>9월</span><span>10월</span><span>11월</span><b>12월</b></div></div>
-              <p class="keyword-insight"><b>피크</b> 이 키워드는 <strong>12월에 가장 많이 찾아요</strong> (평균의 1.1배)</p>
-              <p class="keyword-insight"><b class="teal">타이밍</b> 피크 준비는 <strong>10월부터가 좋아요.</strong> 시즌 포인트 알고리즘이 이어서 챙겨드려요.</p>
-              <div class="ai-message"><b>AI 마케터:</b> 5위 안이에요. 아주 좋습니다. 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글과 소식 1건처럼 부담 작은 관리만 챙겨보세요.</div>
+              <div class="rank-chart-labels"><b>최고 —</b><span>최저 —</span></div>
+              <p class="chart-note">순위 이력이 쌓이면 변화 추이가 표시됩니다.</p>
+              <div class="search-bars"><div class="search-bars__header"><b>검색량</b><span>월간 <strong>측정 대기</strong> · 모바일 — / PC —</span></div></div>
+              <p class="keyword-insight"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p>
+              <p class="keyword-insight"><b class="teal">타이밍</b> 수집된 검색량을 기준으로 안내합니다.</p>
+              <div class="ai-message"><b>AI 마케터:</b> 실제 순위와 검색량을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</div>
             </section>
             """,
             unsafe_allow_html=True,

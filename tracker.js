@@ -2,8 +2,8 @@ const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: '—', volume: '측정 대기' }];
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
-  !keyword.measuredAt && keyword.value === '장현동맛집' && keyword.rank === 5 && keyword.volume === '1,350'
-    ? { ...DEFAULT_KEYWORDS[0] }
+  keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
+    ? { ...keyword, volume: '측정 대기' }
     : keyword
 ));
 let selectedKeyword = trackedKeywords[0]?.value || '';
@@ -41,7 +41,7 @@ function updateKeywordHeading(keyword) {
   document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '첫 측정 대기';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== '—'
-    ? `${keyword.rank}위 <small>보합</small>`
+    ? `${keyword.rank}위 <small>측정 결과</small>`
     : `측정 대기 <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
@@ -77,7 +77,12 @@ async function loadServerTracker() {
         ...keyword,
         rank: measurement.rank ?? '—',
         measuredAt: measurement.measured_at,
-        volume: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches.toLocaleString('ko-KR') : keyword.volume,
+        // 검색량 값이 응답에 실제로 있을 때만 화면에 표시한다.
+        // 과거 브라우저에 남은 예시값을 실측값처럼 보여주면 안 된다.
+        monthlySearches: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches : null,
+        volume: Number.isInteger(measurement.monthly_searches)
+          ? measurement.monthly_searches.toLocaleString('ko-KR')
+          : '측정 대기',
       } : keyword;
     });
     saveKeywords();
@@ -154,8 +159,8 @@ document.querySelectorAll('[data-feedback]').forEach((button) => button.addEvent
 
 const seasonCheck = document.querySelector('#season-check');
 seasonCheck.addEventListener('change', () => {
-  document.querySelector('#season-count').textContent = seasonCheck.checked ? '끝낸 준비 2 / 7' : '끝낸 준비 1 / 7';
-  document.querySelector('#season-progress').style.width = seasonCheck.checked ? '29%' : '14%';
+  document.querySelector('#season-count').textContent = '끝낸 준비 설정 대기';
+  document.querySelector('#season-progress').style.width = '0%';
 });
 
 const logInput = document.querySelector('#log-input');

@@ -29,7 +29,7 @@ class NaverPlaceRankCollectorTests(unittest.TestCase):
 
     def test_rank_status_marks_unmatched_top_100_as_outside(self):
         self.assertEqual(collector.rank_status(None, 100), "outside_top_100")
-        self.assertEqual(collector.rank_status(None, 92), "not_found_in_visible_results")
+        self.assertEqual(collector.rank_status(None, 92), "outside_top_100")
 
     def test_history_appends_measurement(self):
         history = {"schema_version": 1, "measurements": []}

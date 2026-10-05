@@ -60,7 +60,9 @@ function selectedKeywordData() {
 
 function rankPresentation(keyword) {
   if (Number.isInteger(keyword?.rank)) return { value: keyword.rank, suffix: '위', label: `${keyword.rank}위`, measured: true };
-  if (keyword?.status === 'outside_top_100') return { value: 100, suffix: '위 밖', label: '100위 밖', measured: true };
+  if (keyword?.status === 'outside_top_100' || (
+    keyword?.status === 'not_found_in_visible_results' && Number(keyword.visibleResultCount) >= 90
+  )) return { value: 100, suffix: '위 밖', label: '100위 밖', measured: true };
   if (keyword?.status === 'not_found_in_visible_results' && Number.isInteger(keyword.visibleResultCount)) {
     return { value: keyword.visibleResultCount, suffix: '위 밖', label: `${keyword.visibleResultCount}위 밖`, measured: true };
   }

@@ -15,8 +15,8 @@ from scripts.keyword_actions import ACTION_META, ACTIONS, build_action_plan
 
 
 st.set_page_config(
-    page_title="택이네조개전골 장현점 바다를품다 · 광고 대시보드",
-    page_icon="📈",
+    page_title="택이네조개전골 장현점 바다를품다 · 순위 트래커",
+    page_icon="📍",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -226,6 +226,57 @@ def campaign_cards(rows: list[dict]) -> None:
                 """,
                 unsafe_allow_html=True,
             )
+
+
+def render_rank_tracker() -> None:
+    """Mobile-first Naver Place keyword rank overview."""
+    st.markdown(
+        """
+        <section class="rank-hero">
+          <p class="rank-hero__keyword">거점키워드 · 장현동맛집 · 월 1,350회</p>
+          <div class="rank-hero__score"><strong>5</strong><span>위</span><b>직전 측정과 같아요</b></div>
+          <p class="rank-hero__time">지금 순위 · 오후 1:56 확인</p>
+          <svg class="rank-sparkline" viewBox="0 0 560 150" aria-label="최근 14일 장현동맛집 순위 추이" role="img">
+            <path class="rank-grid" d="M16 52H544M16 106H544" />
+            <polyline points="16,117 54,117 92,76 130,96 168,107 206,107 244,118 282,107 320,118 358,128 396,24 434,24 472,34 510,44" />
+            <circle cx="510" cy="44" r="8" />
+          </svg>
+          <div class="rank-hero__dates"><span>최근 14일 · 9월 21일 · 12위</span><span>오늘 · 5위</span></div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("추적키워드 5개 보기", expanded=True):
+        st.caption("키워드를 눌러보세요 · 그 키워드 순위가 어떻게 움직였는지 펼쳐져요")
+        st.markdown(
+            """
+            <div class="tracked-keyword">
+              <div class="tracked-keyword__rank">5<small>위</small></div>
+              <div class="tracked-keyword__name">★ <b>장현동맛집</b> <span>가장 중요한 거점키워드</span></div>
+              <b class="tracked-keyword__volume">월 1,350회</b><i>⌃</i>
+            </div>
+            <section class="keyword-detail">
+              <div class="keyword-detail__top"><strong>5위 <small>보합</small></strong><p>시작 <b>15위</b>　 최고 <b>3위</b> (10/1)　 최저 <b>17위</b> (9/7)</p></div>
+              <div class="period-pills"><button class="is-selected">1주</button><button>1개월</button><button>3개월</button><button>전체</button></div>
+              <div class="rank-chart-labels"><b>최고 3위 (10/1)</b><span>최저 13위 (9/30)</span></div>
+              <svg class="keyword-rank-chart" viewBox="0 0 620 164" preserveAspectRatio="none" role="img" aria-label="장현동맛집 1주 순위 차트">
+                <defs><linearGradient id="rank-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd8d2"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/></linearGradient></defs>
+                <path class="rank-grid" d="M0 18H620M0 70H620M0 122H620"/>
+                <path fill="url(#rank-fill)" d="M0 122 L105 132 L210 25 L410 25 L620 48 L620 155 L0 155Z"/>
+                <polyline points="0,122 105,132 210,25 410,25 620,48"/>
+                <circle class="peak" cx="210" cy="25" r="4"/><circle class="lowest" cx="315" cy="155" r="4"/>
+                <text x="8" y="18">1</text><text x="8" y="155">15</text>
+              </svg>
+              <p class="chart-note">◇ 내가 기록한 날, 순위 변화와 함께 보세요</p>
+              <div class="search-bars"><div class="search-bars__header"><b>검색량</b><span>월간 <strong>1,350회</strong> · 모바일 1,220 / PC 130</span></div><div class="search-bars__items"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="outlined"></i><i></i><i class="current"></i></div><div class="search-bars__months"><span>1월</span><span>2월</span><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span><span>8월</span><span>9월</span><span>10월</span><span>11월</span><b>12월</b></div></div>
+              <p class="keyword-insight"><b>피크</b> 이 키워드는 <strong>12월에 가장 많이 찾아요</strong> (평균의 1.1배)</p>
+              <p class="keyword-insight"><b class="teal">타이밍</b> 피크 준비는 <strong>10월부터가 좋아요.</strong> 시즌 포인트 알고리즘이 이어서 챙겨드려요.</p>
+              <div class="ai-message"><b>AI 마케터:</b> 5위 안이에요. 아주 좋습니다. 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글과 소식 1건처럼 부담 작은 관리만 챙겨보세요.</div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_overview(week_label: str, rows: list[dict], previous_rows: list[dict]) -> None:
@@ -1279,6 +1330,16 @@ st.markdown(
     .place-empty { margin-top:1rem; padding:1.5rem; border:1px solid var(--line); border-radius:18px; background:white; }
     .place-empty b { font-size:1rem; }.place-empty p { margin:.65rem 0 0; color:var(--muted); font-size:.76rem; }
     .section-rule { height:1px; margin:2.2rem 0; background:var(--line); }
+    /* 순위 트래커: 전달받은 플레이스비서 레이아웃을 기준으로 한 독립 카드 UI */
+    .rank-hero { padding:1.55rem 1.5rem 1.25rem; border:1px solid #dfe4e9; border-radius:21px; background:#fff; }
+    .rank-hero__keyword { margin:0; color:#34465d; font-size:.78rem; font-weight:850; }
+    .rank-hero__score { display:flex; align-items:center; gap:.38rem; margin-top:.4rem; }.rank-hero__score strong { font-size:3.35rem; line-height:1; letter-spacing:-.1em; }.rank-hero__score > span { padding-top:.8rem; font-size:1.2rem; font-weight:900; }.rank-hero__score b { margin-left:.45rem; padding:.45rem .76rem; border-radius:999px; background:#f3f5f7; color:#44556a; font-size:.72rem; }.rank-hero__time { margin:.55rem 0 0; color:#34465d; font-size:.78rem; font-weight:800; }
+    .rank-sparkline { display:block; width:100%; height:auto; margin:1.25rem 0 .6rem; overflow:visible; }.rank-sparkline .rank-grid,.keyword-rank-chart .rank-grid { fill:none; stroke:#e5e9ee; stroke-width:1; }.rank-sparkline polyline,.keyword-rank-chart polyline { fill:none; stroke:#1261d6; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; }.rank-sparkline circle { fill:#1261d6; }.rank-hero__dates { display:flex; justify-content:space-between; color:#5d6a7a; font-size:.68rem; font-weight:750; }
+    .stExpander { margin-top:.85rem; border:1px solid #dfe4e9 !important; border-radius:15px !important; background:#fff; overflow:hidden; }.stExpander summary { padding:.75rem .85rem; color:#075bce; font-size:.82rem; font-weight:900; }.stExpander [data-testid="stCaptionContainer"] p { margin:.1rem 0 .75rem; color:#7a8794; font-size:.67rem; }.streamlit-expanderContent { padding:0 .65rem .7rem !important; }
+    .tracked-keyword { min-height:56px; display:flex; align-items:center; gap:.7rem; margin:-.1rem 0 .15rem; padding:.7rem .85rem; border-left:3px solid #1261d6; border-radius:11px; background:#f0f2f5; }.tracked-keyword__rank { font-size:1.35rem; font-weight:950; }.tracked-keyword__rank small { font-size:.68rem; }.tracked-keyword__name { flex:1; color:#075bce; font-size:1.05rem; }.tracked-keyword__name b { color:#162230; font-size:.84rem; }.tracked-keyword__name span { display:inline-block; margin-left:.25rem; padding:.23rem .42rem; border:1px solid #e0e5eb; border-radius:999px; color:#536374; font-size:.56rem; }.tracked-keyword__volume { color:#40536a; font-size:.7rem; white-space:nowrap; }.tracked-keyword i { color:#758396; font-style:normal; }
+    .keyword-detail { padding:.9rem 1rem; border:1px solid #e0e4e9; border-radius:15px; background:#fff; }.keyword-detail__top { display:flex; justify-content:space-between; align-items:baseline; gap:.8rem; }.keyword-detail__top > strong { font-size:2rem; letter-spacing:-.07em; }.keyword-detail__top strong small { margin-left:.4rem; font-size:.75rem; letter-spacing:0; }.keyword-detail__top p { margin:0; color:#7a8796; font-size:.65rem; white-space:nowrap; }.keyword-detail__top p b { color:#344154; }
+    .period-pills { display:flex; gap:.35rem; margin:.65rem 0 .55rem; }.period-pills button { padding:.45rem .66rem; border:1px solid #d0d7e0; border-radius:8px; background:#fff; color:#536274; font-size:.63rem; font-weight:800; }.period-pills button.is-selected { border-color:#1a2635; background:#1a2635; color:#fff; }.rank-chart-labels { display:flex; justify-content:space-between; padding:0 .3rem; color:#e34242; font-size:.63rem; }.rank-chart-labels span { color:#1261d6; font-weight:800; }.keyword-rank-chart { width:100%; height:164px; margin:.15rem 0; overflow:visible; }.keyword-rank-chart text { fill:#8290a0; font-size:10px; }.keyword-rank-chart .peak { fill:#e34242; }.keyword-rank-chart .lowest { fill:#fff; stroke:#008779; stroke-width:2; }.chart-note { margin:0; color:#6c7888; font-size:.64rem; }
+    .search-bars { margin-top:1rem; }.search-bars__header { display:flex; justify-content:space-between; margin-bottom:.55rem; color:#657284; font-size:.65rem; }.search-bars__header b,.search-bars__header strong { color:#344154; }.search-bars__items { height:59px; display:grid; grid-template-columns:repeat(12,1fr); gap:5px; align-items:end; }.search-bars__items i { height:80%; border-radius:3px 3px 0 0; background:#d9dee5; }.search-bars__items i:nth-child(2),.search-bars__items i:nth-child(8) { height:95%; }.search-bars__items i:nth-child(6) { height:75%; }.search-bars__items i:nth-child(9) { height:72%; }.search-bars__items .outlined { height:100%; border:2px solid #1d2735; background:#e6e9ed; }.search-bars__items .current { height:100%; background:#1261d6; }.search-bars__months { display:grid; grid-template-columns:repeat(12,1fr); gap:5px; margin-top:.32rem; color:#758293; font-size:.56rem; text-align:center; }.search-bars__months b { color:#dd3d35; }.keyword-insight { margin:.7rem 0 0; color:#657182; font-size:.67rem; }.keyword-insight b { display:inline-block; margin-right:.35rem; padding:.19rem .4rem; border-radius:999px; background:#ffe7e4; color:#e3433a; font-size:.58rem; }.keyword-insight b.teal { background:#daf5ea; color:#07865f; }.keyword-insight strong { color:#405064; }.ai-message { margin-top:.8rem; padding:.75rem .85rem; border:1px solid #ffcdbf; border-radius:10px; background:#fff9f5; color:#596879; font-size:.68rem; line-height:1.6; }.ai-message b { color:#f05435; }
     @media(max-width:760px){
       .stApp:before{display:none}.block-container{margin-left:0;padding:4.7rem 1rem 4rem}.top-brand{position:relative;width:auto;min-height:0;padding:.3rem 0 1.2rem}.top-utility{left:0;height:54px;gap:.7rem;padding:0 1rem}.top-utility__metric b{font-size:.85rem}.top-utility__metric span,.top-utility__metric small{font-size:.52rem}.top-brand__status{display:none}.top-brand__name{font-size:.78rem}
       [data-testid="stHorizontalBlock"]{gap:.5rem}.hero-copy{padding:1.7rem 0 1rem}
@@ -1299,7 +1360,7 @@ nav_col, filter_col = st.columns([2.8, 1.2], vertical_alignment="bottom")
 with nav_col:
     page = st.radio(
         "메뉴",
-        ["대시보드", "키워드 액션", "상세 보기"],
+        ["순위 트래커", "대시보드", "키워드 액션", "상세 보기"],
         horizontal=True,
         label_visibility="collapsed",
         key="main_navigation",
@@ -1335,7 +1396,9 @@ previous_day_index = min(selected_day_index + 1, len(DAY_KEYS) - 1)
 selected_day_rows = enrich(DAY_DATA[selected_day])
 previous_day_rows = enrich(DAY_DATA[DAY_KEYS[previous_day_index]])
 
-if page == "대시보드":
+if page == "순위 트래커":
+    render_rank_tracker()
+elif page == "대시보드":
     render_overview(selected_week, selected_rows, previous_rows)
 elif page == "키워드 액션":
     render_keyword_analysis()

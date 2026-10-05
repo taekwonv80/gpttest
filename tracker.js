@@ -64,7 +64,7 @@ function renderKeywords() {
   selectedKeyword = current?.value || '';
   list.innerHTML = trackedKeywords.map((keyword) => `
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
-      <b class="keyword-rank">${keyword.rank || PENDING_RANK}<small>위</small></b><span class="star">★</span><strong>${keyword.value}</strong>
+      <b class="keyword-rank">${keyword.rank && keyword.rank !== PENDING_RANK ? `${keyword.rank}<small>위</small>` : PENDING_RANK}</b><span class="star">★</span><strong>${keyword.value}</strong>
       <em>${keyword.value === DEFAULT_KEYWORDS[0].value ? '가장 중요한 거점키워드' : '새로 등록한 추적키워드'}</em>
       <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
     </button>`).join('');
@@ -78,8 +78,9 @@ function updateKeywordHeading(keyword) {
   const value = keyword?.value || '추적 키워드';
   const volume = keyword?.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword?.volume || PENDING_RANK}회`;
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
-  document.querySelector('.rank-title strong').textContent = keyword?.rank && keyword.rank !== PENDING_RANK ? keyword.rank : PENDING_RANK;
   const isMeasured = Boolean(keyword?.rank && keyword.rank !== PENDING_RANK);
+  document.querySelector('.rank-title strong').textContent = isMeasured ? keyword.rank : PENDING_RANK;
+  document.querySelector('.rank-title span').hidden = !isMeasured;
   document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '순위(측정대기)';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== PENDING_RANK

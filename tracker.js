@@ -1,10 +1,14 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
-const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: '—', volume: '측정 대기' }];
+const PENDING_VOLUME = '검색량(측정 대기)';
+const PENDING_RANK = '-';
+const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume: PENDING_VOLUME }];
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
-    ? { ...keyword, volume: '측정 대기' }
-    : keyword
+    ? { ...keyword, volume: PENDING_VOLUME }
+    : keyword.volume === '측정 대기'
+      ? { ...keyword, volume: PENDING_VOLUME }
+      : keyword
 ));
 let selectedKeyword = trackedKeywords[0]?.value || '';
 
@@ -22,9 +26,9 @@ function renderKeywords() {
   selectedKeyword = current?.value || '';
   list.innerHTML = trackedKeywords.map((keyword) => `
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
-      <b class="keyword-rank">${keyword.rank || '—'}<small>위</small></b><span class="star">★</span><strong>${keyword.value}</strong>
+      <b class="keyword-rank">${keyword.rank || PENDING_RANK}<small>위</small></b><span class="star">★</span><strong>${keyword.value}</strong>
       <em>${keyword.value === DEFAULT_KEYWORDS[0].value ? '가장 중요한 거점키워드' : '새로 등록한 추적키워드'}</em>
-      <span class="volume">${keyword.volume === '측정 대기' ? '측정 대기' : `월 ${keyword.volume || '—'}회`}</span><i>⌃</i>
+      <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
     </button>`).join('');
   const deleteLine = document.querySelector('.keyword-delete-line');
   deleteLine.hidden = !current;
@@ -34,15 +38,15 @@ function renderKeywords() {
 
 function updateKeywordHeading(keyword) {
   const value = keyword?.value || '추적 키워드';
-  const volume = keyword?.volume === '측정 대기' ? '측정 대기' : `월 ${keyword?.volume || '—'}회`;
+  const volume = keyword?.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword?.volume || PENDING_RANK}회`;
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
-  document.querySelector('.rank-title strong').textContent = keyword?.rank && keyword.rank !== '—' ? keyword.rank : '—';
-  const isMeasured = Boolean(keyword?.rank && keyword.rank !== '—');
-  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '첫 측정 대기';
+  document.querySelector('.rank-title strong').textContent = keyword?.rank && keyword.rank !== PENDING_RANK ? keyword.rank : PENDING_RANK;
+  const isMeasured = Boolean(keyword?.rank && keyword.rank !== PENDING_RANK);
+  document.querySelector('.rank-title em').textContent = isMeasured ? '최근 측정 결과' : '순위(측정 대기)';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
-  document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== '—'
+  document.querySelector('.panel-heading > strong').innerHTML = keyword?.rank && keyword.rank !== PENDING_RANK
     ? `${keyword.rank}위 <small>측정 결과</small>`
-    : `측정 대기 <small>첫 수집 후 표시</small>`;
+    : `순위(측정 대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
   document.querySelector('#rank-chart-pending').textContent = isMeasured
@@ -63,7 +67,7 @@ async function loadServerTracker() {
     const history = historyResponse.ok ? await historyResponse.json() : {};
     for (const value of config.keywords || []) {
       if (!trackedKeywords.some((keyword) => keyword.value === value)) {
-        trackedKeywords.push({ value, rank: '—', volume: '측정 대기' });
+        trackedKeywords.push({ value, rank: PENDING_RANK, volume: PENDING_VOLUME });
       }
     }
     const latest = {};
@@ -75,14 +79,14 @@ async function loadServerTracker() {
       const measurement = latest[keyword.value];
       return measurement ? {
         ...keyword,
-        rank: measurement.rank ?? '—',
+        rank: measurement.rank ?? PENDING_RANK,
         measuredAt: measurement.measured_at,
         // 검색량 값이 응답에 실제로 있을 때만 화면에 표시한다.
         // 과거 브라우저에 남은 예시값을 실측값처럼 보여주면 안 된다.
         monthlySearches: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches : null,
         volume: Number.isInteger(measurement.monthly_searches)
           ? measurement.monthly_searches.toLocaleString('ko-KR')
-          : '측정 대기',
+          : PENDING_VOLUME,
       } : keyword;
     });
     saveKeywords();
@@ -115,7 +119,7 @@ document.querySelector('#keyword-form').addEventListener('submit', (event) => {
     return;
   }
   input.setCustomValidity('');
-  trackedKeywords.push({ value, rank: '—', volume: '측정 대기' });
+  trackedKeywords.push({ value, rank: PENDING_RANK, volume: PENDING_VOLUME });
   selectedKeyword = value;
   saveKeywords();
   renderKeywords();

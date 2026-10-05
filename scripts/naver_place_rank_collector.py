@@ -97,22 +97,38 @@ def search_volume(rows: list[dict[str, Any]], keyword: str) -> dict[str, int | N
     }
 
 
+def pending_volume() -> dict[str, int | None]:
+    return {"monthly_pc_searches": None, "monthly_mobile_searches": None, "monthly_searches": None}
+
+
 def collect_keyword_volumes(keywords: list[str]) -> dict[str, dict[str, int | None]]:
     """Use the existing signed SearchAd credentials, never expose them to Pages."""
-    from scripts.naver_daily_report import IntegrationError, NaverSearchAdClient, required_env
+    # GitHub Actions invokes this file directly (``python scripts/...py``),
+    # where ``scripts`` is not an importable top-level package.
+    try:
+        from scripts.naver_daily_report import IntegrationError, NaverSearchAdClient, required_env
+    except ModuleNotFoundError as error:
+        if error.name != "scripts":
+            raise
+        from naver_daily_report import IntegrationError, NaverSearchAdClient, required_env
 
-    client = NaverSearchAdClient(
-        customer_id=required_env("NAVER_CUSTOMER_ID"),
-        api_key=required_env("NAVER_ACCESS_LICENSE"),
-        secret_key=required_env("NAVER_SECRET_KEY"),
-    )
+    try:
+        client = NaverSearchAdClient(
+            customer_id=required_env("NAVER_CUSTOMER_ID"),
+            api_key=required_env("NAVER_ACCESS_LICENSE"),
+            secret_key=required_env("NAVER_SECRET_KEY"),
+        )
+    except IntegrationError as error:
+        print(f"검색량 수집 건너뜀: {error}")
+        return {keyword: pending_volume() for keyword in keywords}
+
     volumes = {}
     for index, keyword in enumerate(keywords):
         try:
             volumes[keyword] = search_volume(client.keyword_tool(keyword), keyword)
         except IntegrationError as error:
             print(f"검색량 수집 건너뜀: {keyword} · {error}")
-            volumes[keyword] = {"monthly_pc_searches": None, "monthly_mobile_searches": None, "monthly_searches": None}
+            volumes[keyword] = pending_volume()
         if index < len(keywords) - 1:
             # Keyword Tool has a lower rate limit than other SearchAd APIs.
             import time

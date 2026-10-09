@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "place_id": "1827896507",
-  "updated_at": "2026-10-08T14:57:38+09:00",
+  "updated_at": "2026-10-09T15:04:12+09:00",
   "measurements": [
     {
       "keyword": "장현동맛집",
@@ -432,6 +432,71 @@
     {
       "keyword": "장곡동점심맛집",
       "measured_at": "2026-10-08T14:57:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 18,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 30,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "장현동맛집",
+      "measured_at": "2026-10-09T15:04:12+09:00",
+      "source": "naver-map-public-search",
+      "rank": 4,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 93,
+      "status": "found",
+      "monthly_pc_searches": 140,
+      "monthly_mobile_searches": 1130,
+      "monthly_searches": 1270
+    },
+    {
+      "keyword": "시흥능곡샤브샤브",
+      "measured_at": "2026-10-09T15:04:12+09:00",
+      "source": "naver-map-public-search",
+      "rank": 6,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 13,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 170,
+      "monthly_searches": 180
+    },
+    {
+      "keyword": "장곡동샤브샤브",
+      "measured_at": "2026-10-09T15:04:12+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 180,
+      "monthly_searches": 190
+    },
+    {
+      "keyword": "능곡동칼국수",
+      "measured_at": "2026-10-09T15:04:12+09:00",
+      "source": "naver-map-public-search",
+      "rank": null,
+      "matched_name": null,
+      "is_ad": null,
+      "visible_result_count": 89,
+      "status": "outside_top_100",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 40,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "장곡동점심맛집",
+      "measured_at": "2026-10-09T15:04:12+09:00",
       "source": "naver-map-public-search",
       "rank": 5,
       "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",

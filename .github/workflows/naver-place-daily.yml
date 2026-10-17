@@ -65,6 +65,18 @@ jobs:
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 3
+      - name: Notify Slack when collection fails
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            exit 0
+          fi
+          curl --silent --show-error --fail --request POST \
+            --header 'Content-Type: application/json' \
+            --data '{"text":"⚠️ 스마트플레이스 통계 수집에 실패했습니다. 네이버 로그인 세션 또는 통계 탭 URL을 확인해 주세요.\n로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+            "$SLACK_WEBHOOK_URL"
       - name: Commit accumulated statistics
         shell: bash
         run: |

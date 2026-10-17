@@ -76,9 +76,8 @@ def find_rank(card_texts: list[str], target_names: list[str]) -> dict[str, Any] 
 def rank_status(match: dict[str, Any] | None, checked_count: int) -> str:
     if match:
         return "found"
-    # A fully exhausted result list shorter than 100 still proves the place is
-    # absent from the top 100: there are no additional results to inspect.
-    return "outside_top_100"
+    # "100위 밖"은 실제로 100개 결과를 모두 확인했을 때만 확정한다.
+    return "outside_top_100" if checked_count >= MAX_TRACKED_RANK else "not_found_in_visible_results"
 
 
 def numeric_volume(value: Any) -> int | None:

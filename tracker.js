@@ -60,11 +60,12 @@ function selectedKeywordData() {
 
 function rankPresentation(keyword) {
   if (Number.isInteger(keyword?.rank)) return { value: keyword.rank, suffix: '위', label: `${keyword.rank}위`, measured: true };
-  if (keyword?.status === 'outside_top_100' || (
-    keyword?.status === 'not_found_in_visible_results' && Number(keyword.visibleResultCount) >= 90
-  )) return { value: 100, suffix: '위 밖', label: '100위 밖', measured: true };
-  if (keyword?.status === 'not_found_in_visible_results' && Number.isInteger(keyword.visibleResultCount)) {
-    return { value: keyword.visibleResultCount, suffix: '위 밖', label: `${keyword.visibleResultCount}위 밖`, measured: true };
+  const visibleResultCount = Number(keyword?.visibleResultCount);
+  if (keyword?.status === 'outside_top_100' && visibleResultCount >= 100) {
+    return { value: 100, suffix: '위 밖', label: '100위 밖', measured: true };
+  }
+  if ((keyword?.status === 'outside_top_100' || keyword?.status === 'not_found_in_visible_results') && Number.isInteger(visibleResultCount)) {
+    return { value: null, suffix: '', label: `상위 ${visibleResultCount}개 내 미발견`, measured: true, partial: true };
   }
   return { value: null, suffix: '', label: PENDING_RANK, measured: false };
 }
@@ -77,7 +78,7 @@ function renderKeywords() {
     const presentation = rankPresentation(keyword);
     return `
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
-      <b class="keyword-rank">${presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star">★</span><strong>${keyword.value}</strong>
+      <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star">★</span><strong>${keyword.value}</strong>
       <em>${keyword.value === DEFAULT_KEYWORDS[0].value ? '가장 중요한 거점키워드' : '새로 등록한 추적키워드'}</em>
       <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
     </button>`;
@@ -93,13 +94,15 @@ function updateKeywordHeading(keyword) {
   const volume = keyword?.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword?.volume || PENDING_RANK}회`;
   const presentation = rankPresentation(keyword);
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
-  document.querySelector('.rank-title strong').textContent = presentation.value ?? PENDING_RANK;
-  document.querySelector('.rank-title span').textContent = presentation.suffix;
-  document.querySelector('.rank-title span').hidden = !presentation.measured;
-  document.querySelector('.rank-title em').textContent = presentation.measured ? '최근 측정 결과' : '순위(측정대기)';
+  document.querySelector('.rank-title strong').textContent = presentation.partial ? '미발견' : presentation.value ?? PENDING_RANK;
+  document.querySelector('.rank-title span').textContent = presentation.partial ? presentation.label : presentation.suffix;
+  document.querySelector('.rank-title span').hidden = !presentation.measured || (!presentation.partial && !presentation.suffix);
+  document.querySelector('.rank-title em').textContent = presentation.partial ? '100위 밖으로 확정하지 않음' : presentation.measured ? '최근 측정 결과' : '순위(측정대기)';
   document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = presentation.measured
-    ? `${presentation.label} <small>측정 결과</small>`
+    ? presentation.partial
+      ? `${presentation.label} <small>100위 밖으로 확정하지 않음</small>`
+      : `${presentation.label} <small>측정 결과</small>`
     : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);

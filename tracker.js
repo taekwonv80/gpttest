@@ -58,6 +58,15 @@ function selectedKeywordData() {
   return trackedKeywords.find((keyword) => keyword.value === selectedKeyword) || trackedKeywords[0];
 }
 
+function displaySearchVolume(measurement) {
+  const pc = Number.isInteger(measurement?.monthly_pc_searches) ? measurement.monthly_pc_searches : null;
+  const mobile = Number.isInteger(measurement?.monthly_mobile_searches) ? measurement.monthly_mobile_searches : null;
+  if (pc !== null && mobile !== null) return (pc + mobile).toLocaleString('ko-KR');
+  if (mobile !== null) return `${mobile.toLocaleString('ko-KR')}+`;
+  if (pc !== null) return `${pc.toLocaleString('ko-KR')}+`;
+  return PENDING_VOLUME;
+}
+
 function rankPresentation(keyword) {
   if (Number.isInteger(keyword?.rank)) return { value: keyword.rank, suffix: '위', label: `${keyword.rank}위`, measured: true };
   const visibleResultCount = Number(keyword?.visibleResultCount);
@@ -152,9 +161,7 @@ async function loadServerTracker() {
         // 검색량 값이 응답에 실제로 있을 때만 화면에 표시한다.
         // 과거 브라우저에 남은 예시값을 실측값처럼 보여주면 안 된다.
         monthlySearches: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches : null,
-        volume: Number.isInteger(measurement.monthly_searches)
-          ? measurement.monthly_searches.toLocaleString('ko-KR')
-          : PENDING_VOLUME,
+        volume: displaySearchVolume(measurement),
       } : keyword;
     });
     saveKeywords();

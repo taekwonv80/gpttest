@@ -4,4 +4,4 @@ compatibility_date = "2026-10-05"
 
 [vars]
 GITHUB_REPOSITORY = "taekwonv80/gpttest"
-ALLOWED_ORIGIN = "https://taekwonv80.github.io"
+ALLOWED_ORIGINS = "https://taekwonv80.github.io,https://eklove.pages.dev"

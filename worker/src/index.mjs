@@ -1,18 +1,20 @@
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 
-function corsHeaders(env) {
+function corsHeaders(env, request) {
+  const allowedOrigins = String(env.ALLOWED_ORIGINS || "").split(",").map((value) => value.trim());
+  const origin = request.headers.get("origin") || "";
   return {
-    "access-control-allow-origin": env.ALLOWED_ORIGIN,
+    "access-control-allow-origin": allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
     "access-control-allow-headers": "content-type, x-tracker-key",
     "access-control-allow-methods": "GET, POST, OPTIONS",
     vary: "Origin",
   };
 }
 
-function json(body, env, status = 200) {
+function json(body, env, status = 200, request) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...JSON_HEADERS, ...corsHeaders(env) },
+    headers: { ...JSON_HEADERS, ...corsHeaders(env, request) },
   });
 }
 
@@ -70,8 +72,8 @@ async function dispatchMeasurement(env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(env) });
-    if (url.pathname !== "/keywords") return json({ error: "Not found" }, env, 404);
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(env, request) });
+    if (url.pathname !== "/keywords") return json({ error: "Not found" }, env, 404, request);
 
     try {
       if (request.method === "GET") {
@@ -79,12 +81,12 @@ export default {
         return json({ keywords: config.keywords || [] }, env);
       }
 
-      if (request.method !== "POST") return json({ error: "Method not allowed" }, env, 405);
-      if (request.headers.get("x-tracker-key") !== env.ADMIN_KEY) return json({ error: "동기화키가 맞지 않습니다." }, env, 401);
+      if (request.method !== "POST") return json({ error: "Method not allowed" }, env, 405, request);
+      if (request.headers.get("x-tracker-key") !== env.ADMIN_KEY) return json({ error: "동기화키가 맞지 않습니다." }, env, 401, request);
 
       const body = await request.json();
       const keywords = normalizeKeywords(body.keywords);
-      if (!keywords) return json({ error: "키워드를 1~30개, 각 40자 이하로 입력해 주세요." }, env, 400);
+      if (!keywords) return json({ error: "키워드를 1~30개, 각 40자 이하로 입력해 주세요." }, env, 400, request);
 
       const { config, sha } = await readTrackerConfig(env);
       config.keywords = keywords;
@@ -98,10 +100,10 @@ export default {
         }),
       });
       await dispatchMeasurement(env);
-      return json({ keywords, measurementQueued: true }, env);
+      return json({ keywords, measurementQueued: true }, env, 200, request);
     } catch (error) {
       console.error(error);
-      return json({ error: "키워드 파일 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." }, env, 502);
+      return json({ error: "키워드 파일 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." }, env, 502, request);
     }
   },
 };

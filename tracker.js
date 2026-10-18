@@ -6,6 +6,7 @@ const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대�
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume: PENDING_VOLUME }];
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let keywordSyncEndpoint = '';
+let rankHistory = [];
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -67,6 +68,34 @@ function displaySearchVolume(measurement) {
   return PENDING_VOLUME;
 }
 
+function renderRankHistory(keyword) {
+  const chart = document.querySelector('#rank-chart-pending');
+  const points = rankHistory
+    .filter((item) => item.keyword === keyword?.value && Number.isInteger(item.rank))
+    .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)))
+    .slice(-14);
+  if (!points.length) {
+    chart.textContent = '순위 이력이 쌓이면 최근 14일 추이가 표시됩니다.';
+    return;
+  }
+
+  const ranks = points.map((item) => item.rank);
+  const highest = Math.min(...ranks);
+  const lowest = Math.max(...ranks);
+  const width = 560;
+  const height = 112;
+  const padding = 18;
+  const spread = Math.max(lowest - highest, 1);
+  const coordinates = points.map((item, index) => {
+    const x = padding + ((width - padding * 2) * index) / Math.max(points.length - 1, 1);
+    const y = padding + ((height - padding * 2) * (item.rank - highest)) / spread;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  chart.innerHTML = `<svg class="rank-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="최근 ${points.length}회 순위 추이"><line x1="${padding}" y1="${padding}" x2="${width - padding}" y2="${padding}"/><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}"/><polyline points="${coordinates}"/><text x="${padding}" y="12">${highest}위</text><text x="${padding}" y="${height - 3}">${lowest}위</text></svg>`;
+  document.querySelector('.date-row span:first-child').textContent = `최근 ${points.length}회 · 순위추이`;
+  document.querySelector('.date-row span:last-child').textContent = `오늘 · ${points.at(-1).rank}위`;
+}
+
 function rankPresentation(keyword) {
   if (Number.isInteger(keyword?.rank)) return { value: keyword.rank, suffix: '위', label: `${keyword.rank}위`, measured: true };
   const visibleResultCount = Number(keyword?.visibleResultCount);
@@ -115,9 +144,7 @@ function updateKeywordHeading(keyword) {
     : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
-  document.querySelector('#rank-chart-pending').textContent = presentation.measured
-    ? '순위 이력이 쌓이면 최근 14일 추이가 표시됩니다.'
-    : '첫 순위 측정 후 최근 14일 추이가 표시됩니다.';
+  renderRankHistory(keyword);
   document.querySelector('#detail-chart-pending').textContent = presentation.measured
     ? '측정 이력을 기준으로 기간별 추이가 표시됩니다.'
     : '첫 순위 측정 후 기간별 추이가 표시됩니다.';
@@ -132,6 +159,7 @@ async function loadServerTracker() {
     ]);
     let config = configResponse.ok ? await configResponse.json() : {};
     const history = historyResponse.ok ? await historyResponse.json() : {};
+    rankHistory = Array.isArray(history.measurements) ? history.measurements : [];
     const sync = syncResponse.ok ? await syncResponse.json() : {};
     keywordSyncEndpoint = typeof sync.endpoint === 'string' ? sync.endpoint.replace(/\/$/, '') : '';
     if (keywordSyncEndpoint) {

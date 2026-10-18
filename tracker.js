@@ -196,9 +196,6 @@ function updateKeywordHeading(keyword) {
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
   renderRankHistory(keyword);
-  document.querySelector('#detail-chart-pending').textContent = presentation.measured
-    ? '측정 이력을 기준으로 기간별 추이가 표시됩니다.'
-    : '첫 순위 측정 후 기간별 추이가 표시됩니다.';
 }
 
 async function loadServerTracker() {

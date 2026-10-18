@@ -184,10 +184,10 @@ async def public_result_cards(keyword: str) -> list[str]:
 
 
 async def collect_scrolled_cards(frame: Any) -> list[str]:
-    """Accumulate virtualized Map result cards instead of only the first viewport."""
+    """Accumulate unique virtualized Map result cards across scrolling."""
     cards = frame.locator("li.UEzoS")
     seen: list[str] = []
-    seen_texts: set[str] = set()
+    seen_places: set[str] = set()
     unchanged_rounds = 0
 
     # Keep requesting additional virtualized rows until the tracked top-100
@@ -196,8 +196,11 @@ async def collect_scrolled_cards(frame: Any) -> list[str]:
         texts = [text.strip() for text in await cards.all_inner_texts() if text.strip()]
         before = len(seen)
         for text in texts:
-            if text not in seen_texts:
-                seen_texts.add(text)
+            # The virtualized list re-renders the same place with changing
+            # review/menu text. Count the place once, not each rendering.
+            place_key = normalize(card_name(text))
+            if place_key and place_key not in seen_places:
+                seen_places.add(place_key)
                 seen.append(text)
 
         if len(seen) >= MAX_TRACKED_RANK:

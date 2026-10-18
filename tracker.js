@@ -7,6 +7,8 @@ const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let keywordSyncEndpoint = '';
 let rankHistory = [];
+let primaryKeyword = DEFAULT_KEYWORDS[0].value;
+let keywordAddedAt = {};
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -25,7 +27,9 @@ function setKeywordSyncStatus(message) {
   if (status) status.textContent = message;
 }
 
-function applyConfiguredKeywords(keywords) {
+function applyConfiguredKeywords(keywords, metadata = {}) {
+  primaryKeyword = metadata.primaryKeyword || metadata.primary_keyword || (keywords.includes(primaryKeyword) ? primaryKeyword : keywords[0]);
+  keywordAddedAt = metadata.keywordAddedAt || metadata.keyword_added_at || keywordAddedAt;
   const existing = new Map(trackedKeywords.map((keyword) => [keyword.value, keyword]));
   trackedKeywords = keywords.map((value) => existing.get(value) || {
     value,
@@ -37,14 +41,14 @@ function applyConfiguredKeywords(keywords) {
     : trackedKeywords[0]?.value || '';
 }
 
-async function syncKeywords(keywords) {
+async function syncKeywords(keywords, primary = primaryKeyword) {
   if (!keywordSyncEndpoint) throw new Error('키워드 동기화 서버가 아직 연결되지 않았습니다.');
   const adminKey = sessionStorage.getItem(KEYWORD_SYNC_KEY_STORAGE) || window.prompt('키워드 동기화키를 입력해 주세요.');
   if (!adminKey) throw new Error('동기화키 입력이 취소되었습니다.');
   const response = await fetch(`${keywordSyncEndpoint}/keywords`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-tracker-key': adminKey },
-    body: JSON.stringify({ keywords }),
+    body: JSON.stringify({ keywords, primaryKeyword: primary }),
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !Array.isArray(payload.keywords)) {
@@ -53,6 +57,11 @@ async function syncKeywords(keywords) {
   }
   sessionStorage.setItem(KEYWORD_SYNC_KEY_STORAGE, adminKey);
   return payload;
+}
+
+function isNewKeyword(value) {
+  const added = Date.parse(keywordAddedAt[value]);
+  return Number.isFinite(added) && Date.now() - added >= 0 && Date.now() - added < 7 * 24 * 60 * 60 * 1000;
 }
 
 function selectedKeywordData() {
@@ -116,8 +125,8 @@ function renderKeywords() {
     const presentation = rankPresentation(keyword);
     return `
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
-      <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star">★</span><strong>${keyword.value}</strong>
-      <em>${keyword.value === DEFAULT_KEYWORDS[0].value ? '가장 중요한 거점키워드' : '새로 등록한 추적키워드'}</em>
+      <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star" data-primary-keyword="${keyword.value}" role="button" tabindex="0" aria-label="${keyword.value}을 가장 중요한 거점키워드로 선택">★</span><strong>${keyword.value}</strong>
+      ${keyword.value === primaryKeyword ? '<em>가장 중요한 거점키워드</em>' : isNewKeyword(keyword.value) ? '<em>새로 등록한 추적키워드</em>' : ''}
       <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
     </button>`;
   }).join('');
@@ -166,13 +175,13 @@ async function loadServerTracker() {
       try {
         const response = await fetch(`${keywordSyncEndpoint}/keywords`, { cache: 'no-store' });
         const source = response.ok ? await response.json() : {};
-        if (Array.isArray(source.keywords)) config = { ...config, keywords: source.keywords };
+        if (Array.isArray(source.keywords)) config = { ...config, ...source };
       } catch {
         setKeywordSyncStatus('파일 동기화 서버에 연결하지 못했어요. 저장된 설정을 표시합니다.');
       }
     }
     const configured = Array.isArray(config.keywords) ? config.keywords : [];
-    applyConfiguredKeywords(configured);
+    applyConfiguredKeywords(configured, config);
     const latest = {};
     for (const measurement of history.measurements || []) {
       const prior = latest[measurement.keyword];
@@ -203,6 +212,15 @@ async function loadServerTracker() {
 }
 
 document.querySelector('#keyword-list').addEventListener('click', (event) => {
+  const star = event.target.closest('[data-primary-keyword]');
+  if (star) {
+    const value = star.dataset.primaryKeyword;
+    syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
+      applyConfiguredKeywords(result.keywords, result);
+      renderKeywords();
+    }).catch((error) => setKeywordSyncStatus(error.message));
+    return;
+  }
   const row = event.target.closest('[data-keyword]');
   if (!row) return;
   selectedKeyword = row.dataset.keyword;
@@ -228,7 +246,7 @@ document.querySelector('#keyword-form').addEventListener('submit', async (event)
   try {
     setKeywordSyncStatus('키워드 파일에 저장하고 순위 측정을 요청하는 중이에요.');
     const result = await syncKeywords([...trackedKeywords.map((keyword) => keyword.value), value]);
-    applyConfiguredKeywords(result.keywords);
+    applyConfiguredKeywords(result.keywords, result);
     selectedKeyword = value;
     saveKeywords();
     renderKeywords();
@@ -246,7 +264,7 @@ document.querySelector('#keyword-delete').addEventListener('click', async () => 
   try {
     setKeywordSyncStatus('키워드 파일을 갱신하는 중이에요.');
     const result = await syncKeywords(trackedKeywords.filter((keyword) => keyword.value !== current.value).map((keyword) => keyword.value));
-    applyConfiguredKeywords(result.keywords);
+    applyConfiguredKeywords(result.keywords, result);
     saveKeywords();
     renderKeywords();
     setKeywordSyncStatus('키워드 파일에서 삭제됐어요 · 순위 측정을 요청했습니다.');

@@ -78,7 +78,7 @@ export default {
     try {
       if (request.method === "GET") {
         const { config } = await readTrackerConfig(env);
-        return json({ keywords: config.keywords || [] }, env);
+        return json({ keywords: config.keywords || [], primaryKeyword: config.primary_keyword, keywordAddedAt: config.keyword_added_at || {} }, env, 200, request);
       }
 
       if (request.method !== "POST") return json({ error: "Method not allowed" }, env, 405, request);
@@ -90,6 +90,11 @@ export default {
 
       const { config, sha } = await readTrackerConfig(env);
       config.keywords = keywords;
+      const requestedPrimary = String(body.primaryKeyword || "").trim();
+      config.primary_keyword = keywords.includes(requestedPrimary) ? requestedPrimary : (keywords.includes(config.primary_keyword) ? config.primary_keyword : keywords[0]);
+      const previousDates = config.keyword_added_at || {};
+      const now = new Date().toISOString();
+      config.keyword_added_at = Object.fromEntries(keywords.map((keyword) => [keyword, previousDates[keyword] || now]));
       await github(env, `/repos/${env.GITHUB_REPOSITORY}/contents/data/tracker_config.json`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -100,7 +105,7 @@ export default {
         }),
       });
       await dispatchMeasurement(env);
-      return json({ keywords, measurementQueued: true }, env, 200, request);
+      return json({ keywords, primaryKeyword: config.primary_keyword, keywordAddedAt: config.keyword_added_at, measurementQueued: true }, env, 200, request);
     } catch (error) {
       console.error(error);
       return json({ error: "키워드 파일 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." }, env, 502, request);

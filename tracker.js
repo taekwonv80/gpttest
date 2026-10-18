@@ -7,7 +7,7 @@ const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let keywordSyncEndpoint = '';
 let rankHistory = [];
-let primaryKeyword = DEFAULT_KEYWORDS[0].value;
+let primaryKeyword = '';
 let keywordAddedAt = {};
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
@@ -28,7 +28,10 @@ function setKeywordSyncStatus(message) {
 }
 
 function applyConfiguredKeywords(keywords, metadata = {}) {
-  primaryKeyword = metadata.primaryKeyword || metadata.primary_keyword || (keywords.includes(primaryKeyword) ? primaryKeyword : keywords[0]);
+  const configuredPrimary = metadata.primaryKeyword ?? metadata.primary_keyword;
+  primaryKeyword = keywords.includes(configuredPrimary)
+    ? configuredPrimary
+    : (keywords.includes(primaryKeyword) ? primaryKeyword : '');
   keywordAddedAt = metadata.keywordAddedAt || metadata.keyword_added_at || keywordAddedAt;
   const existing = new Map(trackedKeywords.map((keyword) => [keyword.value, keyword]));
   trackedKeywords = keywords.map((value) => existing.get(value) || {

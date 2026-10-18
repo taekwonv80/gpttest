@@ -91,7 +91,9 @@ export default {
       const { config, sha } = await readTrackerConfig(env);
       config.keywords = keywords;
       const requestedPrimary = String(body.primaryKeyword || "").trim();
-      config.primary_keyword = keywords.includes(requestedPrimary) ? requestedPrimary : (keywords.includes(config.primary_keyword) ? config.primary_keyword : keywords[0]);
+      config.primary_keyword = requestedPrimary === ""
+        ? ""
+        : (keywords.includes(requestedPrimary) ? requestedPrimary : (keywords.includes(config.primary_keyword) ? config.primary_keyword : ""));
       const previousDates = config.keyword_added_at || {};
       const now = new Date().toISOString();
       config.keyword_added_at = Object.fromEntries(keywords.map((keyword) => [keyword, previousDates[keyword] || now]));

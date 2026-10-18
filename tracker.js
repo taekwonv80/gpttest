@@ -10,6 +10,7 @@ let keywordSyncEndpoint = '';
 let rankHistory = [];
 let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
+let selectedPeriod = '1주';
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -112,6 +113,38 @@ function renderRankHistory(keyword) {
   chart.innerHTML = `<svg class="rank-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="최근 ${points.length}회 순위 추이"><line x1="${padding}" y1="${padding}" x2="${width - padding}" y2="${padding}"/><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}"/><polyline points="${coordinates}"/><text x="${padding}" y="12">${highest}위</text><text x="${padding}" y="${height - 3}">${lowest}위</text></svg>`;
   document.querySelector('.date-row span:first-child').textContent = `최근 ${points.length}회 · 순위추이`;
   document.querySelector('.date-row span:last-child').textContent = `오늘 · ${points.at(-1).rank}위`;
+  const daysByPeriod = { '1주': 7, '1개월': 30, '3개월': 90, '전체': Infinity };
+  const cutoff = Date.now() - daysByPeriod[selectedPeriod] * 24 * 60 * 60 * 1000;
+  const detailPoints = rankHistory
+    .filter((item) => item.keyword === keyword?.value && Number.isInteger(item.rank) && Date.parse(item.measured_at) >= cutoff)
+    .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)));
+  const detail = document.querySelector('#detail-chart-pending');
+  if (!detailPoints.length) {
+    detail.textContent = '선택한 기간에 순위 이력이 없습니다.';
+    return;
+  }
+  const detailRanks = detailPoints.map((item) => item.rank);
+  const start = detailRanks[0];
+  const best = Math.min(...detailRanks);
+  const worst = Math.max(...detailRanks);
+  const dWidth = 560;
+  const dHeight = 164;
+  const dPadding = 22;
+  const dSpread = Math.max(worst - best, 1);
+  const detailCoordinates = detailPoints.map((item, index) => {
+    const x = dPadding + ((dWidth - dPadding * 2) * index) / Math.max(detailPoints.length - 1, 1);
+    const y = dPadding + ((dHeight - dPadding * 2) * (item.rank - best)) / dSpread;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  detail.innerHTML = `<svg class="rank-chart" viewBox="0 0 ${dWidth} ${dHeight}" role="img" aria-label="${selectedPeriod} 순위 추이"><polyline points="${detailCoordinates}"/><text x="${dPadding}" y="14">${best}위</text><text x="${dPadding}" y="${dHeight - 4}">${worst}위</text></svg>`;
+  document.querySelector('.panel-heading p').textContent = `시작 ${start}위 · 최고 ${best}위 · 최저 ${worst}위`;
+  document.querySelector('#peak-note').textContent = `최고 ${best}위`;
+  document.querySelector('#low-note').textContent = `최저 ${worst}위`;
+  const latest = detailPoints.at(-1);
+  const pc = Number.isInteger(latest.monthly_pc_searches) ? latest.monthly_pc_searches.toLocaleString('ko-KR') : '<10';
+  const mobile = Number.isInteger(latest.monthly_mobile_searches) ? latest.monthly_mobile_searches.toLocaleString('ko-KR') : '-';
+  document.querySelector('.volume-head span').innerHTML = `<strong>${displaySearchVolume(latest) === PENDING_VOLUME ? PENDING_VOLUME : `월 ${displaySearchVolume(latest)}회`}</strong> · 모바일 ${mobile} / PC ${pc}`;
+  document.querySelector('.volume-pending').textContent = displaySearchVolume(latest) === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색량을 수집합니다.' : '네이버 검색광고 API의 최근 월간 검색량입니다.';
 }
 
 function rankPresentation(keyword) {
@@ -298,6 +331,8 @@ const tabs = document.querySelectorAll('[data-period]');
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   tabs.forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
   tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
+  selectedPeriod = tab.dataset.period;
+  updateKeywordHeading(selectedKeywordData());
 }));
 
 document.querySelectorAll('[data-dismiss]').forEach((button) => button.addEventListener('click', () => {

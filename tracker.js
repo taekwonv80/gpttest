@@ -215,10 +215,17 @@ document.querySelector('#keyword-list').addEventListener('click', (event) => {
   const star = event.target.closest('[data-primary-keyword]');
   if (star) {
     const value = star.dataset.primaryKeyword;
+    const previousPrimary = primaryKeyword;
+    primaryKeyword = value;
+    renderKeywords();
     syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
       applyConfiguredKeywords(result.keywords, result);
       renderKeywords();
-    }).catch((error) => setKeywordSyncStatus(error.message));
+    }).catch((error) => {
+      primaryKeyword = previousPrimary;
+      renderKeywords();
+      setKeywordSyncStatus(error.message);
+    });
     return;
   }
   const row = event.target.closest('[data-keyword]');

@@ -1,5 +1,6 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
 const KEYWORD_SYNC_KEY_STORAGE = 'taekine-keyword-sync-key';
+const PRIMARY_KEYWORD_STORAGE = 'taekine-primary-keyword';
 const PENDING_VOLUME = '검색량(측정대기)';
 const PENDING_RANK = '-';
 const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대기)']);
@@ -7,7 +8,7 @@ const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let keywordSyncEndpoint = '';
 let rankHistory = [];
-let primaryKeyword = '';
+let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
@@ -29,9 +30,14 @@ function setKeywordSyncStatus(message) {
 
 function applyConfiguredKeywords(keywords, metadata = {}) {
   const configuredPrimary = metadata.primaryKeyword ?? metadata.primary_keyword;
-  primaryKeyword = keywords.includes(configuredPrimary)
-    ? configuredPrimary
-    : (keywords.includes(primaryKeyword) ? primaryKeyword : '');
+  const storedPrimary = localStorage.getItem(PRIMARY_KEYWORD_STORAGE);
+  primaryKeyword = keywords.includes(storedPrimary)
+    ? storedPrimary
+    : (keywords.includes(configuredPrimary)
+      ? configuredPrimary
+    : (keywords.includes(primaryKeyword) ? primaryKeyword : ''));
+  if (primaryKeyword) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, primaryKeyword);
+  else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
   keywordAddedAt = metadata.keywordAddedAt || metadata.keyword_added_at || keywordAddedAt;
   const existing = new Map(trackedKeywords.map((keyword) => [keyword.value, keyword]));
   trackedKeywords = keywords.map((value) => existing.get(value) || {
@@ -220,12 +226,15 @@ document.querySelector('#keyword-list').addEventListener('click', (event) => {
     const value = star.dataset.primaryKeyword;
     const previousPrimary = primaryKeyword;
     primaryKeyword = value;
+    localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
     renderKeywords();
     syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
       applyConfiguredKeywords(result.keywords, result);
       renderKeywords();
     }).catch((error) => {
       primaryKeyword = previousPrimary;
+      if (previousPrimary) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, previousPrimary);
+      else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
       renderKeywords();
       setKeywordSyncStatus(error.message);
     });

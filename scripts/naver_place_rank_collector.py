@@ -58,16 +58,20 @@ def card_name(card_text: str) -> str:
 
 
 def find_rank(card_texts: list[str], target_names: list[str]) -> dict[str, Any] | None:
-    """Find the first matching visible result and retain whether it was an ad."""
+    """Find the first matching non-ad result and count only non-ad results."""
     normalized_targets = [normalize(name) for name in target_names if normalize(name)]
-    for index, text in enumerate(card_texts, start=1):
+    organic_rank = 0
+    for text in card_texts:
+        if "광고" in text:
+            continue
+        organic_rank += 1
         name = card_name(text)
         normalized_name = normalize(name)
         if normalized_name and any(target in normalized_name for target in normalized_targets):
             return {
-                "rank": index,
+                "rank": organic_rank,
                 "matched_name": name,
-                "is_ad": "광고" in text,
+                "is_ad": False,
                 "visible_result_count": len(card_texts),
             }
     return None

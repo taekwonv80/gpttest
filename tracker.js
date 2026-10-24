@@ -114,7 +114,12 @@ function renderSearchVolumeTrend(keyword) {
   if (!bars || !months) return;
 
   const today = new Date();
-  const dates = Array.from({ length: 12 }, (_, index) => new Date(today.getFullYear(), index, 1));
+  const currentMonth = today.getMonth() + 1;
+  const dates = Array.from({ length: 12 }, (_, index) => new Date(
+    index + 1 >= currentMonth ? today.getFullYear() - 1 : today.getFullYear(),
+    index,
+    1,
+  ));
   const trendMeasurement = rankHistory
     .filter((item) => item.keyword === keyword && Array.isArray(item.monthly_trend) && item.monthly_trend.length)
     .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)))
@@ -128,16 +133,17 @@ function renderSearchVolumeTrend(keyword) {
   const maximum = Math.max(...measuredValues, 1);
   const peakValue = measuredValues.length ? Math.max(...measuredValues) : null;
   const peakIndex = peakValue === null || peakValue <= 0 ? -1 : values.indexOf(peakValue);
-  const currentIndex = today.getMonth();
   bars.innerHTML = values.map((value, index) => {
     const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
     if (index === peakIndex) states.push('volume-bar--peak');
-    if (index === currentIndex) states.push('volume-bar--current');
     const height = value === null ? '' : ` style="height:${Math.round((value / maximum) * 100)}%"`;
     const label = value === null ? '검색 추이 미수집' : `검색지수 ${value.toLocaleString('ko-KR')}`;
     return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');
-  months.innerHTML = dates.map((date, index) => `<span${index === currentIndex ? '><b>' : '>'}${date.getMonth() + 1}월${index === currentIndex ? '</b>' : ''}</span>`).join('');
+  months.innerHTML = dates.map((date, index) => {
+    const isLastYear = date.getFullYear() !== today.getFullYear();
+    return `<span>${date.getMonth() + 1}월${isLastYear ? '<small>(작년)</small>' : ''}</span>`;
+  }).join('');
 
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');
@@ -234,7 +240,7 @@ function renderKeywords() {
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
       <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star ${keyword.value === primaryKeyword ? 'selected' : ''}" data-primary-keyword="${keyword.value}" role="button" aria-pressed="${keyword.value === primaryKeyword}" tabindex="0" aria-label="${keyword.value}을 가장 중요한 거점키워드로 선택">★</span><strong>${keyword.value}</strong>
       ${keyword.value === primaryKeyword ? '<em>가장 중요한 거점키워드</em>' : isNewKeyword(keyword.value) ? '<em>새로 등록한 추적키워드</em>' : ''}
-      <span class="volume">${searchVolumeLabel(keyword.volume, keyword.zeroVolumeDevice)}</span><i>⌃</i>
+      <span class="volume">${searchVolumeLabel(keyword.volume, keyword.zeroVolumeDevice)}</span><i>⌄</i>
     </button>`;
   }).join('');
   const deleteLine = document.querySelector('.keyword-delete-line');

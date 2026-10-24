@@ -198,16 +198,9 @@ async def collect_keyword_trends(keywords: list[str]) -> dict[str, list[dict[str
                     await page.goto(PUBLIC_TREND_URL, wait_until="networkidle", timeout=45_000)
                     await page.locator("#item_keyword1").fill(keyword)
                     await page.locator("#item_sub_keyword1_1").fill(keyword)
-                    # Keep the result aligned with the dashboard's January-to-
-                    # December axis instead of the page's rolling one-year default.
-                    current_year = datetime.now(SEOUL).year
-                    await page.locator('label[for="set_period5"]').click()
-                    await page.locator("#startYear").click()
-                    await page.locator(f"#startYearDiv ._item_{current_year} a").click()
-                    await page.locator("#startMonth").click()
-                    await page.locator("#startMonthDiv ._item_01 a").click()
-                    await page.locator("#startDay").click()
-                    await page.locator("#startDayDiv ._item_01 a").click()
+                    # The public page's one-year default contains the latest
+                    # twelve completed monthly values, including last year's
+                    # months when this month's value is not final yet.
                     await page.locator("#timeDimensionTitle").click()
                     await page.locator("#timeDimensionDiv ._item_month a").click()
                     async with page.expect_navigation(wait_until="networkidle", timeout=45_000):

@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "dadf1957-8bd9-4dcf-a704-f6049e153e21",
+      "recorded_at": "2026-10-24T15:21:36.507Z",
+      "text": "리뷰 답글 달았어요",
+      "kind": "note"
+    },
+    {
       "id": "14bc221f-5652-4c71-b8d0-4de148d3faca",
       "recorded_at": "2026-10-24T15:21:31.165Z",
       "text": "오늘 할 일 완료 · 마케팅 메시지·리뷰이벤트 준비",

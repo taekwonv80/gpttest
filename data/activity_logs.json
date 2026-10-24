@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "ae6050f7-4159-4e90-8527-e558ee753e6e",
+      "recorded_at": "2026-10-24T15:21:40.472Z",
+      "text": "소식 발행했어요",
+      "kind": "note"
+    },
+    {
       "id": "dadf1957-8bd9-4dcf-a704-f6049e153e21",
       "recorded_at": "2026-10-24T15:21:36.507Z",
       "text": "리뷰 답글 달았어요",

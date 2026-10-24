@@ -760,7 +760,7 @@ function renderWeeklyHistory(reports, selectedReport = null) {
     button.dataset.weekStart = item.weekStart;
     button.className = item.weekStart === selectedReport?.weekStart ? 'selected' : '';
     const title = document.createElement('b');
-    title.textContent = index === 0 ? '지난주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
+    title.textContent = `${reportMonthDay(item.issuedAt)} 발행`;
     const range = document.createElement('span');
     range.textContent = weeklyReportLabel(item);
     const action = document.createElement('em');
@@ -779,7 +779,7 @@ function renderWeeklyReport() {
   document.querySelector('#weekly-release-date').textContent = weeklyReleaseLabel(nextWeeklyReleaseDate());
   const listView = !selectedWeeklyReport;
   releaseCard.hidden = !listView;
-  detail.hidden = listView;
+  detail.hidden = false;
   previousLink.hidden = listView;
   if (!reports.length) {
     document.querySelector('#weekly-headline').textContent = '주간 데이터를 수집하고 있어요';
@@ -787,12 +787,8 @@ function renderWeeklyReport() {
     renderWeeklyHistory(reports);
     return;
   }
-  if (listView) {
-    renderWeeklyHistory(reports);
-    return;
-  }
-  const report = reports.find((item) => item.weekStart === selectedWeeklyReport) || reports[0];
-  selectedWeeklyReport = report.weekStart;
+  const report = listView ? reports[0] : (reports.find((item) => item.weekStart === selectedWeeklyReport) || reports[0]);
+  if (!listView) selectedWeeklyReport = report.weekStart;
   const reviewCount = Number.isFinite(report.reviews) ? report.reviews : 0;
   const average = report.averageReviews;
   const barMax = Math.max(reviewCount, average || 0, 1);
@@ -821,7 +817,7 @@ function renderWeeklyReport() {
   document.querySelector('#weekly-detail-reviews').textContent = `${reviewCount}건`;
   document.querySelector('#weekly-detail-reservations').textContent = `${report.reservations} / ${report.completions}`;
   document.querySelector('#weekly-previous-title').textContent = `지난 리포트 · ${reportMonthDay(report.issuedAt)} 발행`;
-  renderWeeklyHistory(reports, report);
+  renderWeeklyHistory(reports.slice(1), listView ? null : report);
 }
 
 function addLog(value = '', kind = 'note') {

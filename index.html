@@ -11,6 +11,9 @@
   <style>
     .keyword-row { border-left-color: transparent; }
     .keyword-row.selected { border-left-color: var(--blue); }
+    .bars i.volume-bar--pending { height: 32% !important; background: #d9dfe6; }
+    .bars i.volume-bar--current { background: var(--blue); }
+    .bars i.volume-bar--measured { background: #c9d1db; }
   </style>
 </head>
 <body>
@@ -34,8 +37,8 @@
         <div class="chart-notes"><b id="peak-note">최고 -</b><span id="low-note">최저 -</span></div>
         <div class="chart-pending detail-pending" id="detail-chart-pending">첫 순위 측정 후 기간별 추이가 표시됩니다.</div>
         <p class="record-note">◇ 기록을 남기면 순위 변화와 함께 볼 수 있어요.</p>
-        <section class="search-volume"><div class="volume-head"><b>검색량</b><span><strong>검색량(측정대기)</strong> · 모바일 - / PC -</span></div><div class="volume-pending">네이버 검색광고 API에서 실제 검색량을 수집합니다.</div></section>
-        <p class="insight"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p><p class="insight"><b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색량을 기준으로 안내합니다.</p><p class="ai-note"><b>AI 마케터:</b> 검색량과 순위 이력을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</p>
+        <section class="search-volume"><div class="volume-head"><b>검색량</b><span><strong>검색량(측정대기)</strong> · 모바일 - / PC -</span></div><div class="bars" id="volume-bars" aria-label="최근 12개월 검색량 추이"></div><div class="months" id="volume-months" aria-hidden="true"></div><div class="volume-pending">네이버 검색광고 API에서 실제 검색량을 수집합니다.</div></section>
+        <p class="insight" id="volume-peak"><b>피크</b> 월별 검색량 수집 후 표시됩니다.</p><p class="insight" id="volume-timing"><b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색량을 기준으로 안내합니다.</p><p class="ai-note"><b>AI 마케터:</b> 검색량과 순위 이력을 수집하는 중이에요. 결과가 쌓이면 실제 변화에 맞춰 안내합니다.</p>
       </section>
     </details>
 

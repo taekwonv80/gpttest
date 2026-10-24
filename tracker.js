@@ -78,12 +78,33 @@ function selectedKeywordData() {
   return trackedKeywords.find((keyword) => keyword.value === selectedKeyword) || trackedKeywords[0];
 }
 
+function hasMeasuredSearchVolume(measurement) {
+  return Boolean(measurement) && [
+    'monthly_pc_searches',
+    'monthly_mobile_searches',
+    'monthly_searches',
+  ].some((field) => Object.hasOwn(measurement, field));
+}
+
+function zeroSearchVolumeDevice(measurement) {
+  if (!hasMeasuredSearchVolume(measurement)) return null;
+  const pc = Number.isInteger(measurement?.monthly_pc_searches) ? measurement.monthly_pc_searches : 0;
+  const mobile = Number.isInteger(measurement?.monthly_mobile_searches) ? measurement.monthly_mobile_searches : 0;
+  if (mobile === 0 && pc > 0) return '모바일';
+  if (pc === 0 && mobile > 0) return 'PC';
+  return null;
+}
+
+function searchVolumeLabel(volume, zeroDevice = null) {
+  if (volume === PENDING_VOLUME) return PENDING_VOLUME;
+  return `월 ${volume}회${zeroDevice ? ` (${zeroDevice}: 0회)` : ''}`;
+}
+
 function displaySearchVolume(measurement) {
   const pc = Number.isInteger(measurement?.monthly_pc_searches) ? measurement.monthly_pc_searches : null;
   const mobile = Number.isInteger(measurement?.monthly_mobile_searches) ? measurement.monthly_mobile_searches : null;
   if (pc !== null && mobile !== null) return (pc + mobile).toLocaleString('ko-KR');
-  if (mobile !== null) return `${mobile.toLocaleString('ko-KR')}+`;
-  if (pc !== null) return `${pc.toLocaleString('ko-KR')}+`;
+  if (hasMeasuredSearchVolume(measurement)) return ((pc || 0) + (mobile || 0)).toLocaleString('ko-KR');
   return PENDING_VOLUME;
 }
 
@@ -141,10 +162,12 @@ function renderRankHistory(keyword) {
   document.querySelector('#peak-note').textContent = `최고 ${best}위`;
   document.querySelector('#low-note').textContent = `최저 ${worst}위`;
   const latest = detailPoints.at(-1);
-  const pc = Number.isInteger(latest.monthly_pc_searches) ? latest.monthly_pc_searches.toLocaleString('ko-KR') : '<10';
-  const mobile = Number.isInteger(latest.monthly_mobile_searches) ? latest.monthly_mobile_searches.toLocaleString('ko-KR') : '-';
-  document.querySelector('.volume-head span').innerHTML = `<strong>${displaySearchVolume(latest) === PENDING_VOLUME ? PENDING_VOLUME : `월 ${displaySearchVolume(latest)}회`}</strong> · 모바일 ${mobile} / PC ${pc}`;
-  document.querySelector('.volume-pending').textContent = displaySearchVolume(latest) === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색량을 수집합니다.' : '네이버 검색광고 API의 최근 월간 검색량입니다.';
+  const volumeWasMeasured = hasMeasuredSearchVolume(latest);
+  const pc = Number.isInteger(latest.monthly_pc_searches) ? latest.monthly_pc_searches.toLocaleString('ko-KR') : volumeWasMeasured ? '0' : '-';
+  const mobile = Number.isInteger(latest.monthly_mobile_searches) ? latest.monthly_mobile_searches.toLocaleString('ko-KR') : volumeWasMeasured ? '0' : '-';
+  const volume = displaySearchVolume(latest);
+  document.querySelector('.volume-head span').innerHTML = `<strong>${searchVolumeLabel(volume, zeroSearchVolumeDevice(latest))}</strong> · 모바일 ${mobile} / PC ${pc}`;
+  document.querySelector('.volume-pending').textContent = volume === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색량을 수집합니다.' : '네이버 검색광고 API의 최근 월간 검색량입니다.';
 }
 
 function rankPresentation(keyword) {
@@ -169,7 +192,7 @@ function renderKeywords() {
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
       <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star ${keyword.value === primaryKeyword ? 'selected' : ''}" data-primary-keyword="${keyword.value}" role="button" aria-pressed="${keyword.value === primaryKeyword}" tabindex="0" aria-label="${keyword.value}을 가장 중요한 거점키워드로 선택">★</span><strong>${keyword.value}</strong>
       ${keyword.value === primaryKeyword ? '<em>가장 중요한 거점키워드</em>' : isNewKeyword(keyword.value) ? '<em>새로 등록한 추적키워드</em>' : ''}
-      <span class="volume">${keyword.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword.volume || PENDING_RANK}회`}</span><i>⌃</i>
+      <span class="volume">${searchVolumeLabel(keyword.volume, keyword.zeroVolumeDevice)}</span><i>⌃</i>
     </button>`;
   }).join('');
   const deleteLine = document.querySelector('.keyword-delete-line');
@@ -180,7 +203,7 @@ function renderKeywords() {
 
 function updateKeywordHeading(keyword) {
   const value = keyword?.value || '추적 키워드';
-  const volume = keyword?.volume === PENDING_VOLUME ? PENDING_VOLUME : `월 ${keyword?.volume || PENDING_RANK}회`;
+  const volume = searchVolumeLabel(keyword?.volume || PENDING_RANK, keyword?.zeroVolumeDevice);
   const presentation = rankPresentation(keyword);
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
   document.querySelector('.rank-title strong').textContent = presentation.partial ? '미발견' : presentation.value ?? PENDING_RANK;
@@ -238,6 +261,7 @@ async function loadServerTracker() {
         // 과거 브라우저에 남은 예시값을 실측값처럼 보여주면 안 된다.
         monthlySearches: Number.isInteger(measurement.monthly_searches) ? measurement.monthly_searches : null,
         volume: displaySearchVolume(measurement),
+        zeroVolumeDevice: zeroSearchVolumeDevice(measurement),
       } : keyword;
     });
     saveKeywords();

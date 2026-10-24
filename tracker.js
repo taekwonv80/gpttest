@@ -779,28 +779,81 @@ const aiWorkInput = document.querySelector('#ai-work-input');
 const aiWorkDraft = document.querySelector('#ai-work-draft');
 const aiWorkStatus = document.querySelector('#ai-work-status');
 const aiWorkCopy = document.querySelector('#ai-work-copy');
+const aiWorkTitle = document.querySelector('#ai-work-title');
+const aiWorkDescription = document.querySelector('#ai-work-copy-description');
+const aiWorkLabel = document.querySelector('#ai-work-label');
+const aiWorkGenerate = document.querySelector('#ai-work-generate');
 
-function createDescriptionDraft(focus) {
-  const detail = focus || '대표 메뉴와 편안한 방문 경험';
-  return `${placeName}은 ${detail}을(를) 찾는 분들을 위해 정성껏 준비한 매장입니다.\n\n방문 전 궁금한 점은 편하게 문의해 주세요. 가족·친구·동료와 함께 여유롭게 식사하실 수 있도록 친절하게 안내해 드리겠습니다.`;
+const AI_TOOL_HINTS = {
+  메뉴네이밍: { description: '시즌 대표 메뉴의 이름과 소개 문구를 만듭니다.', label: '메뉴·손님 상황', placeholder: '예: 겨울 굴과 조개전골, 가족모임 손님' },
+  상세설명: { description: '네이버 플레이스에 넣을 매장·메뉴 설명 초안을 만듭니다.', label: '강조할 메뉴·장점', placeholder: '예: 조개전골, 넓은 좌석, 가족모임' },
+  리뷰답글: { description: '리뷰에 맞는 정중한 답글 초안을 만듭니다.', label: '리뷰 내용 또는 상황', placeholder: '예: 조개가 신선하고 가족과 편하게 먹었다는 리뷰' },
+  광고문구: { description: '시즌 메뉴를 알리는 짧은 광고 문구를 만듭니다.', label: '홍보할 내용', placeholder: '예: 굴철 한정 조개전골, 주말 가족모임' },
+  마케팅메시지: { description: '단골 손님에게 보낼 마케팅 메시지 초안을 만듭니다.', label: '알릴 내용', placeholder: '예: 쭈꾸미철 시작, 재방문 쿠폰 안내' },
+  체험단의뢰: { description: '체험단 모집·의뢰에 쓸 안내 초안을 만듭니다.', label: '모집 조건과 메뉴', placeholder: '예: 대하철 체험단, 2인 메뉴 제공, 평일 방문' },
+  소식문구: { description: '네이버 플레이스 소식에 올릴 문구 초안을 만듭니다.', label: '소식 내용', placeholder: '예: 굴철 시작, 시즌 대표 메뉴 안내' },
+};
+
+function currentAiTool() {
+  return activeMission?.aiTool && AI_TOOL_HINTS[activeMission.aiTool] ? activeMission.aiTool : '상세설명';
+}
+
+function setAiWorkCopy(tool) {
+  const copy = AI_TOOL_HINTS[tool];
+  aiWorkTitle.textContent = `AI로 ${tool} 만들기`;
+  aiWorkDescription.textContent = copy.description;
+  aiWorkLabel.textContent = copy.label;
+  aiWorkInput.placeholder = copy.placeholder;
+  aiWorkDraft.setAttribute('aria-label', `${tool} AI 초안`);
 }
 
 function saveDescriptionDraft() {
   localStorage.setItem(DESCRIPTION_DRAFT_STORAGE, JSON.stringify({
-    focus: aiWorkInput.value.trim(), draft: aiWorkDraft.value, createdAt: new Date().toISOString(),
+    tool: currentAiTool(), focus: aiWorkInput.value.trim(), draft: aiWorkDraft.value, createdAt: new Date().toISOString(),
   }));
 }
 
 document.querySelector('#ai-work-open').addEventListener('click', () => {
+  setAiWorkCopy(currentAiTool());
   aiWorkDialog.showModal();
   aiWorkInput.focus();
 });
 
-document.querySelector('#ai-work-generate').addEventListener('click', () => {
-  aiWorkDraft.value = createDescriptionDraft(aiWorkInput.value.trim());
-  aiWorkCopy.disabled = false;
-  aiWorkStatus.textContent = '상세설명 초안을 만들었어요. 복사해서 네이버 플레이스에 붙여 넣어 보세요.';
-  saveDescriptionDraft();
+aiWorkGenerate.addEventListener('click', async () => {
+  const request = aiWorkInput.value.trim();
+  if (!request) {
+    aiWorkStatus.textContent = '만들고 싶은 내용을 먼저 적어 주세요.';
+    aiWorkInput.focus();
+    return;
+  }
+  if (!keywordSyncEndpoint) {
+    aiWorkStatus.textContent = 'AI 생성 서버가 아직 연결되지 않았습니다.';
+    return;
+  }
+  const tool = currentAiTool();
+  aiWorkGenerate.disabled = true;
+  aiWorkCopy.disabled = true;
+  aiWorkStatus.textContent = 'AI가 초안을 만들고 있어요…';
+  try {
+    const response = await fetch(`${keywordSyncEndpoint}/ai/generate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-tracker-key': trackerAdminKey() },
+      body: JSON.stringify({ tool, request, mission: activeMission?.name || '' }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.output) {
+      if (response.status === 401) sessionStorage.removeItem(KEYWORD_SYNC_KEY_STORAGE);
+      throw new Error(payload.error || 'AI 초안을 만들지 못했습니다.');
+    }
+    aiWorkDraft.value = payload.output;
+    aiWorkCopy.disabled = false;
+    aiWorkStatus.textContent = `${tool} 초안을 만들었어요. 확인한 뒤 복사해 사용해 보세요.`;
+    saveDescriptionDraft();
+  } catch (error) {
+    aiWorkStatus.textContent = error.message || 'AI 초안을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  } finally {
+    aiWorkGenerate.disabled = false;
+  }
 });
 
 aiWorkCopy.addEventListener('click', async () => {
@@ -815,6 +868,7 @@ aiWorkCopy.addEventListener('click', async () => {
 });
 
 const storedDraft = readStoredValue(DESCRIPTION_DRAFT_STORAGE, {});
+setAiWorkCopy(currentAiTool());
 if (typeof storedDraft.focus === 'string') aiWorkInput.value = storedDraft.focus;
 if (typeof storedDraft.draft === 'string' && storedDraft.draft) {
   aiWorkDraft.value = storedDraft.draft;

@@ -16,6 +16,7 @@ let rankHistory = [];
 let placeDailyRows = [];
 let performancePeriod = 'recent30';
 let showAllPerformanceActivities = false;
+let selectedWeeklyReport = '';
 let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
 let selectedPeriod = '1주';
@@ -376,6 +377,7 @@ async function loadServerTracker() {
     saveKeywords();
     renderKeywords();
     renderPerformance();
+    renderWeeklyReport();
     setKeywordSyncStatus(keywordSyncEndpoint
       ? '키워드 파일과 동기화됨 · 등록 또는 삭제하면 바로 순위 측정을 요청합니다.'
       : '자동동기화 서버를 연결하면 등록·삭제가 파일에 저장됩니다.');
@@ -679,6 +681,119 @@ function renderPerformance() {
   renderPerformanceActivityList(activities);
 }
 
+function reportDateFromYmd(value) {
+  const date = new Date(`${value}T12:00:00+09:00`);
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
+function reportMonthDay(value) {
+  const date = value instanceof Date ? value : reportDateFromYmd(value);
+  return date ? `${date.getMonth() + 1}월 ${date.getDate()}일` : '-';
+}
+
+function weeklyReports() {
+  const grouped = new Map();
+  for (const row of placeDailyRows) {
+    const date = reportDateFromYmd(row.collected_date);
+    if (!date) continue;
+    const weekStart = typeof row.week_start === 'string' && row.week_start ? row.week_start : row.collected_date;
+    if (!grouped.has(weekStart)) grouped.set(weekStart, []);
+    grouped.get(weekStart).push(row);
+  }
+  const groups = [...grouped.entries()]
+    .map(([weekStart, rows]) => ({ weekStart, rows: rows.sort((left, right) => String(left.collected_date).localeCompare(String(right.collected_date))) }))
+    .filter(({ rows }) => new Set(rows.map((row) => row.collected_date)).size >= 7)
+    .sort((left, right) => right.weekStart.localeCompare(left.weekStart));
+  const usableGroups = groups.length ? groups : [...grouped.entries()]
+    .map(([weekStart, rows]) => ({ weekStart, rows: rows.sort((left, right) => String(left.collected_date).localeCompare(String(right.collected_date))) }))
+    .sort((left, right) => right.weekStart.localeCompare(left.weekStart));
+  return usableGroups.map(({ weekStart, rows }, index, all) => {
+    const start = reportDateFromYmd(weekStart);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const numberSum = (field) => rows.reduce((sum, row) => {
+      const value = Number(row[field]);
+      return Number.isFinite(value) ? sum + value : sum;
+    }, 0);
+    const reviewDeltas = rows.map((row) => Number(row.reviews_daily_delta)).filter(Number.isFinite);
+    const lastWeeklyReview = [...rows].reverse().map((row) => Number(row.reviews_weekly)).find(Number.isFinite);
+    const reviews = reviewDeltas.length ? numberSum('reviews_daily_delta') : (lastWeeklyReview ?? null);
+    const reservations = numberSum('reservation_applications_daily_delta');
+    const completions = numberSum('reservation_completions_daily_delta');
+    const priorReviews = all.slice(index + 1, index + 3)
+      .map(({ rows: priorRows }) => {
+        const values = priorRows.map((row) => Number(row.reviews_daily_delta)).filter(Number.isFinite);
+        return values.length ? priorRows.reduce((sum, row) => sum + (Number(row.reviews_daily_delta) || 0), 0) : null;
+      }).filter(Number.isFinite);
+    const averageReviews = priorReviews.length ? priorReviews.reduce((sum, value) => sum + value, 0) / priorReviews.length : null;
+    return { weekStart, start, end, issuedAt: new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1), reviews, reservations, completions, averageReviews };
+  });
+}
+
+function weeklyReportLabel(report) {
+  return `${reportMonthDay(report.start)}~${reportMonthDay(report.end)}`;
+}
+
+function renderWeeklyReport() {
+  const reports = weeklyReports();
+  const history = document.querySelector('#weekly-history-list');
+  if (!history) return;
+  if (!reports.length) {
+    document.querySelector('#weekly-headline').textContent = '주간 데이터를 수집하고 있어요';
+    document.querySelector('#weekly-range').textContent = '수집 후 주간 리포트가 발행됩니다';
+    history.textContent = '주간 데이터를 모으면 리포트가 자동으로 쌓입니다.';
+    return;
+  }
+  const report = reports.find((item) => item.weekStart === selectedWeeklyReport) || reports[0];
+  selectedWeeklyReport = report.weekStart;
+  const reviewCount = Number.isFinite(report.reviews) ? report.reviews : 0;
+  const average = report.averageReviews;
+  const barMax = Math.max(reviewCount, average || 0, 1);
+  const change = average === null ? null : reviewCount - average;
+  document.querySelector('#weekly-place-name').textContent = placeName;
+  document.querySelector('#weekly-range').textContent = weeklyReportLabel(report);
+  document.querySelector('#weekly-headline').textContent = reviewCount
+    ? `지난주 방문자 리뷰가 ${reviewCount}개 늘었어요`
+    : '지난주 새 리뷰 데이터를 확인해 주세요';
+  document.querySelector('#weekly-review-change').textContent = reviewCount ? `+${reviewCount}개` : '-';
+  document.querySelector('#weekly-review-detail').textContent = '실제 일별 수집 데이터 기준';
+  document.querySelector('#weekly-current-count').textContent = `${reviewCount}개`;
+  document.querySelector('#weekly-average-count').textContent = average === null ? '비교 대기' : `${average.toFixed(average % 1 ? 1 : 0)}개`;
+  document.querySelector('#weekly-current-bar').style.width = `${Math.max((reviewCount / barMax) * 100, reviewCount ? 4 : 0)}%`;
+  document.querySelector('#weekly-average-bar').style.width = average === null ? '0%' : `${Math.max((average / barMax) * 100, 4)}%`;
+  document.querySelector('#weekly-comparison-copy').textContent = change === null
+    ? '비교할 지난 주 데이터가 쌓이면 변화도 함께 보여드려요.'
+    : (change > 0 ? `지난 2주 평균보다 ${change.toFixed(change % 1 ? 1 : 0)}개 더 늘었어요.` : change < 0 ? `지난 2주 평균보다 ${Math.abs(change).toFixed(Math.abs(change) % 1 ? 1 : 0)}개 적어요.` : '지난 2주 평균과 비슷해요.');
+  document.querySelector('#weekly-task-title').textContent = reviewCount
+    ? `지난주 새로 쌓인 리뷰가 ${reviewCount}개예요. 리뷰를 확인하고 답글을 남겨주세요.`
+    : '이번 주 방문자 리뷰를 확인하고 답글을 남겨주세요.';
+  document.querySelector('#weekly-task-previous').textContent = `${reviewCount}개`;
+  document.querySelector('#weekly-task-average').textContent = average === null ? '비교 대기' : `${average.toFixed(average % 1 ? 1 : 0)}개`;
+  document.querySelector('#weekly-task-note').textContent = '리뷰 답글 데이터는 연결 후 답글 관리율도 함께 표시됩니다.';
+  document.querySelector('#weekly-task-evidence').textContent = `${weeklyReportLabel(report)}에 수집된 방문자 리뷰 증감과 예약 데이터를 기준으로 안내합니다.`;
+  document.querySelector('#weekly-detail-reviews').textContent = `${reviewCount}건`;
+  document.querySelector('#weekly-detail-reservations').textContent = `${report.reservations} / ${report.completions}`;
+  const prior = reports.find((item) => item.weekStart !== report.weekStart);
+  document.querySelector('#weekly-previous-title').textContent = prior ? `지난 리포트 · ${reportMonthDay(prior.issuedAt)} 발행` : '지난 리포트';
+  const previousLink = document.querySelector('#weekly-previous-link');
+  previousLink.disabled = !prior;
+  previousLink.dataset.weekStart = prior?.weekStart || '';
+  history.replaceChildren(...reports.slice(0, 8).map((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.weekStart = item.weekStart;
+    button.className = item.weekStart === report.weekStart ? 'selected' : '';
+    const title = document.createElement('b');
+    title.textContent = index === 0 ? '이번 주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
+    const range = document.createElement('span');
+    range.textContent = weeklyReportLabel(item);
+    const action = document.createElement('em');
+    action.textContent = item.weekStart === report.weekStart ? '지금 보는 리포트' : '보기 ›';
+    button.append(title, range, action);
+    return button;
+  }));
+}
+
 function addLog(value = '', kind = 'note') {
   const text = typeof value === 'string' ? value || logInput.value.trim() || selectedQuickLog : logInput.value.trim() || selectedQuickLog;
   if (!text) { logInput.focus(); return false; }
@@ -905,6 +1020,7 @@ async function renderSeasonMission(seasonTimeline) {
     activeMission = {
       id: `${season.name}:${mission.key}:${candidate.startDay}`,
       name: mission.name,
+      summary: mission.summary,
       aiTool: AI_TOOL_HINTS[mission.aiTool] ? mission.aiTool : '',
       prompt: [mission.summary, ...(mission.bodyLines || [])].filter(Boolean).join('\n'),
     };
@@ -1019,14 +1135,13 @@ document.querySelector('#ai-work-open').addEventListener('click', () => {
   restoreAiDraftForTool(tool);
   if (activeMission?.prompt) {
     aiWorkDescription.textContent = activeMission.prompt;
-    aiWorkInput.value = activeMission.prompt.slice(0, 500);
   }
   aiWorkDialog.showModal();
   aiWorkInput.focus();
 });
 
 aiWorkGenerate.addEventListener('click', async () => {
-  const request = aiWorkInput.value.trim();
+  const request = aiWorkInput.value.trim() || activeMission?.summary || '';
   if (!request) {
     aiWorkStatus.textContent = '만들고 싶은 내용을 먼저 적어 주세요.';
     aiWorkInput.focus();
@@ -1090,11 +1205,31 @@ document.querySelector('#performance-activity-toggle').addEventListener('click',
   renderPerformance();
 });
 
+document.querySelector('#weekly-previous-link').addEventListener('click', (event) => {
+  const weekStart = event.currentTarget.dataset.weekStart;
+  if (!weekStart) return;
+  selectedWeeklyReport = weekStart;
+  renderWeeklyReport();
+});
+
+document.querySelector('#weekly-history-list').addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-week-start]');
+  if (!button) return;
+  selectedWeeklyReport = button.dataset.weekStart;
+  renderWeeklyReport();
+});
+
 function renderPageRoute() {
   const performanceView = window.location.hash === '#performance';
+  const weeklyReportView = window.location.hash === '#weekly';
   document.body.classList.toggle('performance-view', performanceView);
+  document.body.classList.toggle('weekly-report-view', weeklyReportView);
   if (performanceView) {
     renderPerformance();
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  }
+  if (weeklyReportView) {
+    renderWeeklyReport();
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 }

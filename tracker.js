@@ -133,7 +133,7 @@ function renderSearchVolumeTrend(keyword) {
     const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
     if (index === peakIndex) states.push('volume-bar--peak');
     if (index === currentIndex) states.push('volume-bar--current');
-    const height = value === null ? '' : ` style="height:${Math.max(12, Math.round((value / maximum) * 100))}%"`;
+    const height = value === null ? '' : ` style="height:${Math.round((value / maximum) * 100)}%"`;
     const label = value === null ? '검색 추이 미수집' : `검색지수 ${value.toLocaleString('ko-KR')}`;
     return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');

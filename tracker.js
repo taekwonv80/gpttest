@@ -385,7 +385,6 @@ async function loadServerTracker() {
 
 function selectPrimaryKeyword(value) {
   if (!trackedKeywords.some((keyword) => keyword.value === value)) return;
-  const previousPrimary = primaryKeyword;
   primaryKeyword = value;
   localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
   renderKeywords();
@@ -395,12 +394,9 @@ function selectPrimaryKeyword(value) {
     renderKeywords();
     renderPerformance();
   }).catch((error) => {
-    primaryKeyword = previousPrimary;
-    if (previousPrimary) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, previousPrimary);
-    else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
     renderKeywords();
     renderPerformance();
-    setKeywordSyncStatus(error.message);
+    setKeywordSyncStatus(`거점키워드는 이 브라우저에 저장됐어요. 서버 동기화는 잠시 후 다시 시도해 주세요. (${error.message})`);
   });
 }
 

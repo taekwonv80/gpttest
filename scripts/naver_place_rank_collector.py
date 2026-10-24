@@ -30,6 +30,9 @@ HISTORY_PATH = Path("data/rank_history.json")
 MAP_SEARCH_URL = "https://map.naver.com/p/search/{query}"
 MAX_HISTORY = 3650
 MAX_TRACKED_RANK = 100
+# Naver Map's generated CSS classes can change.  Keep the previous selector
+# during rollout, but prefer the class used by the current public result list.
+RESULT_CARD_SELECTOR = "li.VLTHu, li.UEzoS"
 
 
 class RankCollectionError(RuntimeError):
@@ -155,6 +158,7 @@ async def public_result_cards(keyword: str) -> list[str]:
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context(locale="ko-KR", timezone_id="Asia/Seoul")
         page = await context.new_page()
+        last_error: Exception | None = None
         try:
             await page.goto(
                 MAP_SEARCH_URL.format(query=quote(keyword)),
@@ -168,24 +172,25 @@ async def public_result_cards(keyword: str) -> list[str]:
                     None,
                 )
                 if frame:
-                    cards = frame.locator("li.UEzoS")
+                    cards = frame.locator(RESULT_CARD_SELECTOR)
                     try:
                         await cards.first.wait_for(timeout=5_000)
                         texts = await collect_scrolled_cards(frame)
                         if texts:
                             return texts
-                    except Exception:
-                        pass
+                    except Exception as error:
+                        last_error = error
                 await page.wait_for_timeout(1_000)
         finally:
             await context.close()
             await browser.close()
-    raise RankCollectionError(f"검색 결과를 읽지 못했습니다: {keyword}")
+    detail = f" ({type(last_error).__name__}: {last_error})" if last_error else ""
+    raise RankCollectionError(f"검색 결과를 읽지 못했습니다: {keyword}{detail}")
 
 
 async def collect_scrolled_cards(frame: Any) -> list[str]:
     """Accumulate unique virtualized Map result cards across scrolling."""
-    cards = frame.locator("li.UEzoS")
+    cards = frame.locator(RESULT_CARD_SELECTOR)
     seen: list[str] = []
     seen_places: set[str] = set()
     unchanged_rounds = 0

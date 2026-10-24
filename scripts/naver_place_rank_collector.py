@@ -10,24 +10,32 @@ and capture time instead of being represented as an absolute universal rank.
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import os
 import re
+import zipfile
+import xml.etree.ElementTree as ElementTree
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 try:
-    from zoneinfo import ZoneInfo
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 except ImportError:  # Python 3.8 local verification compatibility
     ZoneInfo = None
+    ZoneInfoNotFoundError = ValueError
 
 
-SEOUL = ZoneInfo("Asia/Seoul") if ZoneInfo else timezone(timedelta(hours=9))
+try:
+    SEOUL = ZoneInfo("Asia/Seoul") if ZoneInfo else timezone(timedelta(hours=9))
+except ZoneInfoNotFoundError:  # Minimal local Python builds can omit tzdata.
+    SEOUL = timezone(timedelta(hours=9))
 CONFIG_PATH = Path("data/tracker_config.json")
 HISTORY_PATH = Path("data/rank_history.json")
 MAP_SEARCH_URL = "https://map.naver.com/p/search/{query}"
+PUBLIC_TREND_URL = "https://datalab.naver.com/keyword/trendSearch.naver"
 MAX_HISTORY = 3650
 MAX_TRACKED_RANK = 100
 # Naver Map's generated CSS classes can change.  Keep the previous selector
@@ -151,6 +159,74 @@ def collect_keyword_volumes(keywords: list[str]) -> dict[str, dict[str, int | No
     return volumes
 
 
+def monthly_trend_from_xlsx(content: bytes) -> list[dict[str, Any]]:
+    """Read date/value rows from the public trend page's downloaded workbook."""
+    namespace = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    with zipfile.ZipFile(io.BytesIO(content)) as workbook:
+        strings_root = ElementTree.fromstring(workbook.read("xl/sharedStrings.xml"))
+        strings = ["".join(item.itertext()) for item in strings_root.findall(f"{namespace}si")]
+        sheet_root = ElementTree.fromstring(workbook.read("xl/worksheets/sheet1.xml"))
+
+    trend = []
+    for row in sheet_root.findall(f".//{namespace}row"):
+        values = []
+        for cell in row.findall(f"{namespace}c"):
+            raw = cell.findtext(f"{namespace}v")
+            values.append(strings[int(raw)] if cell.get("t") == "s" and raw is not None else raw)
+        if len(values) < 2 or not re.fullmatch(r"\d{4}-\d{2}-01", str(values[0] or "")):
+            continue
+        try:
+            ratio = float(str(values[1]).replace(",", ""))
+        except (TypeError, ValueError):
+            continue
+        trend.append({"month": values[0][:7], "ratio": ratio})
+    return trend
+
+
+async def collect_keyword_trends(keywords: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """Collect public monthly search indices with no account or API credentials."""
+    from playwright.async_api import async_playwright
+
+    trends = {keyword: [] for keyword in keywords}
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context(locale="ko-KR", timezone_id="Asia/Seoul")
+        page = await context.new_page()
+        try:
+            for keyword in keywords:
+                try:
+                    await page.goto(PUBLIC_TREND_URL, wait_until="networkidle", timeout=45_000)
+                    await page.locator("#item_keyword1").fill(keyword)
+                    await page.locator("#item_sub_keyword1_1").fill(keyword)
+                    # Keep the result aligned with the dashboard's January-to-
+                    # December axis instead of the page's rolling one-year default.
+                    current_year = datetime.now(SEOUL).year
+                    await page.locator('label[for="set_period5"]').click()
+                    await page.locator("#startYear").click()
+                    await page.locator(f"#startYearDiv ._item_{current_year} a").click()
+                    await page.locator("#startMonth").click()
+                    await page.locator("#startMonthDiv ._item_01 a").click()
+                    await page.locator("#startDay").click()
+                    await page.locator("#startDayDiv ._item_01 a").click()
+                    await page.locator("#timeDimensionTitle").click()
+                    await page.locator("#timeDimensionDiv ._item_month a").click()
+                    async with page.expect_navigation(wait_until="networkidle", timeout=45_000):
+                        await page.locator("a._trend_search_detail_query").click()
+                    async with page.expect_download(timeout=30_000) as download_info:
+                        await page.locator("a.sp_btn_file_down").click()
+                    download = await download_info.value
+                    download_path = await download.path()
+                    if not download_path:
+                        raise RankCollectionError("월별 검색지수 파일을 받지 못했습니다.")
+                    trends[keyword] = monthly_trend_from_xlsx(Path(download_path).read_bytes())
+                except Exception as error:
+                    print(f"월별 검색 추이 수집 건너뜀: {keyword} · {type(error).__name__}: {error}")
+        finally:
+            await context.close()
+            await browser.close()
+    return trends
+
+
 async def public_result_cards(keyword: str) -> list[str]:
     from playwright.async_api import async_playwright
 
@@ -239,6 +315,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
 
     measured_at = datetime.now(SEOUL).isoformat(timespec="seconds")
     volumes = collect_keyword_volumes(keywords)
+    trends = await collect_keyword_trends(keywords)
     measurements = []
     for keyword in keywords:
         cards = (await public_result_cards(keyword))[:MAX_TRACKED_RANK]
@@ -254,6 +331,7 @@ async def collect_measurements(config: dict[str, Any]) -> list[dict[str, Any]]:
                 "visible_result_count": match["visible_result_count"] if match else len(cards),
                 "status": rank_status(match, len(cards)),
                 **volumes[keyword],
+                "monthly_trend": trends[keyword],
             }
         )
     return measurements

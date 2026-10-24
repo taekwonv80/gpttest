@@ -280,7 +280,7 @@ function rankPresentation(keyword) {
 
 function renderKeywords() {
   const list = document.querySelector('#keyword-list');
-  const current = selectedKeywordData();
+  const current = trackedKeywords.find((keyword) => keyword.value === primaryKeyword) || selectedKeywordData();
   selectedKeyword = current?.value || '';
   list.innerHTML = trackedKeywords.map((keyword) => {
     const presentation = rankPresentation(keyword);

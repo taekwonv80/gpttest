@@ -89,7 +89,7 @@ function normalizeAiRequest(value) {
   const tool = String(value?.tool || "").trim();
   const request = String(value?.request || "").trim().replace(/\s+/g, " ");
   const mission = String(value?.mission || "").trim().replace(/\s+/g, " ");
-  if (!AI_TOOLS.has(tool) || !request || request.length > 500 || mission.length > 120) return null;
+  if (!AI_TOOLS.has(tool) || !request || request.length > 500 || mission.length > 1000) return null;
   return { tool, request, mission };
 }
 

@@ -905,7 +905,8 @@ async function renderSeasonMission(seasonTimeline) {
     activeMission = {
       id: `${season.name}:${mission.key}:${candidate.startDay}`,
       name: mission.name,
-      aiTool: mission.aiTool || '',
+      aiTool: AI_TOOL_HINTS[mission.aiTool] ? mission.aiTool : '',
+      prompt: [mission.summary, ...(mission.bodyLines || [])].filter(Boolean).join('\n'),
     };
     document.querySelector('#mission-title').textContent = mission.summary;
     document.querySelector('#mission-summary').textContent = missionBubbleSub(Boolean(seasonTimeline.praise));
@@ -916,7 +917,7 @@ async function renderSeasonMission(seasonTimeline) {
       return paragraph;
     }));
     document.querySelector('#mission-evidence-details').hidden = false;
-    document.querySelector('#ai-work-open').textContent = mission.aiTool ? `AI로 ${mission.aiTool} 만들기` : 'AI 작업실 열기';
+    document.querySelector('#ai-work-open').textContent = activeMission.aiTool ? `AI로 ${activeMission.aiTool} 만들기` : 'AI 작업실 열기';
     renderMissionState();
   } catch (error) {
     console.warn(error);
@@ -1003,8 +1004,23 @@ function saveDescriptionDraft() {
   }));
 }
 
+function restoreAiDraftForTool(tool) {
+  const draft = readStoredValue(DESCRIPTION_DRAFT_STORAGE, {});
+  const matchesTool = draft?.tool === tool;
+  aiWorkInput.value = matchesTool && typeof draft.focus === 'string' ? draft.focus : '';
+  aiWorkDraft.value = matchesTool && typeof draft.draft === 'string' ? draft.draft : '';
+  aiWorkCopy.disabled = !aiWorkDraft.value;
+  aiWorkStatus.textContent = '';
+}
+
 document.querySelector('#ai-work-open').addEventListener('click', () => {
-  setAiWorkCopy(currentAiTool());
+  const tool = currentAiTool();
+  setAiWorkCopy(tool);
+  restoreAiDraftForTool(tool);
+  if (activeMission?.prompt) {
+    aiWorkDescription.textContent = activeMission.prompt;
+    aiWorkInput.value = activeMission.prompt.slice(0, 500);
+  }
   aiWorkDialog.showModal();
   aiWorkInput.focus();
 });
@@ -1029,7 +1045,7 @@ aiWorkGenerate.addEventListener('click', async () => {
     const response = await fetch(`${keywordSyncEndpoint}/ai/generate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-tracker-key': trackerAdminKey() },
-      body: JSON.stringify({ tool, request, mission: activeMission?.name || '' }),
+      body: JSON.stringify({ tool, request, mission: activeMission?.prompt || activeMission?.name || '' }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.output) {
@@ -1060,13 +1076,8 @@ aiWorkCopy.addEventListener('click', async () => {
   aiWorkStatus.textContent = '초안을 복사했어요.';
 });
 
-const storedDraft = readStoredValue(DESCRIPTION_DRAFT_STORAGE, {});
 setAiWorkCopy(currentAiTool());
-if (typeof storedDraft.focus === 'string') aiWorkInput.value = storedDraft.focus;
-if (typeof storedDraft.draft === 'string' && storedDraft.draft) {
-  aiWorkDraft.value = storedDraft.draft;
-  aiWorkCopy.disabled = false;
-}
+restoreAiDraftForTool(currentAiTool());
 
 document.querySelector('#performance-period').addEventListener('change', (event) => {
   performancePeriod = event.target.value;

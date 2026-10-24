@@ -382,30 +382,35 @@ async function loadServerTracker() {
   }
 }
 
-document.querySelector('#keyword-list').addEventListener('click', (event) => {
-  const star = event.target.closest('[data-primary-keyword]');
-  if (star) {
-    const value = star.dataset.primaryKeyword;
-    const previousPrimary = primaryKeyword;
-    primaryKeyword = value;
-    localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
-    renderKeywords();
-    syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
-      applyConfiguredKeywords(result.keywords, result);
-      renderKeywords();
-    }).catch((error) => {
-      primaryKeyword = previousPrimary;
-      if (previousPrimary) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, previousPrimary);
-      else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
-      renderKeywords();
-      setKeywordSyncStatus(error.message);
-    });
-    return;
-  }
-  const row = event.target.closest('[data-keyword]');
-  if (!row) return;
-  selectedKeyword = row.dataset.keyword;
+function selectPrimaryKeyword(value) {
+  if (!trackedKeywords.some((keyword) => keyword.value === value)) return;
+  const previousPrimary = primaryKeyword;
+  const previousSelected = selectedKeyword;
+  primaryKeyword = value;
+  selectedKeyword = value;
+  localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
   renderKeywords();
+  renderPerformance();
+  syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
+    applyConfiguredKeywords(result.keywords, result);
+    selectedKeyword = value;
+    renderKeywords();
+    renderPerformance();
+  }).catch((error) => {
+    primaryKeyword = previousPrimary;
+    selectedKeyword = previousSelected;
+    if (previousPrimary) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, previousPrimary);
+    else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
+    renderKeywords();
+    renderPerformance();
+    setKeywordSyncStatus(error.message);
+  });
+}
+
+document.querySelector('#keyword-list').addEventListener('click', (event) => {
+  const value = event.target.closest('[data-primary-keyword]')?.dataset.primaryKeyword
+    || event.target.closest('[data-keyword]')?.dataset.keyword;
+  if (value) selectPrimaryKeyword(value);
 });
 
 const keywordDialog = document.querySelector('#keyword-dialog');

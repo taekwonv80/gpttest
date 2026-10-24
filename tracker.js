@@ -23,6 +23,8 @@ let selectedPeriod = '1주';
 let placeName = '은경이네';
 let activeMission = null;
 let seasonStageModulePromise = null;
+let seasonPlannerMonth = '';
+let seasonPlannerFocusKey = '';
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -352,6 +354,7 @@ async function loadServerTracker() {
     currentStoreProfile = storeProfile;
     const seasonTimeline = annualSeasonTimeline(storeProfile);
     void renderSeasonGuide(seasonTimeline);
+    void renderSeasonPlanner(seasonTimeline);
     void renderSeasonMission(seasonTimeline);
     applyConfiguredKeywords(configured, config);
     const latest = {};
@@ -903,6 +906,7 @@ function toggleSeasonStage(season, stage) {
   all[key] = [...checked];
   localStorage.setItem(SEASON_PROGRESS_STORAGE, JSON.stringify(all));
   void renderSeasonGuide(annualSeasonTimeline(currentStoreProfile));
+  void renderSeasonPlanner(annualSeasonTimeline(currentStoreProfile));
 }
 
 let currentStoreProfile = {};
@@ -988,6 +992,137 @@ async function renderSeasonGuide(seasonTimeline) {
     console.warn(error);
     stageList.replaceChildren();
   }
+}
+
+function seasonPlannerDate(value) {
+  const date = new Date(`${value}T12:00:00+09:00`);
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
+function seasonPlannerDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function seasonPlannerMonthLabel(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  return `${year}년 ${month}월`;
+}
+
+function seasonPlannerStageDate(season, stage) {
+  const start = seasonPlannerDate(season.start_date);
+  if (!start) return null;
+  start.setDate(start.getDate() - Number(stage.dDay || 0));
+  return start;
+}
+
+async function buildSeasonPlannerStages(seasonTimeline, season) {
+  const startDay = ymdToUtcDay(season.start_date);
+  const todayDay = ymdToUtcDay(koreaToday());
+  if (startDay === null || todayDay === null) return [];
+  const { buildDashboardSeasonStageTimeline } = await loadSeasonStageModule();
+  const timeline = buildDashboardSeasonStageTimeline({
+    season: { ...season, dMinus: Number(season.d_minus), industries: [seasonTimeline.industry_label] },
+    daysUntil: startDay - todayDay,
+    seasonDay: startDay,
+    industryLabel: seasonTimeline.industry_label,
+  });
+  return (timeline?.stages || []).map((stage) => ({ ...stage, plannerDate: seasonPlannerStageDate(season, stage) }));
+}
+
+function seasonPlannerFocus(seasonTimeline) {
+  const todayDay = ymdToUtcDay(koreaToday());
+  const seasons = Array.isArray(seasonTimeline?.seasons) ? seasonTimeline.seasons : [];
+  const dated = seasons.map((season) => ({ season, startDay: ymdToUtcDay(season.start_date), endDay: ymdToUtcDay(season.end_date) }))
+    .filter((item) => item.startDay !== null);
+  const configured = dated.find((item) => `${item.season.key}:${item.season.start_date}` === seasonPlannerFocusKey);
+  if (configured) return configured.season;
+  const active = dated.find((item) => item.startDay <= todayDay && (item.endDay === null || item.endDay >= todayDay));
+  const next = dated.filter((item) => item.startDay >= todayDay).sort((left, right) => left.startDay - right.startDay)[0];
+  return (active || next || dated[0])?.season || null;
+}
+
+async function renderSeasonPlanner(seasonTimeline) {
+  const page = document.querySelector('#season');
+  if (!page) return;
+  const year = Number(koreaYmdParts().year);
+  const currentMonth = Number(koreaYmdParts().month);
+  if (!seasonPlannerMonth) seasonPlannerMonth = `${year}-${String(currentMonth).padStart(2, '0')}`;
+  const monthSelect = document.querySelector('#season-month');
+  monthSelect.replaceChildren(...Array.from({ length: 12 }, (_, index) => {
+    const option = document.createElement('option');
+    option.value = `${year}-${String(index + 1).padStart(2, '0')}`;
+    option.textContent = `${year}년 ${index + 1}월`;
+    return option;
+  }));
+  monthSelect.value = seasonPlannerMonth;
+  const seasons = (Array.isArray(seasonTimeline?.seasons) ? seasonTimeline.seasons : [])
+    .filter((season) => String(season.start_date).startsWith(`${year}-`));
+  const stageSets = await Promise.all(seasons.map(async (season) => ({ season, stages: await buildSeasonPlannerStages(seasonTimeline, season) })));
+  const monthStages = stageSets.flatMap(({ season, stages }) => stages.map((stage) => ({ season, stage })))
+    .filter(({ stage }) => stage.plannerDate && seasonPlannerDateKey(stage.plannerDate).startsWith(seasonPlannerMonth));
+  const completed = stageSets.reduce((count, { season, stages }) => count + stages.filter((stage) => new Set(seasonProgressState()[seasonProgressKey(season)] || []).has(stage.key)).length, 0);
+  const todayKey = koreaToday();
+  document.querySelector('#season-planner-subtitle').textContent = `${seasonTimeline.industry_label || '내 가게'} · ${seasonPlannerMonthLabel(seasonPlannerMonth)}`;
+  document.querySelector('#season-opportunity-count').textContent = `${monthStages.length}개`;
+  document.querySelector('#season-complete-count').textContent = `${completed}개`;
+  document.querySelector('#season-now-count').textContent = `${monthStages.filter(({ stage }) => seasonPlannerDateKey(stage.plannerDate) === todayKey).length}개`;
+  document.querySelector('#season-calendar-title').textContent = seasonPlannerMonthLabel(seasonPlannerMonth);
+  const [monthYear, monthNumber] = seasonPlannerMonth.split('-').map(Number);
+  const first = new Date(monthYear, monthNumber - 1, 1);
+  const offset = (first.getDay() + 6) % 7;
+  const days = new Date(monthYear, monthNumber, 0).getDate();
+  const grid = document.querySelector('#season-month-grid');
+  grid.replaceChildren(...Array.from({ length: offset + days }, (_, index) => {
+    const cell = document.createElement(index < offset ? 'i' : 'button');
+    if (index < offset) return cell;
+    const day = index - offset + 1;
+    const date = new Date(monthYear, monthNumber - 1, day);
+    const key = seasonPlannerDateKey(date);
+    const events = monthStages.filter(({ stage }) => seasonPlannerDateKey(stage.plannerDate) === key);
+    cell.type = 'button';
+    cell.className = `season-day${key === todayKey ? ' today' : ''}${events.length ? ' has-event' : ''}`;
+    const number = document.createElement('b');
+    number.textContent = String(day);
+    cell.append(number);
+    events.slice(0, 2).forEach(({ season, stage }) => {
+      const label = document.createElement('span');
+      label.textContent = stage.name;
+      cell.append(label);
+      cell.addEventListener('click', () => { seasonPlannerFocusKey = `${season.key}:${season.start_date}`; void renderSeasonPlanner(seasonTimeline); });
+    });
+    return cell;
+  }));
+  const focus = seasonPlannerFocus(seasonTimeline);
+  const focusStages = focus ? await buildSeasonPlannerStages(seasonTimeline, focus) : [];
+  const focusCompleted = new Set(seasonProgressState()[seasonProgressKey(focus)] || []);
+  const focusStart = focus ? seasonPlannerDate(focus.start_date) : null;
+  document.querySelector('#season-focus-badge').textContent = focusStart ? `D-${Math.max(0, Math.round((focusStart.getTime() - Date.now()) / 86400000))} · ${focus.name}` : '준비 일정';
+  document.querySelector('#season-focus-title').textContent = focus ? `${focus.name} 준비` : '시즌을 설정해 주세요';
+  document.querySelector('#season-focus-copy').textContent = focus?.desc || '시즌 정보를 등록하면 준비 순서를 안내합니다.';
+  const focusList = document.querySelector('#season-focus-stages');
+  focusList.replaceChildren(...focusStages.map((stage, index) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    const done = focusCompleted.has(stage.key);
+    button.type = 'button'; button.className = done ? 'done' : '';
+    const title = document.createElement('b'); title.textContent = `${index + 1}. ${stage.name}`;
+    const date = document.createElement('span'); date.textContent = `${reportMonthDay(stage.plannerDate)} · ${done ? '완료' : '눌러서 완료'}`;
+    button.append(title, date); button.addEventListener('click', () => toggleSeasonStage(focus, stage));
+    item.append(button); return item;
+  }));
+  const other = document.querySelector('#season-other-list');
+  other.replaceChildren(...seasons.filter((season) => season.start_date !== focus?.start_date).map((season) => {
+    const button = document.createElement('button'); button.type = 'button';
+    const title = document.createElement('b'); title.textContent = season.name;
+    const copy = document.createElement('span'); copy.textContent = `${Number(season.start_month)}월 ${Number(season.start_day)}일 시작`;
+    button.append(title, copy); button.addEventListener('click', () => { seasonPlannerFocusKey = `${season.key}:${season.start_date}`; void renderSeasonPlanner(seasonTimeline); });
+    return button;
+  }));
+  document.querySelector('#season-setting-industry').textContent = seasonTimeline.industry_label || '-';
+  document.querySelector('#season-setting-seasons').textContent = seasons.map((season) => `${season.name} ${Number(season.start_month)}월 ${Number(season.start_day)}일`).join(' · ') || '-';
+  const placeRows = placeDailyRows.filter((row) => String(row.collected_date).startsWith(seasonPlannerMonth));
+  const sum = (field) => placeRows.reduce((total, row) => total + (Number(row[field]) || 0), 0);
+  document.querySelector('#season-place-data').textContent = placeRows.length ? `방문 ${sum('place_visits_daily_delta').toLocaleString('ko-KR')} · 새 리뷰 ${sum('reviews_daily_delta')} · 예약 신청 ${sum('reservation_applications_daily_delta')}` : '선택한 달의 내 플레이스 수집 자료가 아직 없어요.';
 }
 
 function seasonCandidate(seasonTimeline) {
@@ -1243,17 +1378,28 @@ document.querySelector('#weekly-history-list').addEventListener('click', (event)
   renderWeeklyReport();
 });
 
+document.querySelector('#season-month').addEventListener('change', (event) => {
+  seasonPlannerMonth = event.target.value;
+  void renderSeasonPlanner(annualSeasonTimeline(currentStoreProfile));
+});
+
 function renderPageRoute() {
   const performanceView = window.location.hash === '#performance';
   const weeklyReportView = window.location.hash === '#weekly';
+  const seasonPlannerView = window.location.hash === '#season';
   document.body.classList.toggle('performance-view', performanceView);
   document.body.classList.toggle('weekly-report-view', weeklyReportView);
+  document.body.classList.toggle('season-planner-view', seasonPlannerView);
   if (performanceView) {
     renderPerformance();
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
   if (weeklyReportView) {
     renderWeeklyReport();
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  }
+  if (seasonPlannerView) {
+    void renderSeasonPlanner(annualSeasonTimeline(currentStoreProfile));
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 }

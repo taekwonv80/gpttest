@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="weekly-report.css?v=20261025-weekly-report">
   <link rel="stylesheet" href="weekly-release.css?v=20261025-weekly-release">
   <link rel="stylesheet" href="weekly-current-report.css?v=20261025-weekly-current-report">
+  <link rel="stylesheet" href="season-planner.css?v=20261025-season-planner">
   <link rel="stylesheet" href="pending.css">
   <style>
     .keyword-row {
@@ -154,12 +155,22 @@
       <section class="weekly-history-card"><h2>지난 리포트</h2><div id="weekly-history-list"></div></section>
     </section>
 
+    <section class="season-planner-page" id="season" aria-labelledby="season-planner-title">
+      <a class="season-planner-back" href="#main-keyword">‹ 주간 리포트</a>
+      <div class="season-planner-heading"><div><p>🍂</p><h1 id="season-planner-title">대목 고르기</h1><span id="season-planner-subtitle">시즌 정보를 불러오는 중이에요</span></div><select id="season-month" aria-label="대목 달 선택"></select></div>
+      <div class="season-planner-stats"><article><b>이번 달 기회</b><strong id="season-opportunity-count">-</strong></article><article><b>준비 끝</b><strong id="season-complete-count">-</strong></article><article><b>지금 할 일</b><strong id="season-now-count">-</strong></article></div>
+      <section class="season-calendar-card"><h2 id="season-calendar-title">-</h2><p class="season-calendar-legend">□ 수요 오름　□ 준비　□ 글　□ 동네</p><div class="season-weekdays"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div><div class="season-month-grid" id="season-month-grid"></div><p>날짜를 누르면 그날 할 일이 아래에 펼쳐져요 · 시즌 기회는 설정된 일정 기준이에요</p></section>
+      <section class="season-focus-card" id="season-focus-card"><p id="season-focus-badge">준비 일정</p><h2 id="season-focus-title">시즌을 고르는 중이에요</h2><p id="season-focus-copy"></p><ol id="season-focus-stages"></ol><button type="button" id="season-focus-action" hidden></button></section>
+      <section class="season-other-card"><h2>우리 동네 이런 기회도</h2><div id="season-other-list"></div></section>
+      <section class="season-settings-card"><div><h2>내 시즌 설정</h2><a href="#season-guide">설정 바꾸기 ›</a></div><dl><dt>업종</dt><dd id="season-setting-industry">-</dd><dt>시즌</dt><dd id="season-setting-seasons">-</dd><dt>내 플레이스</dt><dd id="season-place-data">이번 달 데이터를 불러오는 중이에요</dd></dl></section>
+    </section>
+
     <p class="more-label">여기까지가 오늘 볼 것 · 아래는 필요할 때만</p><section class="more-links" id="reports"><h2>은경이매장비서 자세히 보기</h2><a href="#weekly"><b>주간 리포트</b><span>실제 데이터가 쌓인 뒤 발행</span>›</a><a href="#rival"><b>라이벌 리포트</b><span>측정 설정 후 제공</span>›</a><a href="#review"><b>리뷰 리포트</b><span>연결 후 제공</span>›</a><a href="#performance"><b>우리 가게 성과</b><span>수집된 순위·리뷰·저장과 내가 한 일</span>›</a><a href="#season"><b>대목 고르기</b><span>달력에서 기회 날짜와 준비 순서</span>›</a></section>
   </main>
   <aside class="side-nav"><strong>은경이매장비서<br><small>은경이네</small></strong><a href="#main-keyword">오늘의 순위</a><a href="#mission">오늘 할 일</a><a href="#weekly">주간 리포트</a><a href="#performance">우리 가게 성과</a><a href="#season">대목 고르기</a></aside>
   <dialog id="guide-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">사용 방법</p><h2>측정 결과를 확인해 보세요.</h2><ol><li>오늘 순위를 확인해요.</li><li>오늘 할 일 하나를 해요.</li><li>한 줄로 기록을 남겨요.</li></ol></dialog>
   <dialog id="ai-work-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">AI 작업실</p><h2 id="ai-work-title">AI 초안 만들기</h2><p class="dialog-copy" id="ai-work-copy-description">매장 상황을 적으면 바로 쓸 수 있는 초안을 만듭니다.</p><label id="ai-work-label" for="ai-work-input">요청 내용</label><input id="ai-work-input" maxlength="500" autocomplete="off"><div class="ai-work-actions"><button type="button" id="ai-work-generate">AI로 만들기</button><button type="button" id="ai-work-copy" disabled>복사하기</button></div><textarea id="ai-work-draft" readonly aria-label="AI 생성 초안" placeholder="AI 초안을 만들면 여기에 표시됩니다."></textarea><p id="ai-work-status" aria-live="polite"></p></dialog>
   <dialog id="keyword-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">추적키워드 등록</p><h2>매일 확인할 키워드를 적어주세요.</h2><p class="dialog-copy">등록하면 다음 순위 측정부터 기록됩니다.</p><form id="keyword-form"><label for="keyword-input">키워드</label><input id="keyword-input" maxlength="40" autocomplete="off" placeholder="예: 장현동 맛집" required><button type="submit">등록하기</button></form></dialog>
-  <script type="module" src="tracker.js?v=20261025-weekly-current-report"></script>
+  <script type="module" src="tracker.js?v=20261025-season-planner"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "place_id": "1827896507",
-  "updated_at": "2026-10-24T14:08:06+09:00",
+  "updated_at": "2026-10-24T14:16:55+09:00",
   "measurements": [
     {
       "keyword": "장현동맛집",
@@ -1688,6 +1688,97 @@
       "status": "found",
       "monthly_pc_searches": null,
       "monthly_mobile_searches": null,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "장현동맛집",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 13,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 70,
+      "status": "found",
+      "monthly_pc_searches": 150,
+      "monthly_mobile_searches": 1070,
+      "monthly_searches": 1220
+    },
+    {
+      "keyword": "시흥능곡샤브샤브",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 6,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 160,
+      "monthly_searches": 170
+    },
+    {
+      "keyword": "장곡동샤브샤브",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 7,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 150,
+      "monthly_searches": 160
+    },
+    {
+      "keyword": "장곡동점심맛집",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 10,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 30,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "시흥능곡역칼국수",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 13,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 22,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 20,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "장현동가족모임",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 9,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 70,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": null,
+      "monthly_searches": null
+    },
+    {
+      "keyword": "시흥능곡역샤브샤브",
+      "measured_at": "2026-10-24T14:16:55+09:00",
+      "source": "naver-map-public-search",
+      "rank": 4,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 6,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 50,
       "monthly_searches": null
     }
   ]

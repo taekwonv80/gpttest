@@ -389,10 +389,8 @@ function selectPrimaryKeyword(value) {
   localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
   renderKeywords();
   renderPerformance();
-  syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
-    applyConfiguredKeywords(result.keywords, result);
-    renderKeywords();
-    renderPerformance();
+  syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then(() => {
+    setKeywordSyncStatus('거점키워드를 저장했어요.');
   }).catch((error) => {
     renderKeywords();
     renderPerformance();

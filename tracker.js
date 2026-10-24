@@ -833,6 +833,7 @@ aiWorkGenerate.addEventListener('click', async () => {
   const tool = currentAiTool();
   aiWorkGenerate.disabled = true;
   aiWorkCopy.disabled = true;
+  aiWorkDraft.value = '';
   aiWorkStatus.textContent = 'AI가 초안을 만들고 있어요…';
   try {
     const response = await fetch(`${keywordSyncEndpoint}/ai/generate`, {

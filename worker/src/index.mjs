@@ -119,7 +119,7 @@ async function generateAiDraft(env, data, config, profile) {
       authorization: `Bearer ${env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: env.OPENAI_MODEL || "gpt-5.5",
+      model: env.OPENAI_MODEL || "gpt-5-mini",
       store: false,
       max_output_tokens: 900,
       instructions: [
@@ -133,7 +133,12 @@ async function generateAiDraft(env, data, config, profile) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !String(payload.output_text || "").trim()) {
-    const error = new Error("AI 초안을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    console.error("OpenAI generation failed", response.status, payload?.error?.code || "", payload?.error?.message || "");
+    let message = "AI 초안을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    if (response.status === 401 || response.status === 403) message = "OpenAI API 키를 확인해 주세요.";
+    if (response.status === 429) message = "OpenAI API 사용 한도 또는 결제 상태를 확인해 주세요.";
+    if (response.status === 400) message = "OpenAI 모델 또는 요청 설정을 확인해 주세요.";
+    const error = new Error(message);
     error.status = 502;
     throw error;
   }

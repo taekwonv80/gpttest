@@ -204,7 +204,7 @@ function renderSearchVolumeTrend(keyword) {
   timing.innerHTML = '<b class="mint">타이밍</b> 월별 검색지수를 바탕으로 계절별 준비 시점을 안내합니다.';
 }
 
-function renderRankHistory(keyword) {
+function renderRankHistory(keyword, detailKeyword = keyword) {
   const chart = document.querySelector('#rank-chart-pending');
   const points = rankHistory
     .filter((item) => item.keyword === keyword?.value && Number.isInteger(item.rank))
@@ -233,7 +233,7 @@ function renderRankHistory(keyword) {
   const daysByPeriod = { '1주': 7, '1개월': 30, '3개월': 90, '전체': Infinity };
   const cutoff = Date.now() - daysByPeriod[selectedPeriod] * 24 * 60 * 60 * 1000;
   const detailPoints = rankHistory
-    .filter((item) => item.keyword === keyword?.value && Number.isInteger(item.rank) && Date.parse(item.measured_at) >= cutoff)
+    .filter((item) => item.keyword === detailKeyword?.value && Number.isInteger(item.rank) && Date.parse(item.measured_at) >= cutoff)
     .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)));
   const detail = document.querySelector('#detail-chart-pending');
   if (!detailPoints.length) {
@@ -280,7 +280,7 @@ function rankPresentation(keyword) {
 
 function renderKeywords() {
   const list = document.querySelector('#keyword-list');
-  const current = trackedKeywords.find((keyword) => keyword.value === primaryKeyword) || selectedKeywordData();
+  const current = selectedKeywordData();
   selectedKeyword = current?.value || '';
   list.innerHTML = trackedKeywords.map((keyword) => {
     const presentation = rankPresentation(keyword);
@@ -298,15 +298,16 @@ function renderKeywords() {
 }
 
 function updateKeywordHeading(keyword) {
-  const value = keyword?.value || '추적 키워드';
-  const volume = searchVolumeLabel(keyword?.volume || PENDING_RANK, keyword?.zeroVolumeDevice);
-  const presentation = rankPresentation(keyword);
+  const primary = trackedKeywords.find((item) => item.value === primaryKeyword) || keyword;
+  const value = primary?.value || '추적 키워드';
+  const volume = searchVolumeLabel(primary?.volume || PENDING_RANK, primary?.zeroVolumeDevice);
+  const presentation = rankPresentation(primary);
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
   document.querySelector('.rank-title strong').textContent = presentation.partial ? '미발견' : presentation.value ?? PENDING_RANK;
   document.querySelector('.rank-title span').textContent = presentation.partial ? presentation.label : presentation.suffix;
   document.querySelector('.rank-title span').hidden = !presentation.measured || (!presentation.partial && !presentation.suffix);
   document.querySelector('.rank-title em').textContent = presentation.partial ? '100위 밖으로 확정하지 않음' : presentation.measured ? '최근 측정 결과' : '순위(측정대기)';
-  document.querySelector('.rank-time').textContent = keyword?.measuredAt ? `최근 측정 · ${keyword.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
+  document.querySelector('.rank-time').textContent = primary?.measuredAt ? `최근 측정 · ${primary.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
   document.querySelector('.panel-heading > strong').innerHTML = presentation.measured
     ? presentation.partial
       ? `${presentation.label} <small>100위 밖으로 확정하지 않음</small>`
@@ -314,7 +315,7 @@ function updateKeywordHeading(keyword) {
     : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
   if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
-  renderRankHistory(keyword);
+  renderRankHistory(primary, keyword);
   renderSearchVolumeTrend(keyword?.value);
 }
 
@@ -385,20 +386,16 @@ async function loadServerTracker() {
 function selectPrimaryKeyword(value) {
   if (!trackedKeywords.some((keyword) => keyword.value === value)) return;
   const previousPrimary = primaryKeyword;
-  const previousSelected = selectedKeyword;
   primaryKeyword = value;
-  selectedKeyword = value;
   localStorage.setItem(PRIMARY_KEYWORD_STORAGE, value);
   renderKeywords();
   renderPerformance();
   syncKeywords(trackedKeywords.map((keyword) => keyword.value), value).then((result) => {
     applyConfiguredKeywords(result.keywords, result);
-    selectedKeyword = value;
     renderKeywords();
     renderPerformance();
   }).catch((error) => {
     primaryKeyword = previousPrimary;
-    selectedKeyword = previousSelected;
     if (previousPrimary) localStorage.setItem(PRIMARY_KEYWORD_STORAGE, previousPrimary);
     else localStorage.removeItem(PRIMARY_KEYWORD_STORAGE);
     renderKeywords();
@@ -408,9 +405,15 @@ function selectPrimaryKeyword(value) {
 }
 
 document.querySelector('#keyword-list').addEventListener('click', (event) => {
-  const value = event.target.closest('[data-primary-keyword]')?.dataset.primaryKeyword
-    || event.target.closest('[data-keyword]')?.dataset.keyword;
-  if (value) selectPrimaryKeyword(value);
+  const star = event.target.closest('[data-primary-keyword]');
+  if (star) {
+    selectPrimaryKeyword(star.dataset.primaryKeyword);
+    return;
+  }
+  const row = event.target.closest('[data-keyword]');
+  if (!row) return;
+  selectedKeyword = row.dataset.keyword;
+  renderKeywords();
 });
 
 const keywordDialog = document.querySelector('#keyword-dialog');
@@ -490,7 +493,9 @@ function readStoredValue(key, fallback) {
 
 function activityLogs() {
   const saved = readStoredValue(ACTIVITY_LOG_STORAGE, []);
-  return Array.isArray(saved) ? saved.filter((item) => typeof item?.text === 'string') : [];
+  return Array.isArray(saved) ? saved
+    .filter((item) => typeof item?.text === 'string')
+    .map((item) => ({ ...item, recordedAt: item.recordedAt || item.recorded_at || '' })) : [];
 }
 
 function renderActivityLogs() {
@@ -679,18 +684,22 @@ function renderPerformance() {
   renderPerformanceActivityList(activities);
 }
 
-function addLog(value = '') {
-  const text = value || logInput.value.trim() || selectedQuickLog;
+function addLog(value = '', kind = 'note') {
+  const text = typeof value === 'string' ? value || logInput.value.trim() || selectedQuickLog : logInput.value.trim() || selectedQuickLog;
   if (!text) { logInput.focus(); return false; }
   const logs = activityLogs();
   logs.unshift({ text, recordedAt: new Date().toISOString() });
   localStorage.setItem(ACTIVITY_LOG_STORAGE, JSON.stringify(logs.slice(0, 100)));
   renderActivityLogs();
+  void syncActivity(kind, text).catch((error) => {
+    console.warn(error.message);
+    document.querySelector('.community-note').textContent = '기록은 이 브라우저에 저장됐어요. 서버 동기화를 다시 시도해 주세요.';
+  });
   logInput.value = ''; selectedQuickLog = '';
   document.querySelectorAll('.log-chips button').forEach((item) => item.classList.remove('selected'));
   return true;
 }
-document.querySelector('#log-submit').addEventListener('click', addLog);
+document.querySelector('#log-submit').addEventListener('click', () => addLog());
 logInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') addLog(); });
 
 function koreaYmdParts() {
@@ -946,8 +955,7 @@ document.querySelector('#mission-done').addEventListener('click', () => {
   };
   localStorage.setItem(MISSION_STATE_STORAGE, JSON.stringify(allStates));
   const activity = `오늘 할 일 완료 · ${activeMission.name}`;
-  addLog(activity);
-  void syncActivity('mission_complete', activity).catch((error) => console.warn(error.message));
+  addLog(activity, 'mission_complete');
   renderMissionState();
 });
 
@@ -1038,8 +1046,7 @@ aiWorkGenerate.addEventListener('click', async () => {
     aiWorkStatus.textContent = `${tool} 초안을 만들었어요. 확인한 뒤 복사해 사용해 보세요.`;
     saveDescriptionDraft();
     const activity = `AI 작업실 · ${tool} 초안 만들기`;
-    addLog(activity);
-    void syncActivity('note', activity).catch((error) => console.warn(error.message));
+    addLog(activity, 'note');
   } catch (error) {
     aiWorkStatus.textContent = error.message || 'AI 초안을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
   } finally {

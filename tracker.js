@@ -121,7 +121,7 @@ function renderSearchVolumeTrend(keyword) {
   if (!bars || !months) return;
 
   const today = new Date();
-  const dates = Array.from({ length: 12 }, (_, index) => new Date(today.getFullYear(), today.getMonth() - 11 + index, 1));
+  const dates = Array.from({ length: 12 }, (_, index) => new Date(today.getFullYear(), index, 1));
   const latestByMonth = new Map();
   rankHistory
     .filter((item) => item.keyword === keyword && Number.isFinite(numericSearchVolume(item)))
@@ -129,26 +129,28 @@ function renderSearchVolumeTrend(keyword) {
     .forEach((item) => latestByMonth.set(String(item.measured_at).slice(0, 7), numericSearchVolume(item)));
 
   const values = dates.map((date) => latestByMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`) ?? null);
-  const maximum = Math.max(...values.filter((value) => value !== null), 1);
-  const currentIndex = dates.length - 1;
+  const measuredValues = values.filter((value) => value !== null);
+  const maximum = Math.max(...measuredValues, 1);
+  const peakValue = measuredValues.length ? Math.max(...measuredValues) : null;
+  const peakIndex = peakValue === null ? -1 : values.indexOf(peakValue);
+  const currentIndex = today.getMonth();
   bars.innerHTML = values.map((value, index) => {
-    const state = value === null ? 'volume-bar--pending' : index === currentIndex ? 'volume-bar--current' : 'volume-bar--measured';
+    const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
+    if (index === peakIndex) states.push('volume-bar--peak');
+    if (index === currentIndex) states.push('volume-bar--current');
     const height = value === null ? '' : ` style="height:${Math.max(12, Math.round((value / maximum) * 100))}%"`;
     const label = value === null ? '검색량 미수집' : `월 ${value.toLocaleString('ko-KR')}회`;
-    return `<i class="${state}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
+    return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');
   months.innerHTML = dates.map((date, index) => `<span${index === currentIndex ? '><b>' : '>'}${date.getMonth() + 1}월${index === currentIndex ? '</b>' : ''}</span>`).join('');
 
-  const measuredMonths = values.filter((value) => value !== null);
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');
-  if (!measuredMonths.length) {
+  if (!measuredValues.length) {
     peak.innerHTML = '<b>피크</b> 월별 검색량 수집 후 표시됩니다.';
     timing.innerHTML = '<b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색량을 기준으로 안내합니다.';
     return;
   }
-  const peakValue = Math.max(...measuredMonths);
-  const peakIndex = values.indexOf(peakValue);
   peak.innerHTML = `<b>피크</b> 현재 기록상 ${dates[peakIndex].getMonth() + 1}월이 가장 높아요. (월 ${peakValue.toLocaleString('ko-KR')}회)`;
   timing.innerHTML = '<b class="mint">타이밍</b> 월별 기록이 쌓이면 계절별 준비 시점을 안내합니다.';
 }

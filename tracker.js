@@ -13,6 +13,9 @@ const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume
 const storedKeywords = JSON.parse(localStorage.getItem(KEYWORD_STORAGE_KEY) || 'null');
 let keywordSyncEndpoint = '';
 let rankHistory = [];
+let placeDailyRows = [];
+let performancePeriod = 'recent30';
+let showAllPerformanceActivities = false;
 let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
 let selectedPeriod = '1주';
@@ -317,16 +320,18 @@ function updateKeywordHeading(keyword) {
 
 async function loadServerTracker() {
   try {
-    const [configResponse, storeProfileResponse, historyResponse, syncResponse] = await Promise.all([
+    const [configResponse, storeProfileResponse, historyResponse, syncResponse, placeDailyResponse] = await Promise.all([
       fetch('data/tracker_config.json', { cache: 'no-store' }),
       fetch('data/store_profile.json', { cache: 'no-store' }),
       fetch('data/rank_history.json', { cache: 'no-store' }),
       fetch('data/keyword_sync.json', { cache: 'no-store' }),
+      fetch('data/naver_place_daily.csv', { cache: 'no-store' }),
     ]);
     let config = configResponse.ok ? await configResponse.json() : {};
     const storeProfile = storeProfileResponse.ok ? await storeProfileResponse.json() : {};
     const history = historyResponse.ok ? await historyResponse.json() : {};
     rankHistory = Array.isArray(history.measurements) ? history.measurements : [];
+    placeDailyRows = placeDailyResponse.ok ? parsePlaceDailyCsv(await placeDailyResponse.text()) : [];
     const sync = syncResponse.ok ? await syncResponse.json() : {};
     keywordSyncEndpoint = typeof sync.endpoint === 'string' ? sync.endpoint.replace(/\/$/, '') : '';
     void loadSyncedActivities();
@@ -368,6 +373,7 @@ async function loadServerTracker() {
     });
     saveKeywords();
     renderKeywords();
+    renderPerformance();
     setKeywordSyncStatus(keywordSyncEndpoint
       ? '키워드 파일과 동기화됨 · 등록 또는 삭제하면 바로 순위 측정을 요청합니다.'
       : '자동동기화 서버를 연결하면 등록·삭제가 파일에 저장됩니다.');
@@ -490,6 +496,182 @@ function renderActivityLogs() {
     return row;
   }));
   logCount.textContent = String(logs.length);
+  renderPerformance();
+}
+
+function performanceDateParts(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  const values = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date).reduce((all, part) => ({ ...all, [part.type]: part.value }), {});
+  return { date, year: Number(values.year), month: Number(values.month), day: Number(values.day), hour: Number(values.hour) };
+}
+
+function performanceDateKey(value) {
+  const parts = performanceDateParts(value);
+  return parts ? `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}` : '';
+}
+
+function performanceDateLabel(value) {
+  const parts = performanceDateParts(value);
+  return parts ? `${parts.month}월 ${parts.day}일` : '-';
+}
+
+function parsePlaceDailyCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === '"' && quoted && text[index + 1] === '"') { cell += char; index += 1; }
+    else if (char === '"') quoted = !quoted;
+    else if (char === ',' && !quoted) { row.push(cell); cell = ''; }
+    else if ((char === '\n' || char === '\r') && !quoted) {
+      if (char === '\r' && text[index + 1] === '\n') index += 1;
+      row.push(cell); cell = '';
+      if (row.length > 1) rows.push(row);
+      row = [];
+    } else cell += char;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  const [headers = [], ...records] = rows;
+  return records.map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ''])));
+}
+
+function performanceRange() {
+  const now = new Date();
+  if (performancePeriod === 'previous-month') {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    return { start, end, label: '지난달' };
+  }
+  if (performancePeriod === 'current-month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start, end, label: '이번 달' };
+  }
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 29);
+  start.setHours(0, 0, 0, 0);
+  return { start, end, label: '최근 30일' };
+}
+
+function performanceRanks(start, end) {
+  const keyword = primaryKeyword || trackedKeywords[0]?.value || '';
+  const byDay = new Map();
+  rankHistory
+    .filter((item) => item.keyword === keyword && Number.isInteger(item.rank))
+    .filter((item) => {
+      const time = Date.parse(item.measured_at);
+      return Number.isFinite(time) && time >= start.getTime() && time <= end.getTime();
+    })
+    .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)))
+    .forEach((item) => byDay.set(performanceDateKey(item.measured_at), item));
+  return { keyword, points: [...byDay.values()] };
+}
+
+function performanceActivities(start, end) {
+  return activityLogs()
+    .filter((item) => {
+      const time = Date.parse(item.recordedAt);
+      return Number.isFinite(time) && time >= start.getTime() && time <= end.getTime();
+    })
+    .sort((left, right) => String(right.recordedAt).localeCompare(String(left.recordedAt)));
+}
+
+function activitySource(item) {
+  if (item.text.startsWith('AI 작업실 ·')) return 'AI 작업실에서';
+  if (item.text.startsWith('오늘 할 일 완료')) return '했어요에서';
+  return '오늘 기록에서';
+}
+
+function renderPerformanceChart(points, activities, start, end) {
+  const chart = document.querySelector('#performance-rank-chart');
+  const note = document.querySelector('#performance-chart-note');
+  if (!chart || !note) return;
+  if (!points.length) {
+    chart.innerHTML = '<div class="performance-empty">선택한 기간의 측정된 순위가 없어요.</div>';
+    note.textContent = '순위를 측정하면 기록한 일과 함께 변화가 표시됩니다.';
+    return;
+  }
+  const width = 540;
+  const height = 206;
+  const left = 38;
+  const right = 14;
+  const top = 16;
+  const bottom = 30;
+  const ranks = points.map((point) => point.rank);
+  const maxRank = Math.max(30, Math.ceil(Math.max(...ranks) / 10) * 10);
+  const y = (rank) => top + ((height - top - bottom) * (rank - 1)) / Math.max(maxRank - 1, 1);
+  const x = (value) => left + ((width - left - right) * (new Date(value).getTime() - start.getTime())) / Math.max(end.getTime() - start.getTime(), 1);
+  const tickValues = [1, Math.max(10, Math.round(maxRank / 3 / 10) * 10), Math.max(20, Math.round(maxRank * 2 / 3 / 10) * 10), maxRank]
+    .filter((value, index, all) => all.indexOf(value) === index)
+    .sort((a, b) => a - b);
+  const grid = tickValues.map((rank) => `<line class="grid-line" x1="${left}" y1="${y(rank)}" x2="${width - right}" y2="${y(rank)}"/><text x="0" y="${y(rank) + 4}">${rank}위</text>`).join('');
+  const line = points.map((point) => `${x(point.measured_at).toFixed(1)},${y(point.rank).toFixed(1)}`).join(' ');
+  const dots = points.map((point) => `<circle class="rank-dot" cx="${x(point.measured_at).toFixed(1)}" cy="${y(point.rank).toFixed(1)}" r="3"/>`).join('');
+  const eventMarks = activities.slice(0, 6).map((item, index) => {
+    const pointX = x(item.recordedAt).toFixed(1);
+    const pointY = height - bottom - 6;
+    return `<line class="event-line" x1="${pointX}" y1="${pointY - 34}" x2="${pointX}" y2="${pointY - 12}"/><circle class="event-dot" cx="${pointX}" cy="${pointY}" r="10"/><text class="event-label" x="${pointX}" y="${pointY + 3}">${index + 1}</text>`;
+  }).join('');
+  const middle = new Date((start.getTime() + end.getTime()) / 2);
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${points.length}일 순위와 활동 기록"><g>${grid}</g><polyline class="rank-line" points="${line}"/>${dots}<g>${eventMarks}</g><text class="date-label" x="${left}" y="${height - 3}">${performanceDateLabel(start)}</text><text class="date-label" x="${(width / 2).toFixed(1)}" y="${height - 3}">${performanceDateLabel(middle)}</text><text class="date-label" x="${width - right}" y="${height - 3}">${performanceDateLabel(end)}</text></svg>`;
+  note.textContent = `낮 ${performanceDateParts(points.at(-1).measured_at)?.hour || ''}시 측정값 · 번호는 아래 기록과 같아요`;
+}
+
+function renderPerformanceActivityList(activities) {
+  const list = document.querySelector('#performance-activity-list');
+  const toggle = document.querySelector('#performance-activity-toggle');
+  if (!list || !toggle) return;
+  const visible = showAllPerformanceActivities ? activities : activities.slice(0, 5);
+  list.replaceChildren(...visible.map((item, index) => {
+    const row = document.createElement('li');
+    const number = document.createElement('i');
+    number.className = 'performance-activity-number';
+    number.textContent = String(index + 1);
+    const title = document.createElement('b');
+    title.textContent = item.text;
+    const date = document.createElement('span');
+    date.textContent = `${performanceDateLabel(item.recordedAt)} · ${activitySource(item)}`;
+    row.append(number, title, date);
+    return row;
+  }));
+  if (!activities.length) {
+    const empty = document.createElement('li');
+    empty.textContent = '이 기간에 기록한 일이 아직 없어요.';
+    list.replaceChildren(empty);
+  }
+  toggle.hidden = activities.length <= 5;
+  toggle.textContent = showAllPerformanceActivities ? '접기 ︿' : `이 기간 한 일 모두 보기 (${activities.length}건) ︿`;
+}
+
+function renderPerformance() {
+  const page = document.querySelector('#performance');
+  if (!page) return;
+  const { start, end, label } = performanceRange();
+  const { keyword, points } = performanceRanks(start, end);
+  const activities = performanceActivities(start, end);
+  const average = points.length ? points.reduce((sum, point) => sum + point.rank, 0) / points.length : null;
+  const reviewRows = placeDailyRows.filter((row) => {
+    const date = new Date(`${row.collected_date}T12:00:00+09:00`);
+    return Number.isFinite(date.getTime()) && date >= start && date <= end;
+  });
+  const reviewValues = reviewRows.map((row) => Number(row.reviews_daily_delta)).filter((value) => Number.isFinite(value));
+  const reviews = reviewValues.length ? reviewValues.reduce((sum, value) => sum + value, 0) : null;
+  document.querySelector('#performance-range-copy').textContent = `${label} · ${performanceDateLabel(start)} ~ ${performanceDateLabel(end)}`;
+  document.querySelector('#performance-average').textContent = average === null ? '-' : `${average.toFixed(1)}위`;
+  document.querySelector('#performance-reviews').textContent = reviews === null ? '집계 대기' : `${reviews}건`;
+  document.querySelector('#performance-review-note').textContent = reviews === null ? '해당 기간의 리뷰 수집 자료 없음' : '';
+  document.querySelector('#performance-keyword-copy').textContent = keyword ? `거점키워드 「${keyword}」 순위 · 선이 위로 갈수록 좋아요 (1위가 맨 위)` : '거점키워드를 등록하면 순위를 표시해요.';
+  document.querySelector('#performance-activity-period').textContent = label;
+  renderPerformanceChart(points, activities, start, end);
+  renderPerformanceActivityList(activities);
 }
 
 function addLog(value = '') {
@@ -850,6 +1032,9 @@ aiWorkGenerate.addEventListener('click', async () => {
     aiWorkCopy.disabled = false;
     aiWorkStatus.textContent = `${tool} 초안을 만들었어요. 확인한 뒤 복사해 사용해 보세요.`;
     saveDescriptionDraft();
+    const activity = `AI 작업실 · ${tool} 초안 만들기`;
+    addLog(activity);
+    void syncActivity('note', activity).catch((error) => console.warn(error.message));
   } catch (error) {
     aiWorkStatus.textContent = error.message || 'AI 초안을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
   } finally {
@@ -875,8 +1060,31 @@ if (typeof storedDraft.draft === 'string' && storedDraft.draft) {
   aiWorkDraft.value = storedDraft.draft;
   aiWorkCopy.disabled = false;
 }
+
+document.querySelector('#performance-period').addEventListener('change', (event) => {
+  performancePeriod = event.target.value;
+  showAllPerformanceActivities = false;
+  renderPerformance();
+});
+
+document.querySelector('#performance-activity-toggle').addEventListener('click', () => {
+  showAllPerformanceActivities = !showAllPerformanceActivities;
+  renderPerformance();
+});
+
+function renderPageRoute() {
+  const performanceView = window.location.hash === '#performance';
+  document.body.classList.toggle('performance-view', performanceView);
+  if (performanceView) {
+    renderPerformance();
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  }
+}
+
+window.addEventListener('hashchange', renderPageRoute);
 renderActivityLogs();
 renderMissionState();
 
 renderKeywords();
 loadServerTracker();
+renderPageRoute();

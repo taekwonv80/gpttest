@@ -130,6 +130,14 @@
 
     <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">0</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"></ul><p class="community-note">동료 사장님 활동 통계는 연결 후 표시됩니다.</p></section>
 
+    <section class="performance-page" id="performance" aria-labelledby="performance-title">
+      <a class="performance-back" href="#main-keyword">‹ 은경이매장비서</a>
+      <div class="performance-heading"><div><h1 id="performance-title">우리 가게 성과</h1><p id="performance-range-copy">최근 30일</p></div><label>기간 <select id="performance-period" aria-label="성과 조회 기간"><option value="recent30" selected>최근 30일</option><option value="previous-month">지난달</option><option value="current-month">이번 달</option></select></label></div>
+      <div class="performance-summary"><article><b>평균 순위</b><strong id="performance-average">-</strong></article><article><b>새 리뷰</b><strong id="performance-reviews">집계 대기</strong><em id="performance-review-note"></em></article></div>
+      <section class="performance-card performance-rank-card"><div class="performance-card-heading"><div><h2>순위와 내가 한 일</h2><p id="performance-keyword-copy">순위 이력을 불러오는 중이에요.</p></div><a href="#main-keyword">키워드별 ›</a></div><div class="performance-rank-chart" id="performance-rank-chart" aria-live="polite"></div><p class="performance-chart-note" id="performance-chart-note">순위와 기록이 쌓이면 함께 표시됩니다.</p></section>
+      <section class="performance-card performance-activity-card"><h2><span id="performance-activity-period">최근 30일</span> 한 일</h2><p>「오늘 기록」, 「했어요」, AI 작업실에서 한 일을 모았어요</p><ol id="performance-activity-list"></ol><button type="button" id="performance-activity-toggle" hidden></button></section>
+    </section>
+
     <p class="more-label">여기까지가 오늘 볼 것 · 아래는 필요할 때만</p><section class="more-links" id="reports"><h2>은경이매장비서 자세히 보기</h2><a href="#weekly"><b>주간 리포트</b><span>실제 데이터가 쌓인 뒤 발행</span>›</a><a href="#rival"><b>라이벌 리포트</b><span>측정 설정 후 제공</span>›</a><a href="#review"><b>리뷰 리포트</b><span>연결 후 제공</span>›</a><a href="#performance"><b>우리 가게 성과</b><span>수집된 순위·리뷰·저장과 내가 한 일</span>›</a><a href="#season"><b>대목 고르기</b><span>달력에서 기회 날짜와 준비 순서</span>›</a></section>
   </main>
   <aside class="side-nav"><strong>은경이매장비서<br><small>은경이네</small></strong><a href="#main-keyword">오늘의 순위</a><a href="#mission">오늘 할 일</a><a href="#reports">주간 리포트</a><a href="#performance">우리 가게 성과</a><a href="#season">대목 고르기</a></aside>

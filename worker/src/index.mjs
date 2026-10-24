@@ -56,9 +56,32 @@ async function github(env, path, init = {}) {
 }
 
 async function readTrackerConfig(env) {
-  const response = await github(env, `/repos/${env.GITHUB_REPOSITORY}/contents/data/tracker_config.json`);
+  return readRepositoryJson(env, "data/tracker_config.json");
+}
+
+async function readRepositoryJson(env, path) {
+  const response = await github(env, `/repos/${env.GITHUB_REPOSITORY}/contents/${path}`);
   const file = await response.json();
   return { config: JSON.parse(decodeBase64(file.content)), sha: file.sha };
+}
+
+async function writeRepositoryJson(env, path, value, sha, message) {
+  await github(env, `/repos/${env.GITHUB_REPOSITORY}/contents/${path}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      message,
+      content: encodeBase64(`${JSON.stringify(value, null, 2)}\n`),
+      sha,
+    }),
+  });
+}
+
+function normalizeActivity(value) {
+  const text = String(value?.text || "").trim().replace(/\s+/g, " ");
+  const kind = String(value?.kind || "note");
+  if (!text || text.length > 300 || !["mission_complete", "feedback", "note"].includes(kind)) return null;
+  return { text, kind };
 }
 
 async function dispatchMeasurement(env) {
@@ -73,9 +96,23 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(env, request) });
-    if (url.pathname !== "/keywords") return json({ error: "Not found" }, env, 404, request);
+    if (!["/keywords", "/activity"].includes(url.pathname)) return json({ error: "Not found" }, env, 404, request);
 
     try {
+      if (url.pathname === "/activity") {
+        const { config, sha } = await readRepositoryJson(env, "data/activity_logs.json");
+        const logs = Array.isArray(config.logs) ? config.logs : [];
+        if (request.method === "GET") return json({ logs }, env, 200, request);
+        if (request.method !== "POST") return json({ error: "Method not allowed" }, env, 405, request);
+        if (request.headers.get("x-tracker-key") !== env.ADMIN_KEY) return json({ error: "동기화키가 맞지 않습니다." }, env, 401, request);
+
+        const activity = normalizeActivity(await request.json());
+        if (!activity) return json({ error: "기록 내용을 확인해 주세요." }, env, 400, request);
+        const nextLogs = [{ id: crypto.randomUUID(), recorded_at: new Date().toISOString(), ...activity }, ...logs].slice(0, 200);
+        await writeRepositoryJson(env, "data/activity_logs.json", { schema_version: 1, logs: nextLogs }, sha, "data: add activity log");
+        return json({ logs: nextLogs }, env, 200, request);
+      }
+
       if (request.method === "GET") {
         const { config } = await readTrackerConfig(env);
         return json({ keywords: config.keywords || [], primaryKeyword: config.primary_keyword, keywordAddedAt: config.keyword_added_at || {} }, env, 200, request);
@@ -97,15 +134,7 @@ export default {
       const previousDates = config.keyword_added_at || {};
       const now = new Date().toISOString();
       config.keyword_added_at = Object.fromEntries(keywords.map((keyword) => [keyword, previousDates[keyword] || now]));
-      await github(env, `/repos/${env.GITHUB_REPOSITORY}/contents/data/tracker_config.json`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          message: "data: update tracked keywords",
-          content: encodeBase64(`${JSON.stringify(config, null, 2)}\n`),
-          sha,
-        }),
-      });
+      await writeRepositoryJson(env, "data/tracker_config.json", config, sha, "data: update tracked keywords");
       await dispatchMeasurement(env);
       return json({ keywords, primaryKeyword: config.primary_keyword, keywordAddedAt: config.keyword_added_at, measurementQueued: true }, env, 200, request);
     } catch (error) {

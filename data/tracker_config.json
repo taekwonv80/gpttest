@@ -32,5 +32,17 @@
   "schedule": {
     "timezone": "Asia/Seoul",
     "daily_measurement_time": "09:15"
+  },
+  "season_timeline": {
+    "industry_label": "횟집·해산물",
+    "praise": true,
+    "seasons": [
+      {
+        "name": "겨울 방어·대게 시즌",
+        "start_date": "2026-12-05",
+        "d_minus": 45,
+        "desc": "겨울 방어와 대게가 제철로 살이 올라 찾는 손님이 늘어요."
+      }
+    ]
   }
 }

@@ -1,6 +1,10 @@
 const KEYWORD_STORAGE_KEY = 'taekine-tracked-keywords';
 const KEYWORD_SYNC_KEY_STORAGE = 'taekine-keyword-sync-key';
 const PRIMARY_KEYWORD_STORAGE = 'taekine-primary-keyword';
+const MISSION_STATE_STORAGE = 'taekine-mission-state';
+const ACTIVITY_LOG_STORAGE = 'taekine-activity-log';
+const DESCRIPTION_DRAFT_STORAGE = 'taekine-description-draft';
+const SEASON_STAGE_MODULE_URL = 'https://ai.euncoach.com/components/season-dashboard-stages.generated.js';
 const PENDING_VOLUME = '검색량(측정대기)';
 const PENDING_RANK = '-';
 const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대기)']);
@@ -11,6 +15,8 @@ let rankHistory = [];
 let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
 let selectedPeriod = '1주';
+let placeName = '은경이네';
+let activeMission = null;
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -27,6 +33,14 @@ function saveKeywords() {
 function setKeywordSyncStatus(message) {
   const status = document.querySelector('#keyword-sync-status');
   if (status) status.textContent = message;
+}
+
+function trackerAdminKey() {
+  const saved = sessionStorage.getItem(KEYWORD_SYNC_KEY_STORAGE);
+  const adminKey = saved || window.prompt('동기화키를 입력해 주세요.');
+  if (!adminKey) throw new Error('동기화키 입력이 취소되었습니다.');
+  sessionStorage.setItem(KEYWORD_SYNC_KEY_STORAGE, adminKey);
+  return adminKey;
 }
 
 function applyConfiguredKeywords(keywords, metadata = {}) {
@@ -53,8 +67,7 @@ function applyConfiguredKeywords(keywords, metadata = {}) {
 
 async function syncKeywords(keywords, primary = primaryKeyword) {
   if (!keywordSyncEndpoint) throw new Error('키워드 동기화 서버가 아직 연결되지 않았습니다.');
-  const adminKey = sessionStorage.getItem(KEYWORD_SYNC_KEY_STORAGE) || window.prompt('키워드 동기화키를 입력해 주세요.');
-  if (!adminKey) throw new Error('동기화키 입력이 취소되었습니다.');
+  const adminKey = trackerAdminKey();
   const response = await fetch(`${keywordSyncEndpoint}/keywords`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-tracker-key': adminKey },
@@ -65,8 +78,36 @@ async function syncKeywords(keywords, primary = primaryKeyword) {
     if (response.status === 401) sessionStorage.removeItem(KEYWORD_SYNC_KEY_STORAGE);
     throw new Error(payload.error || '키워드 파일 저장에 실패했습니다.');
   }
-  sessionStorage.setItem(KEYWORD_SYNC_KEY_STORAGE, adminKey);
   return payload;
+}
+
+async function syncActivity(kind, text) {
+  if (!keywordSyncEndpoint) return;
+  const response = await fetch(`${keywordSyncEndpoint}/activity`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-tracker-key': trackerAdminKey() },
+    body: JSON.stringify({ kind, text }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !Array.isArray(payload.logs)) {
+    if (response.status === 401) sessionStorage.removeItem(KEYWORD_SYNC_KEY_STORAGE);
+    throw new Error(payload.error || '활동 기록 저장에 실패했습니다.');
+  }
+  localStorage.setItem(ACTIVITY_LOG_STORAGE, JSON.stringify(payload.logs));
+  renderActivityLogs();
+}
+
+async function loadSyncedActivities() {
+  if (!keywordSyncEndpoint) return;
+  try {
+    const response = await fetch(`${keywordSyncEndpoint}/activity`, { cache: 'no-store' });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(payload.logs)) return;
+    localStorage.setItem(ACTIVITY_LOG_STORAGE, JSON.stringify(payload.logs));
+    renderActivityLogs();
+  } catch {
+    // The dashboard remains usable with its most recently stored activity log.
+  }
 }
 
 function isNewKeyword(value) {
@@ -284,6 +325,7 @@ async function loadServerTracker() {
     rankHistory = Array.isArray(history.measurements) ? history.measurements : [];
     const sync = syncResponse.ok ? await syncResponse.json() : {};
     keywordSyncEndpoint = typeof sync.endpoint === 'string' ? sync.endpoint.replace(/\/$/, '') : '';
+    void loadSyncedActivities();
     if (keywordSyncEndpoint) {
       try {
         const response = await fetch(`${keywordSyncEndpoint}/keywords`, { cache: 'no-store' });
@@ -294,6 +336,8 @@ async function loadServerTracker() {
       }
     }
     const configured = Array.isArray(config.keywords) ? config.keywords : [];
+    placeName = String(config.place?.name || placeName).trim() || placeName;
+    void renderSeasonMission(config.season_timeline);
     applyConfiguredKeywords(configured, config);
     const latest = {};
     for (const measurement of history.measurements || []) {
@@ -414,16 +458,6 @@ document.querySelectorAll('[data-dismiss]').forEach((button) => button.addEventL
 const guide = document.querySelector('#guide-dialog');
 document.querySelector('#guide-open').addEventListener('click', () => guide.showModal());
 
-const missionDone = document.querySelector('#mission-done');
-missionDone.addEventListener('click', () => {
-  missionDone.classList.add('done'); missionDone.textContent = '기록했어요 ✓'; missionDone.disabled = true;
-});
-
-document.querySelectorAll('[data-feedback]').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-feedback]').forEach((item) => item.classList.remove('selected'));
-  button.classList.add('selected');
-}));
-
 const seasonCheck = document.querySelector('#season-check');
 seasonCheck.addEventListener('change', () => {
   document.querySelector('#season-count').textContent = '끝낸 준비(설정대기)';
@@ -438,15 +472,223 @@ document.querySelectorAll('.log-chips button').forEach((button) => button.addEve
   document.querySelectorAll('.log-chips button').forEach((item) => item.classList.remove('selected'));
   button.classList.add('selected'); selectedQuickLog = button.textContent; logInput.value = selectedQuickLog; logInput.focus();
 }));
-function addLog() {
-  const text = logInput.value.trim() || selectedQuickLog;
-  if (!text) { logInput.focus(); return; }
-  const item = document.createElement('li'); item.textContent = text; logList.prepend(item);
-  logCount.textContent = String(logList.children.length); logInput.value = ''; selectedQuickLog = '';
+function readStoredValue(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || ''); } catch { return fallback; }
+}
+
+function activityLogs() {
+  const saved = readStoredValue(ACTIVITY_LOG_STORAGE, []);
+  return Array.isArray(saved) ? saved.filter((item) => typeof item?.text === 'string') : [];
+}
+
+function renderActivityLogs() {
+  const logs = activityLogs();
+  logList.replaceChildren(...logs.map((item) => {
+    const row = document.createElement('li');
+    row.textContent = item.text;
+    return row;
+  }));
+  logCount.textContent = String(logs.length);
+}
+
+function addLog(value = '') {
+  const text = value || logInput.value.trim() || selectedQuickLog;
+  if (!text) { logInput.focus(); return false; }
+  const logs = activityLogs();
+  logs.unshift({ text, recordedAt: new Date().toISOString() });
+  localStorage.setItem(ACTIVITY_LOG_STORAGE, JSON.stringify(logs.slice(0, 100)));
+  renderActivityLogs();
+  logInput.value = ''; selectedQuickLog = '';
   document.querySelectorAll('.log-chips button').forEach((item) => item.classList.remove('selected'));
+  return true;
 }
 document.querySelector('#log-submit').addEventListener('click', addLog);
 logInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') addLog(); });
+
+function koreaYmdParts() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  return Object.fromEntries(parts.filter(({ type }) => type !== 'literal').map(({ type, value }) => [type, value]));
+}
+
+function koreaToday() {
+  const { year, month, day } = koreaYmdParts();
+  return `${year}-${month}-${day}`;
+}
+
+function ymdToUtcDay(ymd) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || ''));
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const value = Date.UTC(Number(year), Number(month) - 1, Number(day));
+  return Number.isFinite(value) ? Math.floor(value / 86400000) : null;
+}
+
+function seasonCandidate(seasonTimeline) {
+  const timeline = seasonTimeline && typeof seasonTimeline === 'object' ? seasonTimeline : {};
+  const todayDay = ymdToUtcDay(koreaToday());
+  if (todayDay === null) return null;
+  const candidates = (Array.isArray(timeline.seasons) ? timeline.seasons : [])
+    .map((season) => {
+      const startDay = ymdToUtcDay(season.start_date || season.startDate);
+      const dMinus = Number(season.d_minus ?? season.dMinus);
+      const daysUntil = startDay === null ? NaN : startDay - todayDay;
+      return { season, startDay, dMinus, daysUntil };
+    })
+    .filter(({ dMinus, daysUntil }) => Number.isFinite(dMinus) && daysUntil >= 0 && daysUntil <= dMinus)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+  return candidates[0] || null;
+}
+
+function setMissionUnavailable(message) {
+  activeMission = null;
+  document.querySelector('#mission-title').textContent = '오늘 할 일을 준비하고 있어요';
+  document.querySelector('#mission-summary').textContent = message;
+  document.querySelector('#mission-evidence').replaceChildren();
+  document.querySelector('#mission-evidence-details').hidden = true;
+  renderMissionState();
+}
+
+// 참조 대시보드의 renderQuestCard와 같은 오늘의 안내 문구 선택 규칙.
+function missionBubbleSub(isPraise) {
+  return isPraise ? '오늘은 기록 하나만 남겨도 충분해요' : '5분이면 다음 측정과 비교할 기록이 생겨요';
+}
+
+async function renderSeasonMission(seasonTimeline) {
+  const candidate = seasonCandidate(seasonTimeline);
+  if (!candidate) {
+    setMissionUnavailable('다가오는 시즌을 설정하면 오늘 할 일을 안내합니다.');
+    return;
+  }
+  try {
+    const { buildDashboardSeasonStageTimeline } = await import(SEASON_STAGE_MODULE_URL);
+    const industryLabel = String(seasonTimeline.industry_label || seasonTimeline.industryLabel || '').trim();
+    const season = {
+      ...candidate.season,
+      dMinus: candidate.dMinus,
+      industries: candidate.season.industries || (industryLabel ? [industryLabel] : []),
+    };
+    const timeline = buildDashboardSeasonStageTimeline({
+      season,
+      daysUntil: candidate.daysUntil,
+      seasonDay: candidate.startDay,
+      industryLabel,
+    });
+    const mission = timeline?.current;
+    if (!mission) throw new Error('현재 시즌 단계를 계산하지 못했습니다.');
+
+    activeMission = {
+      id: `${season.name}:${mission.key}:${candidate.startDay}`,
+      name: mission.name,
+      aiTool: mission.aiTool || '',
+    };
+    document.querySelector('#mission-title').textContent = mission.summary;
+    document.querySelector('#mission-summary').textContent = missionBubbleSub(Boolean(seasonTimeline.praise));
+    const evidence = document.querySelector('#mission-evidence');
+    evidence.replaceChildren(...mission.bodyLines.map((line) => {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = line;
+      return paragraph;
+    }));
+    document.querySelector('#mission-evidence-details').hidden = false;
+    document.querySelector('#ai-work-open').textContent = mission.aiTool ? `AI로 ${mission.aiTool} 만들기` : 'AI 작업실 열기';
+    renderMissionState();
+  } catch (error) {
+    console.warn(error);
+    setMissionUnavailable('오늘 할 일을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.');
+  }
+}
+
+function missionState() {
+  const saved = readStoredValue(MISSION_STATE_STORAGE, {});
+  return saved && typeof saved === 'object' ? saved : {};
+}
+
+function renderMissionState() {
+  const state = missionState()[koreaToday()] || {};
+  const missionDone = document.querySelector('#mission-done');
+  const completed = Boolean(activeMission && state.completedMissionId === activeMission.id);
+  missionDone.classList.toggle('done', completed);
+  missionDone.textContent = completed ? '기록했어요 ✓' : '했어요, 기록해 주세요';
+  missionDone.disabled = !activeMission || completed;
+  document.querySelectorAll('[data-feedback]').forEach((button) => {
+    button.classList.toggle('selected', button.dataset.feedback === state.feedback);
+  });
+}
+
+document.querySelector('#mission-done').addEventListener('click', () => {
+  if (!activeMission) return;
+  const allStates = missionState();
+  const today = koreaToday();
+  allStates[today] = {
+    ...allStates[today], completedMissionId: activeMission.id, completedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(MISSION_STATE_STORAGE, JSON.stringify(allStates));
+  const activity = `오늘 할 일 완료 · ${activeMission.name}`;
+  addLog(activity);
+  void syncActivity('mission_complete', activity).catch((error) => console.warn(error.message));
+  renderMissionState();
+});
+
+document.querySelectorAll('[data-feedback]').forEach((button) => button.addEventListener('click', () => {
+  const allStates = missionState();
+  const today = koreaToday();
+  allStates[today] = { ...allStates[today], feedback: button.dataset.feedback };
+  localStorage.setItem(MISSION_STATE_STORAGE, JSON.stringify(allStates));
+  const message = button.dataset.feedback === 'good' ? '오늘 할 일 평가 · 도움됐어요' : '오늘 할 일 평가 · 도움안돼요';
+  void syncActivity('feedback', message).catch((error) => console.warn(error.message));
+  renderMissionState();
+}));
+
+const aiWorkDialog = document.querySelector('#ai-work-dialog');
+const aiWorkInput = document.querySelector('#ai-work-input');
+const aiWorkDraft = document.querySelector('#ai-work-draft');
+const aiWorkStatus = document.querySelector('#ai-work-status');
+const aiWorkCopy = document.querySelector('#ai-work-copy');
+
+function createDescriptionDraft(focus) {
+  const detail = focus || '대표 메뉴와 편안한 방문 경험';
+  return `${placeName}은 ${detail}을(를) 찾는 분들을 위해 정성껏 준비한 매장입니다.\n\n방문 전 궁금한 점은 편하게 문의해 주세요. 가족·친구·동료와 함께 여유롭게 식사하실 수 있도록 친절하게 안내해 드리겠습니다.`;
+}
+
+function saveDescriptionDraft() {
+  localStorage.setItem(DESCRIPTION_DRAFT_STORAGE, JSON.stringify({
+    focus: aiWorkInput.value.trim(), draft: aiWorkDraft.value, createdAt: new Date().toISOString(),
+  }));
+}
+
+document.querySelector('#ai-work-open').addEventListener('click', () => {
+  aiWorkDialog.showModal();
+  aiWorkInput.focus();
+});
+
+document.querySelector('#ai-work-generate').addEventListener('click', () => {
+  aiWorkDraft.value = createDescriptionDraft(aiWorkInput.value.trim());
+  aiWorkCopy.disabled = false;
+  aiWorkStatus.textContent = '상세설명 초안을 만들었어요. 복사해서 네이버 플레이스에 붙여 넣어 보세요.';
+  saveDescriptionDraft();
+});
+
+aiWorkCopy.addEventListener('click', async () => {
+  if (!aiWorkDraft.value) return;
+  try {
+    await navigator.clipboard.writeText(aiWorkDraft.value);
+  } catch {
+    aiWorkDraft.select();
+    document.execCommand('copy');
+  }
+  aiWorkStatus.textContent = '초안을 복사했어요.';
+});
+
+const storedDraft = readStoredValue(DESCRIPTION_DRAFT_STORAGE, {});
+if (typeof storedDraft.focus === 'string') aiWorkInput.value = storedDraft.focus;
+if (typeof storedDraft.draft === 'string' && storedDraft.draft) {
+  aiWorkDraft.value = storedDraft.draft;
+  aiWorkCopy.disabled = false;
+}
+renderActivityLogs();
+renderMissionState();
 
 renderKeywords();
 loadServerTracker();

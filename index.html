@@ -34,6 +34,36 @@
     .bars i.volume-bar--peak { background: var(--blue); }
     .bars i.volume-bar--current { border: 2px solid var(--ink); }
     .months small { display: block; font-size: 8px; line-height: 1; }
+    .mission-card {
+      margin-top: 14px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+    .mission-card h2 { margin: 8px 0 7px; font-size: 20px; letter-spacing: -1px; }
+    .mission-card > p:not(.section-label) { font-size: 12px; line-height: 1.55; }
+    .mission-card details {
+      margin-top: 14px;
+      padding: 12px 0;
+      border-top: 1px solid #e5eaf0;
+      border-bottom: 1px solid #e5eaf0;
+    }
+    .mission-card summary { color: #42546a; }
+    .evidence { margin: 10px 0 0; font-size: 11px; }
+    .mission-actions { margin-top: 8px; }
+    .mission-actions a, .mission-actions button { padding: 9px 12px; border-radius: 8px; }
+    .mission-actions .ai-work-button { border: 0; background: #e8f0ff; color: var(--blue); }
+    .mission-actions button.done { background: #009d6c; }
+    .feedback { margin-top: 14px; }
+    #ai-work-dialog { width: min(460px, calc(100% - 32px)); }
+    #ai-work-dialog label { display: block; margin: 14px 0 6px; color: #4d6075; font-size: 12px; font-weight: 800; }
+    #ai-work-input, #ai-work-draft { width: 100%; padding: 10px; border: 1px solid #d7e0e8; border-radius: 8px; font: inherit; font-size: 13px; }
+    #ai-work-draft { min-height: 150px; margin-top: 12px; resize: vertical; line-height: 1.65; }
+    .ai-work-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .ai-work-actions button { padding: 10px 12px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .ai-work-actions button:last-child { background: #edf2f7; color: #42546a; }
+    #ai-work-status { min-height: 18px; margin: 10px 0 0; color: #66778b; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -65,9 +95,9 @@
     <section class="today-title"><div><p>은경이매장비서 · 오늘의 대시보드</p><h1>사장님, 오늘도 애쓰고 계시네요</h1></div><button type="button" class="text-button" id="guide-open">사용법 보기</button></section>
 
     <section class="mission-card" id="mission">
-      <p class="section-label">오늘 할 일</p><h2>상세설명 보완하기</h2><p>실제 분석 데이터가 쌓이면 방문 직전 손님의 망설임을 줄일 개선점을 안내합니다.</p>
-      <details><summary>근거 보기 <span>자세히</span></summary><p class="evidence">최근 검색어에서 메뉴·주차·대표 서비스에 대한 질문이 반복됐어요. 첫 문단에 핵심 정보를 먼저 적어보세요.</p></details>
-      <div class="mission-actions"><a href="#ai-work">AI로 상세설명 만들기</a><button type="button" id="mission-done">했어요, 기록해 주세요</button></div>
+      <p class="section-label">오늘 할 일</p><h2 id="mission-title">오늘 할 일을 준비하고 있어요</h2><p id="mission-summary">시즌 정보를 확인하는 중입니다.</p>
+      <details id="mission-evidence-details" open><summary>근거 보기 <span>자세히</span></summary><div class="evidence" id="mission-evidence"></div></details>
+      <div class="mission-actions"><button type="button" class="ai-work-button" id="ai-work-open">AI 작업실 열기</button><button type="button" id="mission-done" disabled>했어요, 기록해 주세요</button></div>
       <div class="feedback"><span>도움됐어요?</span><button type="button" data-feedback="good">👍 도움됐어요</button><button type="button" data-feedback="bad">👎 도움안돼요</button></div>
     </section>
 
@@ -82,7 +112,8 @@
   </main>
   <aside class="side-nav"><strong>은경이매장비서<br><small>은경이네</small></strong><a href="#main-keyword">오늘의 순위</a><a href="#mission">오늘 할 일</a><a href="#reports">주간 리포트</a><a href="#performance">우리 가게 성과</a><a href="#season">대목 고르기</a></aside>
   <dialog id="guide-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">사용 방법</p><h2>측정 결과를 확인해 보세요.</h2><ol><li>오늘 순위를 확인해요.</li><li>오늘 할 일 하나를 해요.</li><li>한 줄로 기록을 남겨요.</li></ol></dialog>
+  <dialog id="ai-work-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">AI 작업실</p><h2>상세설명 초안 만들기</h2><p class="dialog-copy">강조하고 싶은 메뉴·장점·손님 상황을 적으면 바로 쓸 수 있는 초안을 만듭니다.</p><label for="ai-work-input">강조할 내용</label><input id="ai-work-input" maxlength="120" placeholder="예: 조개전골, 넓은 좌석, 가족모임" autocomplete="off"><div class="ai-work-actions"><button type="button" id="ai-work-generate">초안 만들기</button><button type="button" id="ai-work-copy" disabled>복사하기</button></div><textarea id="ai-work-draft" readonly aria-label="상세설명 초안" placeholder="초안을 만들면 여기에 표시됩니다."></textarea><p id="ai-work-status" aria-live="polite"></p></dialog>
   <dialog id="keyword-dialog"><button class="dialog-close" aria-label="닫기">×</button><p class="section-label">추적키워드 등록</p><h2>매일 확인할 키워드를 적어주세요.</h2><p class="dialog-copy">등록하면 다음 순위 측정부터 기록됩니다.</p><form id="keyword-form"><label for="keyword-input">키워드</label><input id="keyword-input" maxlength="40" autocomplete="off" placeholder="예: 장현동 맛집" required><button type="submit">등록하기</button></form></dialog>
-  <script src="tracker.js?v=20261005-100rank"></script>
+  <script type="module" src="tracker.js?v=20261024-season-mission"></script>
 </body>
 </html>

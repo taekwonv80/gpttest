@@ -734,14 +734,61 @@ function weeklyReportLabel(report) {
   return `${reportMonthDay(report.start)}~${reportMonthDay(report.end)}`;
 }
 
-function renderWeeklyReport() {
-  const reports = weeklyReports();
+function nextWeeklyReleaseDate() {
+  const date = new Date();
+  const daysUntilMonday = (8 - date.getDay()) % 7;
+  date.setDate(date.getDate() + daysUntilMonday);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function weeklyReleaseLabel(date) {
+  const weekdays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  return `${reportMonthDay(date)} ${weekdays[date.getDay()]} 발행`;
+}
+
+function renderWeeklyHistory(reports, selectedReport = null) {
   const history = document.querySelector('#weekly-history-list');
   if (!history) return;
   if (!reports.length) {
+    history.textContent = '주간 데이터를 모으면 리포트가 자동으로 쌓입니다.';
+    return;
+  }
+  history.replaceChildren(...reports.slice(0, 8).map((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.weekStart = item.weekStart;
+    button.className = item.weekStart === selectedReport?.weekStart ? 'selected' : '';
+    const title = document.createElement('b');
+    title.textContent = index === 0 ? '지난주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
+    const range = document.createElement('span');
+    range.textContent = weeklyReportLabel(item);
+    const action = document.createElement('em');
+    action.textContent = item.weekStart === selectedReport?.weekStart ? '지금 보는 리포트' : '보기 ›';
+    button.append(title, range, action);
+    return button;
+  }));
+}
+
+function renderWeeklyReport() {
+  const reports = weeklyReports();
+  const releaseCard = document.querySelector('#weekly-release-card');
+  const detail = document.querySelector('#weekly-report-detail');
+  const previousLink = document.querySelector('#weekly-previous-link');
+  if (!releaseCard || !detail || !previousLink) return;
+  document.querySelector('#weekly-release-date').textContent = weeklyReleaseLabel(nextWeeklyReleaseDate());
+  const listView = !selectedWeeklyReport;
+  releaseCard.hidden = !listView;
+  detail.hidden = listView;
+  previousLink.hidden = listView;
+  if (!reports.length) {
     document.querySelector('#weekly-headline').textContent = '주간 데이터를 수집하고 있어요';
     document.querySelector('#weekly-range').textContent = '수집 후 주간 리포트가 발행됩니다';
-    history.textContent = '주간 데이터를 모으면 리포트가 자동으로 쌓입니다.';
+    renderWeeklyHistory(reports);
+    return;
+  }
+  if (listView) {
+    renderWeeklyHistory(reports);
     return;
   }
   const report = reports.find((item) => item.weekStart === selectedWeeklyReport) || reports[0];
@@ -773,25 +820,8 @@ function renderWeeklyReport() {
   document.querySelector('#weekly-task-evidence').textContent = `${weeklyReportLabel(report)}에 수집된 방문자 리뷰 증감과 예약 데이터를 기준으로 안내합니다.`;
   document.querySelector('#weekly-detail-reviews').textContent = `${reviewCount}건`;
   document.querySelector('#weekly-detail-reservations').textContent = `${report.reservations} / ${report.completions}`;
-  const prior = reports.find((item) => item.weekStart !== report.weekStart);
-  document.querySelector('#weekly-previous-title').textContent = prior ? `지난 리포트 · ${reportMonthDay(prior.issuedAt)} 발행` : '지난 리포트';
-  const previousLink = document.querySelector('#weekly-previous-link');
-  previousLink.disabled = !prior;
-  previousLink.dataset.weekStart = prior?.weekStart || '';
-  history.replaceChildren(...reports.slice(0, 8).map((item, index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.weekStart = item.weekStart;
-    button.className = item.weekStart === report.weekStart ? 'selected' : '';
-    const title = document.createElement('b');
-    title.textContent = index === 0 ? '지난주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
-    const range = document.createElement('span');
-    range.textContent = weeklyReportLabel(item);
-    const action = document.createElement('em');
-    action.textContent = item.weekStart === report.weekStart ? '지금 보는 리포트' : '보기 ›';
-    button.append(title, range, action);
-    return button;
-  }));
+  document.querySelector('#weekly-previous-title').textContent = `지난 리포트 · ${reportMonthDay(report.issuedAt)} 발행`;
+  renderWeeklyHistory(reports, report);
 }
 
 function addLog(value = '', kind = 'note') {
@@ -1206,9 +1236,7 @@ document.querySelector('#performance-activity-toggle').addEventListener('click',
 });
 
 document.querySelector('#weekly-previous-link').addEventListener('click', (event) => {
-  const weekStart = event.currentTarget.dataset.weekStart;
-  if (!weekStart) return;
-  selectedWeeklyReport = weekStart;
+  selectedWeeklyReport = '';
   renderWeeklyReport();
 });
 

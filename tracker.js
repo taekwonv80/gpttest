@@ -285,7 +285,7 @@ function renderKeywords() {
     <button class="keyword-row ${keyword.value === selectedKeyword ? 'selected' : ''}" type="button" data-keyword="${keyword.value}" aria-pressed="${keyword.value === selectedKeyword}">
       <b class="keyword-rank">${presentation.partial ? `<small>${presentation.label}</small>` : presentation.value === null ? PENDING_RANK : `${presentation.value}<small>${presentation.suffix}</small>`}</b><span class="star ${keyword.value === primaryKeyword ? 'selected' : ''}" data-primary-keyword="${keyword.value}" role="button" aria-pressed="${keyword.value === primaryKeyword}" tabindex="0" aria-label="${keyword.value}을 가장 중요한 거점키워드로 선택">★</span><strong>${keyword.value}</strong>
       ${keyword.value === primaryKeyword ? '<em>가장 중요한 거점키워드</em>' : isNewKeyword(keyword.value) ? '<em>새로 등록한 추적키워드</em>' : ''}
-      <span class="volume">${searchVolumeLabel(keyword.volume, keyword.zeroVolumeDevice)}</span><i>⌄</i>
+      <span class="volume">${searchVolumeLabel(keyword.volume, keyword.zeroVolumeDevice)}</span>
     </button>`;
   }).join('');
   const deleteLine = document.querySelector('.keyword-delete-line');

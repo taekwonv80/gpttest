@@ -4,6 +4,7 @@ const PRIMARY_KEYWORD_STORAGE = 'taekine-primary-keyword';
 const MISSION_STATE_STORAGE = 'taekine-mission-state';
 const ACTIVITY_LOG_STORAGE = 'taekine-activity-log';
 const DESCRIPTION_DRAFT_STORAGE = 'taekine-description-draft';
+const SEASON_PROGRESS_STORAGE = 'taekine-season-progress';
 const SEASON_STAGE_MODULE_URL = 'https://ai.euncoach.com/components/season-dashboard-stages.generated.js';
 const PENDING_VOLUME = '검색량(측정대기)';
 const PENDING_RANK = '-';
@@ -17,6 +18,7 @@ let keywordAddedAt = {};
 let selectedPeriod = '1주';
 let placeName = '은경이네';
 let activeMission = null;
+let seasonStageModulePromise = null;
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -315,12 +317,14 @@ function updateKeywordHeading(keyword) {
 
 async function loadServerTracker() {
   try {
-    const [configResponse, historyResponse, syncResponse] = await Promise.all([
+    const [configResponse, storeProfileResponse, historyResponse, syncResponse] = await Promise.all([
       fetch('data/tracker_config.json', { cache: 'no-store' }),
+      fetch('data/store_profile.json', { cache: 'no-store' }),
       fetch('data/rank_history.json', { cache: 'no-store' }),
       fetch('data/keyword_sync.json', { cache: 'no-store' }),
     ]);
     let config = configResponse.ok ? await configResponse.json() : {};
+    const storeProfile = storeProfileResponse.ok ? await storeProfileResponse.json() : {};
     const history = historyResponse.ok ? await historyResponse.json() : {};
     rankHistory = Array.isArray(history.measurements) ? history.measurements : [];
     const sync = syncResponse.ok ? await syncResponse.json() : {};
@@ -337,7 +341,10 @@ async function loadServerTracker() {
     }
     const configured = Array.isArray(config.keywords) ? config.keywords : [];
     placeName = String(config.place?.name || placeName).trim() || placeName;
-    void renderSeasonMission(config.season_timeline);
+    currentStoreProfile = storeProfile;
+    const seasonTimeline = annualSeasonTimeline(storeProfile);
+    void renderSeasonGuide(seasonTimeline);
+    void renderSeasonMission(seasonTimeline);
     applyConfiguredKeywords(configured, config);
     const latest = {};
     for (const measurement of history.measurements || []) {
@@ -458,12 +465,6 @@ document.querySelectorAll('[data-dismiss]').forEach((button) => button.addEventL
 const guide = document.querySelector('#guide-dialog');
 document.querySelector('#guide-open').addEventListener('click', () => guide.showModal());
 
-const seasonCheck = document.querySelector('#season-check');
-seasonCheck.addEventListener('change', () => {
-  document.querySelector('#season-count').textContent = '끝낸 준비(설정대기)';
-  document.querySelector('#season-progress').style.width = '0%';
-});
-
 const logInput = document.querySelector('#log-input');
 const logList = document.querySelector('#log-list');
 const logCount = document.querySelector('#log-count');
@@ -525,6 +526,138 @@ function ymdToUtcDay(ymd) {
   return Number.isFinite(value) ? Math.floor(value / 86400000) : null;
 }
 
+// 매년 반복되는 매장 시즌표를 올해·내년의 실제 날짜로 펼친다.
+// 따라서 연도별 시즌명을 다시 설정하지 않아도 가장 가까운 시즌 준비 미션이 선택된다.
+function annualSeasonTimeline(storeProfile) {
+  const profile = storeProfile && typeof storeProfile === 'object' ? storeProfile : {};
+  const year = Number(koreaYmdParts().year);
+  const seasonCalendar = Array.isArray(profile.season_calendar) ? profile.season_calendar : [];
+  const seasons = seasonCalendar.flatMap((season) => {
+    const month = Number(season.start_month);
+    const day = Number(season.start_day);
+    if (!Number.isInteger(month) || !Number.isInteger(day) || month < 1 || month > 12 || day < 1 || day > 31) return [];
+    return [year - 1, year, year + 1].map((seasonYear) => ({
+      ...season,
+      start_date: `${seasonYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      end_date: `${seasonYear + (Number(season.end_month) < month ? 1 : 0)}-${String(Number(season.end_month)).padStart(2, '0')}-${String(Number(season.end_day)).padStart(2, '0')}`,
+    }));
+  });
+  return {
+    industry_label: String(profile.industry_label || '').trim(),
+    praise: true,
+    seasons,
+  };
+}
+
+function loadSeasonStageModule() {
+  if (!seasonStageModulePromise) seasonStageModulePromise = import(SEASON_STAGE_MODULE_URL);
+  return seasonStageModulePromise;
+}
+
+function seasonProgressState() {
+  const saved = readStoredValue(SEASON_PROGRESS_STORAGE, {});
+  return saved && typeof saved === 'object' ? saved : {};
+}
+
+function seasonProgressKey(season) {
+  return `${season?.key || season?.name || 'season'}:${season?.start_date || ''}`;
+}
+
+function toggleSeasonStage(season, stage) {
+  const all = seasonProgressState();
+  const key = seasonProgressKey(season);
+  const checked = new Set(Array.isArray(all[key]) ? all[key] : []);
+  if (checked.has(stage.key)) checked.delete(stage.key); else checked.add(stage.key);
+  all[key] = [...checked];
+  localStorage.setItem(SEASON_PROGRESS_STORAGE, JSON.stringify(all));
+  void renderSeasonGuide(annualSeasonTimeline(currentStoreProfile));
+}
+
+let currentStoreProfile = {};
+
+async function renderSeasonGuide(seasonTimeline) {
+  const seasons = Array.isArray(seasonTimeline?.seasons) ? seasonTimeline.seasons : [];
+  const todayDay = ymdToUtcDay(koreaToday());
+  const dated = seasons.map((season) => ({
+    season,
+    startDay: ymdToUtcDay(season.start_date),
+    endDay: ymdToUtcDay(season.end_date),
+  })).filter(({ startDay }) => startDay !== null);
+  const active = dated.find(({ startDay, endDay }) => todayDay !== null && startDay <= todayDay && (endDay === null || todayDay <= endDay));
+  const next = dated.filter(({ startDay }) => todayDay === null || startDay >= todayDay).sort((a, b) => a.startDay - b.startDay)[0];
+  const highlighted = active || next;
+  const title = document.querySelector('#season-guide-title');
+  const list = document.querySelector('#season-calendar-list');
+  const stageList = document.querySelector('#season-stage-list');
+  if (!title || !list || !stageList) return;
+  title.textContent = highlighted
+    ? `${active ? '진행 중' : '다가오는'} ${highlighted.season.name} · ${Number(highlighted.season.start_month)}월 ${Number(highlighted.season.start_day)}일`
+    : '연간 제철 일정을 확인해 주세요';
+  const calendar = seasons
+    .filter((season) => String(season.start_date || '').startsWith(`${koreaYmdParts().year}-`))
+    .sort((left, right) => String(left.start_date).localeCompare(String(right.start_date)));
+  list.replaceChildren(...calendar.map((season) => {
+    const row = document.createElement('li');
+    row.classList.toggle('current', highlighted?.season.start_date === season.start_date);
+    const name = document.createElement('b');
+    name.textContent = season.name;
+    const date = document.createElement('span');
+    date.textContent = `${Number(season.start_month)}월 ${Number(season.start_day)}일 시작`;
+    row.append(name, date);
+    return row;
+  }));
+  if (!highlighted) return;
+
+  try {
+    const { buildDashboardSeasonStageTimeline } = await loadSeasonStageModule();
+    const daysUntil = highlighted.startDay - todayDay;
+    const preparationWindow = daysUntil >= 0 && daysUntil <= Number(highlighted.season.d_minus);
+    const guideTimeline = buildDashboardSeasonStageTimeline({
+      season: {
+        ...highlighted.season,
+        dMinus: Number(highlighted.season.d_minus),
+        industries: [String(seasonTimeline.industry_label || '')],
+      },
+      daysUntil: preparationWindow ? daysUntil : Number(highlighted.season.d_minus),
+      seasonDay: highlighted.startDay,
+      industryLabel: seasonTimeline.industry_label,
+    });
+    const stages = guideTimeline?.stages || [];
+    const progressKey = seasonProgressKey(highlighted.season);
+    const completed = new Set(seasonProgressState()[progressKey] || []);
+    const progress = document.querySelector('#season-progress');
+    const count = document.querySelector('#season-count');
+    const progressBar = document.querySelector('.season-progress-track');
+    const completeCount = stages.filter((stage) => completed.has(stage.key)).length;
+    if (progress) progress.style.width = `${stages.length ? Math.round((completeCount / stages.length) * 100) : 0}%`;
+    if (count) count.textContent = `완료 ${completeCount} / ${stages.length}`;
+    if (progressBar) progressBar.setAttribute('aria-valuenow', String(completeCount));
+    stageList.replaceChildren(...stages.map((stage) => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      const done = completed.has(stage.key);
+      const isCurrent = preparationWindow && stage.isCurrent;
+      button.type = 'button';
+      button.className = `season-stage-item${done ? ' done' : ''}${isCurrent ? ' current' : ''}`;
+      button.setAttribute('aria-pressed', String(done));
+      const when = document.createElement('time');
+      when.textContent = stage.dateLabel || (stage.dDay ? `${stage.dDay}일 전` : '시작일');
+      const copy = document.createElement('span');
+      copy.textContent = stage.name;
+      const status = document.createElement('em');
+      status.textContent = done ? '완료' : (isCurrent ? '이번 단계' : (stage.date && stage.date < koreaToday() ? '지남' : '예정'));
+      copy.append(status);
+      button.append(when, copy);
+      button.addEventListener('click', () => toggleSeasonStage(highlighted.season, stage));
+      item.append(button);
+      return item;
+    }));
+  } catch (error) {
+    console.warn(error);
+    stageList.replaceChildren();
+  }
+}
+
 function seasonCandidate(seasonTimeline) {
   const timeline = seasonTimeline && typeof seasonTimeline === 'object' ? seasonTimeline : {};
   const todayDay = ymdToUtcDay(koreaToday());
@@ -562,7 +695,7 @@ async function renderSeasonMission(seasonTimeline) {
     return;
   }
   try {
-    const { buildDashboardSeasonStageTimeline } = await import(SEASON_STAGE_MODULE_URL);
+    const { buildDashboardSeasonStageTimeline } = await loadSeasonStageModule();
     const industryLabel = String(seasonTimeline.industry_label || seasonTimeline.industryLabel || '').trim();
     const season = {
       ...candidate.season,

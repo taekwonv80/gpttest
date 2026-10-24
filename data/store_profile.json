@@ -1,0 +1,35 @@
+{
+  "industry_label": "횟집·해산물",
+  "season_calendar": [
+    {
+      "key": "jjukkumi",
+      "name": "쭈꾸미철",
+      "start_month": 3,
+      "start_day": 1,
+      "end_month": 5,
+      "end_day": 31,
+      "d_minus": 45,
+      "desc": "봄철 쭈꾸미가 제철이라 봄나들이와 가족모임 손님이 늘어요."
+    },
+    {
+      "key": "daehwa",
+      "name": "대하철",
+      "start_month": 8,
+      "start_day": 20,
+      "end_month": 10,
+      "end_day": 31,
+      "d_minus": 45,
+      "desc": "가을 대하가 제철이라 제철 해산물을 찾는 손님이 늘어요."
+    },
+    {
+      "key": "oyster",
+      "name": "굴철",
+      "start_month": 11,
+      "start_day": 1,
+      "end_month": 2,
+      "end_day": 28,
+      "d_minus": 45,
+      "desc": "겨울 굴이 제철이라 따뜻한 해산물 메뉴를 찾는 손님이 늘어요."
+    }
+  ]
+}

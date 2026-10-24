@@ -64,6 +64,29 @@
     .ai-work-actions button { padding: 10px 12px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
     .ai-work-actions button:last-child { background: #edf2f7; color: #42546a; }
     #ai-work-status { min-height: 18px; margin: 10px 0 0; color: #66778b; font-size: 11px; }
+    .season-card { padding: 16px; }
+    .season-card h2 { margin: 4px 0 12px; font-size: 16px; }
+    .season-calendar-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .season-calendar-list li { padding: 8px 5px; border: 1px solid #e2e8ef; border-radius: 8px; color: #64748b; text-align: center; font-size: 10px; }
+    .season-calendar-list b, .season-calendar-list span { display: block; }
+    .season-calendar-list b { margin-bottom: 2px; color: #24364b; font-size: 11px; }
+    .season-calendar-list li.current { border-color: #b7d0ff; background: #edf4ff; }
+    .season-calendar-list li.current b { color: var(--blue); }
+    .season-progress-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #64748b; font-size: 10px; }
+    .season-progress-track { flex: 1; height: 5px; overflow: hidden; border-radius: 99px; background: #e7edf4; }
+    .season-progress-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--blue); transition: width .2s; }
+    .season-stage-guide { margin-top: 13px; padding-top: 11px; border-top: 1px solid #e7ecf2; }
+    .season-stage-guide > p { margin: 0 0 7px; color: #526478; font-size: 10px; font-weight: 800; }
+    .season-stage-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 10px; margin: 0; padding: 0; list-style: none; }
+    .season-stage-list li { min-width: 0; }
+    .season-stage-list li:last-child { grid-column: 1 / -1; }
+    .season-stage-item { display: flex; width: 100%; gap: 5px; padding: 0; border: 0; background: transparent; color: #526478; text-align: left; font: inherit; font-size: 10px; line-height: 1.35; cursor: pointer; }
+    .season-stage-item time { color: var(--blue); white-space: nowrap; font-weight: 800; }
+    .season-stage-item span { min-width: 0; }
+    .season-stage-item em { display: block; color: #8a98a8; font-style: normal; font-size: 9px; }
+    .season-stage-item.current span { color: var(--blue); font-weight: 800; }
+    .season-stage-item.done { color: #8a98a8; text-decoration: line-through; }
+    .season-stage-item.done time { color: #6a9f91; }
   </style>
 </head>
 <body>
@@ -103,7 +126,7 @@
 
     <section class="summary-grid">
       <article class="doing-well"><p class="section-label">잘하고 있는 것</p><p>첫 기록이 쌓이면 이번 주 완료한 관리 활동을 요약합니다.</p></article>
-      <article class="season-card"><p class="section-label">다가오는 대목</p><h2>시즌일정(설정대기) <em>-</em></h2><p class="muted">시즌을 설정하면 준비 순서와 진행률을 안내합니다.</p><div class="progress"><i id="season-progress"></i></div><p class="progress-copy"><b id="season-count">끝낸 준비 -</b></p><label class="check-row"><input type="checkbox" id="season-check" disabled> 시즌 준비를 설정한 뒤 체크할 수 있어요</label></article>
+      <article class="season-card" id="season-guide"><p class="section-label">연간 시즌 일정</p><h2 id="season-guide-title">다가오는 시즌을 확인하고 있어요</h2><ul class="season-calendar-list" id="season-calendar-list" aria-label="연간 제철 일정"></ul><div class="season-progress-row"><div class="season-progress-track" role="progressbar" aria-label="시즌 준비 완료" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><i id="season-progress"></i></div><b id="season-count">완료 0 / 7</b></div><div class="season-stage-guide"><p>시즌 시작 전 준비 순서 · 눌러서 완료 표시</p><ol class="season-stage-list" id="season-stage-list"></ol></div></article>
     </section>
 
     <section class="quick-log" id="quick-log"><div class="quick-log__head"><div><p class="section-label">오늘 한 일 기록</p><h2>내가 적은 기록 <b id="log-count">0</b>건</h2></div><p>한 줄만 남겨도 순위를 읽는 단서가 돼요</p></div><div class="log-chips" role="group" aria-label="빠른 기록"><button type="button">사진 올렸어요</button><button type="button">소식 발행했어요</button><button type="button">리뷰 답글 달았어요</button><button type="button">가격·메뉴 정리했어요</button></div><div class="log-entry"><input id="log-input" type="text" placeholder="오늘 한 일"><button type="button" id="log-submit">기록하기</button></div><ul id="log-list"></ul><p class="community-note">동료 사장님 활동 통계는 연결 후 표시됩니다.</p></section>

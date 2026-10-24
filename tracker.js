@@ -784,7 +784,7 @@ function renderWeeklyReport() {
     button.dataset.weekStart = item.weekStart;
     button.className = item.weekStart === report.weekStart ? 'selected' : '';
     const title = document.createElement('b');
-    title.textContent = index === 0 ? '이번 주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
+    title.textContent = index === 0 ? '지난주 리포트' : `${reportMonthDay(item.issuedAt)} 발행`;
     const range = document.createElement('span');
     range.textContent = weeklyReportLabel(item);
     const action = document.createElement('em');

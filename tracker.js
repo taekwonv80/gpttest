@@ -302,19 +302,20 @@ function updateKeywordHeading(keyword) {
   const value = primary?.value || '추적 키워드';
   const volume = searchVolumeLabel(primary?.volume || PENDING_RANK, primary?.zeroVolumeDevice);
   const presentation = rankPresentation(primary);
+  const selectedPresentation = rankPresentation(keyword);
   document.querySelector('#main-keyword').textContent = `거점키워드 · ${value} · ${volume}`;
   document.querySelector('.rank-title strong').textContent = presentation.partial ? '미발견' : presentation.value ?? PENDING_RANK;
   document.querySelector('.rank-title span').textContent = presentation.partial ? presentation.label : presentation.suffix;
   document.querySelector('.rank-title span').hidden = !presentation.measured || (!presentation.partial && !presentation.suffix);
   document.querySelector('.rank-title em').textContent = presentation.partial ? '100위 밖으로 확정하지 않음' : presentation.measured ? '최근 측정 결과' : '순위(측정대기)';
   document.querySelector('.rank-time').textContent = primary?.measuredAt ? `최근 측정 · ${primary.measuredAt.replace('T', ' ')}` : 'GitHub Actions에서 첫 순위를 측정합니다';
-  document.querySelector('.panel-heading > strong').innerHTML = presentation.measured
-    ? presentation.partial
-      ? `${presentation.label} <small>100위 밖으로 확정하지 않음</small>`
-      : `${presentation.label} <small>측정 결과</small>`
+  document.querySelector('.panel-heading > strong').innerHTML = selectedPresentation.measured
+    ? selectedPresentation.partial
+      ? `${selectedPresentation.label} <small>100위 밖으로 확정하지 않음</small>`
+      : `${selectedPresentation.label} <small>측정 결과</small>`
     : `순위(측정대기) <small>첫 수집 후 표시</small>`;
   const detailChart = document.querySelector('.detail-chart');
-  if (detailChart) detailChart.setAttribute('aria-label', `${value} 순위 변화`);
+  if (detailChart) detailChart.setAttribute('aria-label', `${keyword?.value || '추적 키워드'} 순위 변화`);
   renderRankHistory(primary, keyword);
   renderSearchVolumeTrend(keyword?.value);
 }

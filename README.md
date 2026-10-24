@@ -27,12 +27,13 @@
 ### 키워드 동기화 Worker 설정
 
 `worker/`는 GitHub Pages가 직접 쓸 수 없는 `data/tracker_config.json`을 안전하게 갱신하는
-Cloudflare Worker입니다. Worker에는 다음 두 Secret만 등록합니다.
+Cloudflare Worker입니다. AI 작업실까지 쓰려면 다음 Secret을 등록합니다.
 
 ```powershell
 cd worker
 npx wrangler secret put GITHUB_TOKEN
 npx wrangler secret put ADMIN_KEY
+npx wrangler secret put GEMINI_API_KEY
 npx wrangler deploy
 ```
 
@@ -40,6 +41,8 @@ npx wrangler deploy
   Repository permissions에서 **Contents: Read and write**를 부여합니다.
 - `ADMIN_KEY`: 화면에서 키워드를 등록·삭제할 때 입력하는 별도 동기화키입니다. GitHub 토큰과
   같은 값으로 쓰지 마세요.
+- `GEMINI_API_KEY`: Gemini 기본 생성 모델용 키입니다. Gemini 무료 한도 초과 시에는 같은
+  Worker의 Cloudflare Gemma가 자동으로 대체 생성합니다.
 
 배포 명령이 출력한 Worker 주소를 `data/keyword_sync.json`의 `endpoint`에 넣고 `deploy.bat`으로
 배포합니다. 이후 화면 등록·삭제는 브라우저 저장소가 아닌 설정 파일에 저장되며, Worker가

@@ -163,12 +163,9 @@ function renderSearchVolumeTrend(keyword) {
   if (!bars || !months) return;
 
   const today = new Date();
-  const currentMonth = today.getMonth() + 1;
-  const dates = Array.from({ length: 12 }, (_, index) => new Date(
-    index + 1 >= currentMonth ? today.getFullYear() - 1 : today.getFullYear(),
-    index,
-    1,
-  ));
+  // 이 화면은 1~12월 달력형 추이이므로, 같은 연도의 월을 순서대로 둔다.
+  // 이전 구현은 10~12월만 전년으로 섞어 최신 측정 월과 매칭되지 않았다.
+  const dates = Array.from({ length: 12 }, (_, index) => new Date(today.getFullYear(), index, 1));
   const trendMeasurement = rankHistory
     .filter((item) => item.keyword === keyword && Array.isArray(item.monthly_trend) && item.monthly_trend.length)
     .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)))
@@ -205,10 +202,7 @@ function renderSearchVolumeTrend(keyword) {
     const label = value === null ? '검색 추이 미수집' : currentActualOnly && index === actualIndex ? `실제 검색 횟수 ${value.toLocaleString('ko-KR')}회` : `검색지수 ${value.toLocaleString('ko-KR')}`;
     return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');
-  months.innerHTML = dates.map((date, index) => {
-    const isLastYear = date.getFullYear() !== today.getFullYear();
-    return `<span>${date.getMonth() + 1}월${isLastYear ? '<small>(작년)</small>' : ''}</span>`;
-  }).join('');
+  months.innerHTML = dates.map((date) => `<span>${date.getMonth() + 1}월</span>`).join('');
 
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');

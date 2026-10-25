@@ -6,7 +6,7 @@ const ACTIVITY_LOG_STORAGE = 'taekine-activity-log';
 const DESCRIPTION_DRAFT_STORAGE = 'taekine-description-draft';
 const SEASON_PROGRESS_STORAGE = 'taekine-season-progress';
 const SEASON_STAGE_MODULE_URL = 'https://ai.euncoach.com/components/season-dashboard-stages.generated.js';
-const PENDING_VOLUME = '검색량(측정대기)';
+const PENDING_VOLUME = '실제 검색 횟수(측정대기)';
 const PENDING_RANK = '-';
 const LEGACY_PENDING_VOLUMES = new Set(['측정 대기', '검색량(측정 대기)']);
 const DEFAULT_KEYWORDS = [{ value: '장현동맛집', rank: PENDING_RANK, volume: PENDING_VOLUME }];
@@ -146,7 +146,7 @@ function zeroSearchVolumeDevice(measurement) {
 
 function searchVolumeLabel(volume, zeroDevice = null) {
   if (volume === PENDING_VOLUME) return PENDING_VOLUME;
-  return `월 ${volume}회${zeroDevice ? ` (${zeroDevice}: 0회)` : ''}`;
+  return `실제 검색 횟수: ${volume}회${zeroDevice ? ` (${zeroDevice}: 0회)` : ''}`;
 }
 
 function displaySearchVolume(measurement) {
@@ -179,10 +179,12 @@ function renderSearchVolumeTrend(keyword) {
   }
   const values = dates.map((date) => ratioByMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`) ?? null);
   const measuredValues = values.filter((value) => value !== null);
+  const hasUsableTrend = measuredValues.some((value) => value > 0);
   const maximum = Math.max(...measuredValues, 1);
   const peakValue = measuredValues.length ? Math.max(...measuredValues) : null;
   const peakIndex = peakValue === null || peakValue <= 0 ? -1 : values.indexOf(peakValue);
   const currentIndex = today.getMonth();
+  bars.classList.toggle('volume-trend-unavailable', !hasUsableTrend);
   bars.innerHTML = values.map((value, index) => {
     const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
     if (index === peakIndex) states.push('volume-bar--peak');
@@ -198,10 +200,22 @@ function renderSearchVolumeTrend(keyword) {
 
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');
-  if (!measuredValues.length || peakIndex < 0) {
-    peak.innerHTML = '<b>피크</b> 월별 검색지수 수집 후 표시됩니다.';
-    timing.innerHTML = '<b class="mint">타이밍</b> 시즌 타이밍은 수집된 검색지수를 기준으로 안내합니다.';
+  const volumePending = document.querySelector('.volume-pending');
+  if (!hasUsableTrend) {
+    const hasZeroOnlyTrend = measuredValues.length > 0;
+    peak.innerHTML = `<b>피크</b> ${hasZeroOnlyTrend ? '월별 검색지수 표본이 부족해 피크를 계산하지 않습니다.' : '월별 검색지수 수집 후 표시됩니다.'}`;
+    timing.innerHTML = '<b class="mint">타이밍</b> 월별 검색지수가 쌓이면 계절별 준비 시점을 안내합니다.';
+    if (volumePending) {
+      volumePending.dataset.trendState = hasZeroOnlyTrend ? 'zero-only' : 'pending';
+      volumePending.textContent = hasZeroOnlyTrend
+        ? '최근 월간 검색량과 별개로, 데이터랩 월별 상대지수는 표본 부족으로 표시하지 않습니다.'
+        : '월별 검색지수를 수집하면 최근 12개월 추이가 표시됩니다.';
+    }
     return;
+  }
+  if (volumePending) {
+    volumePending.dataset.trendState = 'measured';
+    volumePending.textContent = '막대는 데이터랩 최근 12개월 검색지수(상대값)입니다.';
   }
   peak.innerHTML = `<b>피크</b> ${dates[peakIndex].getMonth() + 1}월 검색지수가 가장 높아요. (${peakValue.toLocaleString('ko-KR')})`;
   timing.innerHTML = '<b class="mint">타이밍</b> 월별 검색지수를 바탕으로 계절별 준비 시점을 안내합니다.';
@@ -265,8 +279,12 @@ function renderRankHistory(keyword, detailKeyword = keyword) {
   const pc = Number.isInteger(latest.monthly_pc_searches) ? latest.monthly_pc_searches.toLocaleString('ko-KR') : volumeWasMeasured ? '0' : '-';
   const mobile = Number.isInteger(latest.monthly_mobile_searches) ? latest.monthly_mobile_searches.toLocaleString('ko-KR') : volumeWasMeasured ? '0' : '-';
   const volume = displaySearchVolume(latest);
+  document.querySelector('.volume-head b').textContent = '실제 검색 횟수';
   document.querySelector('.volume-head span').innerHTML = `<strong>${searchVolumeLabel(volume, zeroSearchVolumeDevice(latest))}</strong> · 모바일 ${mobile} / PC ${pc}`;
-  document.querySelector('.volume-pending').textContent = volume === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색량을 수집합니다.' : '네이버 검색광고 API의 최근 월간 검색량입니다.';
+  const volumePending = document.querySelector('.volume-pending');
+  if (volumePending?.dataset.trendState !== 'zero-only') {
+    volumePending.textContent = volume === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색 횟수를 수집합니다.' : '네이버 검색광고 API의 실제 월간 검색 횟수입니다.';
+  }
 }
 
 function rankPresentation(keyword) {

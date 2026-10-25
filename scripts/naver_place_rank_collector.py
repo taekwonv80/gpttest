@@ -183,6 +183,11 @@ def monthly_trend_from_xlsx(content: bytes) -> list[dict[str, Any]]:
     return trend
 
 
+def usable_monthly_trend(trend: list[dict[str, Any]]) -> bool:
+    """A zero-only DataLab export means the term is below its monthly index sample."""
+    return any(isinstance(point.get("ratio"), (int, float)) and point["ratio"] > 0 for point in trend)
+
+
 async def collect_keyword_trends(keywords: list[str]) -> dict[str, list[dict[str, Any]]]:
     """Collect public monthly search indices with no account or API credentials."""
     from playwright.async_api import async_playwright
@@ -211,7 +216,15 @@ async def collect_keyword_trends(keywords: list[str]) -> dict[str, list[dict[str
                     download_path = await download.path()
                     if not download_path:
                         raise RankCollectionError("월별 검색지수 파일을 받지 못했습니다.")
-                    trends[keyword] = monthly_trend_from_xlsx(Path(download_path).read_bytes())
+                    trend = monthly_trend_from_xlsx(Path(download_path).read_bytes())
+                    if trend and not usable_monthly_trend(trend):
+                        # DataLab's relative index is rounded to 0.0 for very small
+                        # samples.  This is not evidence that every month had zero
+                        # searches, so keep the historical chart unavailable.
+                        print(f"월별 검색 추이 표본 부족: {keyword}")
+                        trends[keyword] = []
+                    else:
+                        trends[keyword] = trend
                 except Exception as error:
                     print(f"월별 검색 추이 수집 건너뜀: {keyword} · {type(error).__name__}: {error}")
         finally:

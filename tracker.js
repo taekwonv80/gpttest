@@ -163,9 +163,13 @@ function renderSearchVolumeTrend(keyword) {
   if (!bars || !months) return;
 
   const today = new Date();
-  // 이 화면은 1~12월 달력형 추이이므로, 같은 연도의 월을 순서대로 둔다.
-  // 이전 구현은 10~12월만 전년으로 섞어 최신 측정 월과 매칭되지 않았다.
-  const dates = Array.from({ length: 12 }, (_, index) => new Date(today.getFullYear(), index, 1));
+  const currentMonth = today.getMonth() + 1;
+  // 진행 중인 이번 달은 확정 월별 데이터가 아니므로, 최근 12개 완료 월만 표시한다.
+  const dates = Array.from({ length: 12 }, (_, index) => new Date(
+    index + 1 >= currentMonth ? today.getFullYear() - 1 : today.getFullYear(),
+    index,
+    1,
+  ));
   const trendMeasurement = rankHistory
     .filter((item) => item.keyword === keyword && Array.isArray(item.monthly_trend) && item.monthly_trend.length)
     .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)))
@@ -175,17 +179,6 @@ function renderSearchVolumeTrend(keyword) {
     if (typeof point?.month === 'string' && Number.isFinite(point?.ratio)) ratioByMonth.set(point.month, point.ratio);
   }
   let values = dates.map((date) => ratioByMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`) ?? null);
-  const rawMeasuredValues = values.filter((value) => value !== null);
-  const hasTrendIndex = rawMeasuredValues.some((value) => value > 0);
-  const actualMobile = Number.isInteger(trendMeasurement?.monthly_mobile_searches) ? trendMeasurement.monthly_mobile_searches : 0;
-  const actualPc = Number.isInteger(trendMeasurement?.monthly_pc_searches) ? trendMeasurement.monthly_pc_searches : 0;
-  const actualCount = hasMeasuredSearchVolume(trendMeasurement) ? actualMobile + actualPc : null;
-  const actualDate = trendMeasurement?.measured_at ? new Date(trendMeasurement.measured_at) : null;
-  const actualIndex = actualDate && Number.isFinite(actualDate.getTime())
-    ? dates.findIndex((date) => date.getFullYear() === actualDate.getFullYear() && date.getMonth() === actualDate.getMonth())
-    : -1;
-  const currentActualOnly = !hasTrendIndex && actualCount !== null && actualCount > 0 && actualIndex >= 0;
-  if (currentActualOnly) values = values.map((value, index) => index === actualIndex ? actualCount : null);
   const measuredValues = values.filter((value) => value !== null);
   const hasUsableTrend = measuredValues.some((value) => value > 0);
   const maximum = Math.max(...measuredValues, 1);
@@ -197,25 +190,18 @@ function renderSearchVolumeTrend(keyword) {
     const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
     if (index === peakIndex) states.push('volume-bar--peak');
     if (index === currentIndex) states.push('volume-bar--current');
-    if (currentActualOnly && index === actualIndex) states.push('volume-bar--actual');
     const height = value === null ? '' : ` style="height:${Math.round((value / maximum) * 100)}%"`;
-    const label = value === null ? '검색 추이 미수집' : currentActualOnly && index === actualIndex ? `실제 검색 횟수 ${value.toLocaleString('ko-KR')}회` : `검색지수 ${value.toLocaleString('ko-KR')}`;
+    const label = value === null ? '검색 추이 미수집' : `검색지수 ${value.toLocaleString('ko-KR')}`;
     return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');
-  months.innerHTML = dates.map((date) => `<span>${date.getMonth() + 1}월</span>`).join('');
+  months.innerHTML = dates.map((date) => {
+    const isLastYear = date.getFullYear() !== today.getFullYear();
+    return `<span>${date.getMonth() + 1}월${isLastYear ? '<small>(작년)</small>' : ''}</span>`;
+  }).join('');
 
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');
   const volumePending = document.querySelector('.volume-pending');
-  if (currentActualOnly) {
-    peak.innerHTML = `<b>피크</b> ${dates[actualIndex].getMonth() + 1}월 실제 검색 횟수는 ${actualCount.toLocaleString('ko-KR')}회예요.`;
-    timing.innerHTML = '<b class="mint">타이밍</b> 이전 월의 실제 검색 횟수는 수집되지 않았어요.';
-    if (volumePending) {
-      volumePending.dataset.trendState = 'current-actual';
-      volumePending.textContent = '파란 막대는 최신 실제 검색 횟수이며, 나머지 월은 월별 수집 자료가 없습니다.';
-    }
-    return;
-  }
   if (!hasUsableTrend) {
     const hasZeroOnlyTrend = measuredValues.length > 0;
     peak.innerHTML = `<b>피크</b> ${hasZeroOnlyTrend ? '월별 검색지수 표본이 부족해 피크를 계산하지 않습니다.' : '월별 검색지수 수집 후 표시됩니다.'}`;
@@ -223,8 +209,8 @@ function renderSearchVolumeTrend(keyword) {
     if (volumePending) {
       volumePending.dataset.trendState = hasZeroOnlyTrend ? 'zero-only' : 'pending';
       volumePending.textContent = hasZeroOnlyTrend
-        ? '최근 월간 검색량과 별개로, 데이터랩 월별 상대지수는 표본 부족으로 표시하지 않습니다.'
-        : '월별 검색지수를 수집하면 최근 12개월 추이가 표시됩니다.';
+        ? '최근 실제 검색 횟수와 별개로, 완료된 월의 데이터랩 상대지수는 표본 부족으로 표시하지 않습니다.'
+        : '완료된 월의 검색지수를 수집하면 최근 12개월 추이가 표시됩니다.';
     }
     return;
   }

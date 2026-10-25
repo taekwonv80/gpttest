@@ -177,7 +177,18 @@ function renderSearchVolumeTrend(keyword) {
   for (const point of trendMeasurement?.monthly_trend || []) {
     if (typeof point?.month === 'string' && Number.isFinite(point?.ratio)) ratioByMonth.set(point.month, point.ratio);
   }
-  const values = dates.map((date) => ratioByMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`) ?? null);
+  let values = dates.map((date) => ratioByMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`) ?? null);
+  const rawMeasuredValues = values.filter((value) => value !== null);
+  const hasTrendIndex = rawMeasuredValues.some((value) => value > 0);
+  const actualMobile = Number.isInteger(trendMeasurement?.monthly_mobile_searches) ? trendMeasurement.monthly_mobile_searches : 0;
+  const actualPc = Number.isInteger(trendMeasurement?.monthly_pc_searches) ? trendMeasurement.monthly_pc_searches : 0;
+  const actualCount = hasMeasuredSearchVolume(trendMeasurement) ? actualMobile + actualPc : null;
+  const actualDate = trendMeasurement?.measured_at ? new Date(trendMeasurement.measured_at) : null;
+  const actualIndex = actualDate && Number.isFinite(actualDate.getTime())
+    ? dates.findIndex((date) => date.getFullYear() === actualDate.getFullYear() && date.getMonth() === actualDate.getMonth())
+    : -1;
+  const currentActualOnly = !hasTrendIndex && actualCount !== null && actualCount > 0 && actualIndex >= 0;
+  if (currentActualOnly) values = values.map((value, index) => index === actualIndex ? actualCount : null);
   const measuredValues = values.filter((value) => value !== null);
   const hasUsableTrend = measuredValues.some((value) => value > 0);
   const maximum = Math.max(...measuredValues, 1);
@@ -189,8 +200,9 @@ function renderSearchVolumeTrend(keyword) {
     const states = [value === null ? 'volume-bar--pending' : 'volume-bar--measured'];
     if (index === peakIndex) states.push('volume-bar--peak');
     if (index === currentIndex) states.push('volume-bar--current');
+    if (currentActualOnly && index === actualIndex) states.push('volume-bar--actual');
     const height = value === null ? '' : ` style="height:${Math.round((value / maximum) * 100)}%"`;
-    const label = value === null ? '검색 추이 미수집' : `검색지수 ${value.toLocaleString('ko-KR')}`;
+    const label = value === null ? '검색 추이 미수집' : currentActualOnly && index === actualIndex ? `실제 검색 횟수 ${value.toLocaleString('ko-KR')}회` : `검색지수 ${value.toLocaleString('ko-KR')}`;
     return `<i class="${states.join(' ')}"${height} title="${dates[index].getMonth() + 1}월 ${label}"></i>`;
   }).join('');
   months.innerHTML = dates.map((date, index) => {
@@ -201,6 +213,15 @@ function renderSearchVolumeTrend(keyword) {
   const peak = document.querySelector('#volume-peak');
   const timing = document.querySelector('#volume-timing');
   const volumePending = document.querySelector('.volume-pending');
+  if (currentActualOnly) {
+    peak.innerHTML = `<b>피크</b> ${dates[actualIndex].getMonth() + 1}월 실제 검색 횟수는 ${actualCount.toLocaleString('ko-KR')}회예요.`;
+    timing.innerHTML = '<b class="mint">타이밍</b> 이전 월의 실제 검색 횟수는 수집되지 않았어요.';
+    if (volumePending) {
+      volumePending.dataset.trendState = 'current-actual';
+      volumePending.textContent = '파란 막대는 최신 실제 검색 횟수이며, 나머지 월은 월별 수집 자료가 없습니다.';
+    }
+    return;
+  }
   if (!hasUsableTrend) {
     const hasZeroOnlyTrend = measuredValues.length > 0;
     peak.innerHTML = `<b>피크</b> ${hasZeroOnlyTrend ? '월별 검색지수 표본이 부족해 피크를 계산하지 않습니다.' : '월별 검색지수 수집 후 표시됩니다.'}`;

@@ -25,6 +25,7 @@ let activeMission = null;
 let seasonStageModulePromise = null;
 let seasonPlannerMonth = '';
 let seasonPlannerFocusKey = '';
+let seasonPlannerSelectedDate = '';
 let trackedKeywords = (storedKeywords || DEFAULT_KEYWORDS).map((keyword) => (
   keyword.value === '장현동맛집' && keyword.volume === '1,350' && !Number.isInteger(keyword.monthlySearches)
     ? { ...keyword, volume: PENDING_VOLUME }
@@ -1090,6 +1091,10 @@ async function renderSeasonPlanner(seasonTimeline) {
   const first = new Date(monthYear, monthNumber - 1, 1);
   const offset = (first.getDay() + 6) % 7;
   const days = new Date(monthYear, monthNumber, 0).getDate();
+  if (!seasonPlannerSelectedDate.startsWith(seasonPlannerMonth)) {
+    const todayInSelectedMonth = koreaToday().startsWith(seasonPlannerMonth);
+    seasonPlannerSelectedDate = todayInSelectedMonth ? koreaToday() : `${seasonPlannerMonth}-01`;
+  }
   const grid = document.querySelector('#season-month-grid');
   grid.replaceChildren(...Array.from({ length: offset + days }, (_, index) => {
     const cell = document.createElement(index < offset ? 'i' : 'button');
@@ -1099,34 +1104,35 @@ async function renderSeasonPlanner(seasonTimeline) {
     const key = seasonPlannerDateKey(date);
     const events = monthStages.filter(({ stage }) => seasonPlannerDateKey(stage.plannerDate) === key);
     cell.type = 'button';
-    cell.className = `season-day${key === todayKey ? ' today' : ''}${events.length ? ' has-event' : ''}`;
+    cell.className = `season-day${key === todayKey ? ' today' : ''}${key === seasonPlannerSelectedDate ? ' selected' : ''}${events.length ? ' has-event' : ''}`;
     const number = document.createElement('b');
     number.textContent = String(day);
     cell.append(number);
-    events.slice(0, 2).forEach(({ season, stage }) => {
+    events.slice(0, 2).forEach(({ stage }) => {
       const label = document.createElement('span');
       label.textContent = stage.name;
       cell.append(label);
-      cell.addEventListener('click', () => { seasonPlannerFocusKey = `${season.key}:${season.start_date}`; void renderSeasonPlanner(seasonTimeline); });
     });
+    cell.addEventListener('click', () => { seasonPlannerSelectedDate = key; void renderSeasonPlanner(seasonTimeline); });
     return cell;
   }));
   const focus = seasonPlannerFocus(seasonTimeline);
-  const focusStages = focus ? await buildSeasonPlannerStages(seasonTimeline, focus) : [];
-  const focusCompleted = new Set(seasonProgressState()[seasonProgressKey(focus)] || []);
-  const focusStart = focus ? seasonPlannerDate(focus.start_date) : null;
-  document.querySelector('#season-focus-badge').textContent = focusStart ? `D-${Math.max(0, Math.round((focusStart.getTime() - Date.now()) / 86400000))} · ${focus.name}` : '준비 일정';
-  document.querySelector('#season-focus-title').textContent = focus ? `${focus.name} 준비` : '시즌을 설정해 주세요';
-  document.querySelector('#season-focus-copy').textContent = focus?.desc || '시즌 정보를 등록하면 준비 순서를 안내합니다.';
+  const selectedEvents = monthStages.filter(({ stage }) => seasonPlannerDateKey(stage.plannerDate) === seasonPlannerSelectedDate);
+  const selectedDate = seasonPlannerDate(seasonPlannerSelectedDate);
+  document.querySelector('#season-focus-badge').textContent = selectedDate ? `${reportMonthDay(selectedDate)} 할 일` : '준비 일정';
+  document.querySelector('#season-focus-title').textContent = selectedEvents.length ? `${reportMonthDay(selectedDate)}에 준비할 일` : `${reportMonthDay(selectedDate)}에는 예정된 시즌 준비가 없어요`;
+  document.querySelector('#season-focus-copy').textContent = selectedEvents.length
+    ? '날짜를 바꾸면 그 날짜의 시즌 준비 단계만 보여드려요.'
+    : '달력에서 파란 일정이 있는 날짜를 선택해 보세요.';
   const focusList = document.querySelector('#season-focus-stages');
-  focusList.replaceChildren(...focusStages.map((stage, index) => {
+  focusList.replaceChildren(...selectedEvents.map(({ season, stage }, index) => {
     const item = document.createElement('li');
     const button = document.createElement('button');
-    const done = focusCompleted.has(stage.key);
+    const done = new Set(seasonProgressState()[seasonProgressKey(season)] || []).has(stage.key);
     button.type = 'button'; button.className = done ? 'done' : '';
-    const title = document.createElement('b'); title.textContent = `${index + 1}. ${stage.name}`;
+    const title = document.createElement('b'); title.textContent = `${index + 1}. ${season.name} · ${stage.name}`;
     const date = document.createElement('span'); date.textContent = `${reportMonthDay(stage.plannerDate)} · ${done ? '완료' : '눌러서 완료'}`;
-    button.append(title, date); button.addEventListener('click', () => toggleSeasonStage(focus, stage));
+    button.append(title, date); button.addEventListener('click', () => toggleSeasonStage(season, stage));
     item.append(button); return item;
   }));
   const other = document.querySelector('#season-other-list');

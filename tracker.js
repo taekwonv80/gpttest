@@ -158,6 +158,34 @@ function displaySearchVolume(measurement) {
   return PENDING_VOLUME;
 }
 
+function rankCoachCopy(keyword) {
+  const points = rankHistory
+    .filter((item) => item.keyword === keyword && Number.isInteger(item.rank))
+    .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)));
+  const note = document.querySelector('.ai-note');
+  if (!note) return;
+  const latest = points.at(-1);
+  const previous = points.at(-2);
+  if (!latest) {
+    note.textContent = 'AI 마케터: 첫 순위가 측정되면 순위 흐름과 지금 챙길 한 가지를 데이터에 맞춰 안내합니다.';
+    return;
+  }
+  if (!previous) {
+    note.textContent = `AI 마케터: ${latest.rank}위의 첫 기록이에요. 같은 기준의 순위가 더 쌓이면 오름·내림 흐름에 맞춰 다음 할 일을 안내합니다.`;
+    return;
+  }
+  const change = latest.rank - previous.rank;
+  if (change < 0) {
+    note.textContent = `AI 마케터: 지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${Math.abs(change)}위 올랐어요. 새 리뷰 답글과 대표사진처럼 이미 하던 관리를 이어가 보세요.`;
+  } else if (change > 0) {
+    note.textContent = `AI 마케터: 지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${change}위 내려왔어요. 오늘은 새 리뷰 답글, 대표사진, 소식 중 바로 확인할 수 있는 한 가지만 점검해 보세요.`;
+  } else if (latest.rank <= 5) {
+    note.textContent = `AI 마케터: ${latest.rank}위로 상위권을 유지하고 있어요. 손님이 보는 대표사진과 최근 소식을 최신 상태로 이어가 보세요.`;
+  } else {
+    note.textContent = `AI 마케터: 최근 두 번 모두 ${latest.rank}위로 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글이나 소식 한 건처럼 부담이 작은 관리부터 챙겨보세요.`;
+  }
+}
+
 function renderSearchVolumeTrend(keyword) {
   const bars = document.querySelector('#volume-bars');
   const months = document.querySelector('#volume-months');
@@ -219,8 +247,12 @@ function renderSearchVolumeTrend(keyword) {
     volumePending.dataset.trendState = 'measured';
     volumePending.textContent = '막대는 데이터랩 최근 12개월 검색지수(상대값)입니다.';
   }
-  peak.innerHTML = `<b>피크</b> ${dates[peakIndex].getMonth() + 1}월 검색지수가 가장 높아요. (${peakValue.toLocaleString('ko-KR')})`;
-  timing.innerHTML = '<b class="mint">타이밍</b> 월별 검색지수를 바탕으로 계절별 준비 시점을 안내합니다.';
+  const peakMonth = dates[peakIndex].getMonth() + 1;
+  const prepMonth = peakMonth === 1 ? 12 : peakMonth - 1;
+  const average = measuredValues.reduce((sum, value) => sum + value, 0) / measuredValues.length;
+  const strength = average > 0 ? peakValue / average : 0;
+  peak.innerHTML = `<b>피크</b> ${peakMonth}월 검색지수가 가장 높아요. (평달의 ${strength.toFixed(1)}배)`;
+  timing.innerHTML = `<b class="mint">타이밍</b> 피크 준비는 <strong>${prepMonth}월부터</strong>가 좋아요. 시즌 준비 알림과 이어서 챙겨드려요.`;
 }
 
 function renderRankHistory(keyword, detailKeyword = keyword) {
@@ -286,6 +318,7 @@ function renderRankHistory(keyword, detailKeyword = keyword) {
   const volume = displaySearchVolume(latest);
   document.querySelector('.volume-head b').textContent = '실제 검색 횟수';
   document.querySelector('.volume-head span').innerHTML = `<strong>${searchVolumeLabel(volume, zeroSearchVolumeDevice(latest))}</strong> · 모바일 ${mobile} / PC ${pc}`;
+  rankCoachCopy(detailKeyword?.value);
   const volumePending = document.querySelector('.volume-pending');
   if (volumePending?.dataset.trendState !== 'zero-only') {
     volumePending.textContent = volume === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색 횟수를 수집합니다.' : '네이버 검색광고 API의 실제 월간 검색 횟수입니다.';

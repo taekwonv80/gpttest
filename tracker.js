@@ -874,33 +874,34 @@ function renderWeeklyReport() {
   }
   const report = listView ? reports[0] : (reports.find((item) => item.weekStart === selectedWeeklyReport) || reports[0]);
   if (!listView) selectedWeeklyReport = report.weekStart;
-  const reviewCount = Number.isFinite(report.reviews) ? report.reviews : 0;
+  const hasWeeklyData = Number.isFinite(report.reviews);
+  const reviewCount = hasWeeklyData ? report.reviews : null;
   const average = report.averageReviews;
-  const barMax = Math.max(reviewCount, average || 0, 1);
-  const change = average === null ? null : reviewCount - average;
+  const barMax = Math.max(reviewCount || 0, average || 0, 1);
+  const change = !hasWeeklyData || average === null ? null : reviewCount - average;
   document.querySelector('#weekly-place-name').textContent = placeName;
   document.querySelector('#weekly-range').textContent = weeklyReportLabel(report);
-  document.querySelector('#weekly-headline').textContent = reviewCount
+  document.querySelector('#weekly-headline').textContent = hasWeeklyData
     ? `지난주 방문자 리뷰가 ${reviewCount}개 늘었어요`
-    : '지난주 새 리뷰 데이터를 확인해 주세요';
-  document.querySelector('#weekly-review-change').textContent = reviewCount ? `+${reviewCount}개` : '-';
-  document.querySelector('#weekly-review-detail').textContent = '실제 일별 수집 데이터 기준';
-  document.querySelector('#weekly-current-count').textContent = `${reviewCount}개`;
+    : '해당 기간의 내 플레이스 데이터를 수집하고 있어요';
+  document.querySelector('#weekly-review-change').textContent = hasWeeklyData ? `+${reviewCount}개` : '수집 대기';
+  document.querySelector('#weekly-review-detail').textContent = hasWeeklyData ? '실제 일별 수집 데이터 기준' : '수집이 완료되면 실제 수치로 표시됩니다';
+  document.querySelector('#weekly-current-count').textContent = hasWeeklyData ? `${reviewCount}개` : '수집 대기';
   document.querySelector('#weekly-average-count').textContent = average === null ? '비교 대기' : `${average.toFixed(average % 1 ? 1 : 0)}개`;
-  document.querySelector('#weekly-current-bar').style.width = `${Math.max((reviewCount / barMax) * 100, reviewCount ? 4 : 0)}%`;
+  document.querySelector('#weekly-current-bar').style.width = hasWeeklyData ? `${Math.max((reviewCount / barMax) * 100, reviewCount ? 4 : 0)}%` : '0%';
   document.querySelector('#weekly-average-bar').style.width = average === null ? '0%' : `${Math.max((average / barMax) * 100, 4)}%`;
   document.querySelector('#weekly-comparison-copy').textContent = change === null
     ? '비교할 지난 주 데이터가 쌓이면 변화도 함께 보여드려요.'
     : (change > 0 ? `지난 2주 평균보다 ${change.toFixed(change % 1 ? 1 : 0)}개 더 늘었어요.` : change < 0 ? `지난 2주 평균보다 ${Math.abs(change).toFixed(Math.abs(change) % 1 ? 1 : 0)}개 적어요.` : '지난 2주 평균과 비슷해요.');
-  document.querySelector('#weekly-task-title').textContent = reviewCount
+  document.querySelector('#weekly-task-title').textContent = hasWeeklyData
     ? `지난주 새로 쌓인 리뷰가 ${reviewCount}개예요. 리뷰를 확인하고 답글을 남겨주세요.`
-    : '이번 주 방문자 리뷰를 확인하고 답글을 남겨주세요.';
-  document.querySelector('#weekly-task-previous').textContent = `${reviewCount}개`;
+    : '이번 주 데이터를 수집한 뒤 할 일을 안내해 드릴게요.';
+  document.querySelector('#weekly-task-previous').textContent = hasWeeklyData ? `${reviewCount}개` : '수집 대기';
   document.querySelector('#weekly-task-average').textContent = average === null ? '비교 대기' : `${average.toFixed(average % 1 ? 1 : 0)}개`;
   document.querySelector('#weekly-task-note').textContent = '리뷰 답글 데이터는 연결 후 답글 관리율도 함께 표시됩니다.';
   document.querySelector('#weekly-task-evidence').textContent = `${weeklyReportLabel(report)}에 수집된 방문자 리뷰 증감과 예약 데이터를 기준으로 안내합니다.`;
-  document.querySelector('#weekly-detail-reviews').textContent = `${reviewCount}건`;
-  document.querySelector('#weekly-detail-reservations').textContent = `${report.reservations} / ${report.completions}`;
+  document.querySelector('#weekly-detail-reviews').textContent = hasWeeklyData ? `${reviewCount}건` : '수집 대기';
+  document.querySelector('#weekly-detail-reservations').textContent = hasWeeklyData ? `${report.reservations} / ${report.completions}` : '수집 대기';
   document.querySelector('#weekly-previous-title').textContent = `지난 리포트 · ${reportMonthDay(report.issuedAt)} 발행`;
   renderWeeklyHistory(reports.slice(1), listView ? null : report);
 }

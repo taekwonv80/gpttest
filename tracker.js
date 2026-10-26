@@ -807,7 +807,8 @@ function weeklyReportLabel(report) {
 }
 
 function nextWeeklyReleaseDate() {
-  const date = new Date();
+  const date = reportDateFromYmd(koreaToday());
+  if (!date) return new Date();
   const daysUntilMonday = (8 - date.getDay()) % 7;
   date.setDate(date.getDate() + daysUntilMonday);
   date.setHours(0, 0, 0, 0);

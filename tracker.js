@@ -247,7 +247,10 @@ function renderRankHistory(keyword, detailKeyword = keyword) {
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
   chart.innerHTML = `<svg class="rank-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="최근 ${points.length}회 순위 추이"><line x1="${padding}" y1="${padding}" x2="${width - padding}" y2="${padding}"/><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}"/><polyline points="${coordinates}"/><text x="${padding}" y="12">${highest}위</text><text x="${padding}" y="${height - 3}">${lowest}위</text></svg>`;
-  document.querySelector('.date-row span:first-child').textContent = `최근 ${points.length}회 · 순위추이`;
+  const previous = points.at(-2);
+  document.querySelector('.date-row span:first-child').textContent = previous
+    ? `최근 14일 · ${performanceDateLabel(previous.measured_at)} · ${previous.rank}위`
+    : '최근 14일 · 이전 순위 없음';
   document.querySelector('.date-row span:last-child').textContent = `오늘 · ${points.at(-1).rank}위`;
   const daysByPeriod = { '1주': 7, '1개월': 30, '3개월': 90, '전체': Infinity };
   const cutoff = Date.now() - daysByPeriod[selectedPeriod] * 24 * 60 * 60 * 1000;

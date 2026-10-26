@@ -256,6 +256,7 @@ function renderSearchVolumeTrend(keyword) {
 }
 
 function renderRankHistory(keyword, detailKeyword = keyword) {
+  rankCoachCopy(detailKeyword?.value);
   const chart = document.querySelector('#rank-chart-pending');
   const points = rankHistory
     .filter((item) => item.keyword === keyword?.value && Number.isInteger(item.rank))
@@ -318,7 +319,6 @@ function renderRankHistory(keyword, detailKeyword = keyword) {
   const volume = displaySearchVolume(latest);
   document.querySelector('.volume-head b').textContent = '실제 검색 횟수';
   document.querySelector('.volume-head span').innerHTML = `<strong>${searchVolumeLabel(volume, zeroSearchVolumeDevice(latest))}</strong> · 모바일 ${mobile} / PC ${pc}`;
-  rankCoachCopy(detailKeyword?.value);
   const volumePending = document.querySelector('.volume-pending');
   if (volumePending?.dataset.trendState !== 'zero-only') {
     volumePending.textContent = volume === PENDING_VOLUME ? '네이버 검색광고 API에서 실제 검색 횟수를 수집합니다.' : '네이버 검색광고 API의 실제 월간 검색 횟수입니다.';

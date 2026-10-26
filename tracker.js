@@ -772,26 +772,32 @@ function weeklyReports() {
     if (!grouped.has(weekStart)) grouped.set(weekStart, []);
     grouped.get(weekStart).push(row);
   }
-  const groups = [...grouped.entries()]
-    .map(([weekStart, rows]) => ({ weekStart, rows: rows.sort((left, right) => String(left.collected_date).localeCompare(String(right.collected_date))) }))
-    .filter(({ rows }) => new Set(rows.map((row) => row.collected_date)).size >= 7)
-    .sort((left, right) => right.weekStart.localeCompare(left.weekStart));
-  const usableGroups = groups.length ? groups : [...grouped.entries()]
-    .map(([weekStart, rows]) => ({ weekStart, rows: rows.sort((left, right) => String(left.collected_date).localeCompare(String(right.collected_date))) }))
-    .sort((left, right) => right.weekStart.localeCompare(left.weekStart));
-  return usableGroups.map(({ weekStart, rows }, index, all) => {
+  const today = reportDateFromYmd(koreaToday());
+  if (!today) return [];
+  const currentMonday = new Date(today);
+  currentMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const latestCompletedMonday = new Date(currentMonday);
+  latestCompletedMonday.setDate(currentMonday.getDate() - 7);
+  const calendarWeeks = Array.from({ length: 5 }, (_, index) => {
+    const start = new Date(latestCompletedMonday);
+    start.setDate(latestCompletedMonday.getDate() - index * 7);
+    const weekStart = koreaYmdForDate(start);
+    return { weekStart, rows: (grouped.get(weekStart) || []).sort((left, right) => String(left.collected_date).localeCompare(String(right.collected_date))) };
+  });
+  return calendarWeeks.map(({ weekStart, rows }, index, all) => {
     const start = reportDateFromYmd(weekStart);
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
+    const hasCompleteData = new Set(rows.map((row) => row.collected_date)).size >= 7;
     const numberSum = (field) => rows.reduce((sum, row) => {
       const value = Number(row[field]);
       return Number.isFinite(value) ? sum + value : sum;
     }, 0);
     const reviewDeltas = rows.map((row) => Number(row.reviews_daily_delta)).filter(Number.isFinite);
     const lastWeeklyReview = [...rows].reverse().map((row) => Number(row.reviews_weekly)).find(Number.isFinite);
-    const reviews = reviewDeltas.length ? numberSum('reviews_daily_delta') : (lastWeeklyReview ?? null);
-    const reservations = numberSum('reservation_applications_daily_delta');
-    const completions = numberSum('reservation_completions_daily_delta');
+    const reviews = hasCompleteData ? (reviewDeltas.length ? numberSum('reviews_daily_delta') : (lastWeeklyReview ?? null)) : null;
+    const reservations = hasCompleteData ? numberSum('reservation_applications_daily_delta') : null;
+    const completions = hasCompleteData ? numberSum('reservation_completions_daily_delta') : null;
     const priorReviews = all.slice(index + 1, index + 3)
       .map(({ rows: priorRows }) => {
         const values = priorRows.map((row) => Number(row.reviews_daily_delta)).filter(Number.isFinite);
@@ -800,6 +806,12 @@ function weeklyReports() {
     const averageReviews = priorReviews.length ? priorReviews.reduce((sum, value) => sum + value, 0) / priorReviews.length : null;
     return { weekStart, start, end, issuedAt: new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1), reviews, reservations, completions, averageReviews };
   });
+}
+
+function koreaYmdForDate(date) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(date).reduce((all, part) => ({ ...all, [part.type]: part.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 function weeklyReportLabel(report) {

@@ -505,7 +505,14 @@ document.querySelector('#guide-open').addEventListener('click', () => guide.show
 const logInput = document.querySelector('#log-input');
 const logList = document.querySelector('#log-list');
 const logCount = document.querySelector('#log-count');
+const sideNavGroup = document.querySelector('.side-nav-group');
+const sideNavMenu = document.querySelector('#side-nav-menu');
 let selectedQuickLog = '';
+if (sideNavGroup && sideNavMenu) sideNavGroup.addEventListener('click', () => {
+  const expanded = sideNavGroup.getAttribute('aria-expanded') === 'true';
+  sideNavGroup.setAttribute('aria-expanded', String(!expanded));
+  sideNavMenu.hidden = expanded;
+});
 document.querySelectorAll('.log-chips button').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('.log-chips button').forEach((item) => item.classList.remove('selected'));
   button.classList.add('selected'); selectedQuickLog = button.textContent; logInput.value = selectedQuickLog; logInput.focus();

@@ -26,13 +26,14 @@
   }
   .side-nav strong { margin: 0; color: #142235; font-size: 12px; line-height: 1.2; letter-spacing: -.5px; }
   .side-nav small { display: inline-block; margin-top: 2px; color: #607084; font-size: 9px; font-weight: 700; }
-  .side-nav-home { margin: 24px 8px 13px; color: #17283c; font-size: 11px; font-weight: 800; }
   .side-nav-group {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 0; padding: 9px 8px; border-radius: 8px;
+    width: 100%; margin: 18px 0 0; padding: 9px 8px; border: 0; border-radius: 8px;
     background: #f1f3f6; color: #17283c; font-size: 11px; font-weight: 900;
+    font-family: inherit; text-align: left; cursor: pointer;
   }
-  .side-nav-group span { color: #68788a; font-size: 10px; }
+  .side-nav-group span { display: inline-block; color: #68788a; font-size: 10px; }
+  .side-nav-group[aria-expanded="false"] span { transform: rotate(180deg); }
   .side-nav-menu { display: grid; gap: 1px; margin: 3px 0 0; padding: 0 0 0 15px; border-left: 1px solid #e2e7ed; }
   .side-nav a { padding: 6px 8px; border-radius: 7px; color: #24374d; font-size: 11px; line-height: 1.25; }
   .side-nav-menu a[href="#main-keyword"] { background: #e9f1ff; color: #17283c; }

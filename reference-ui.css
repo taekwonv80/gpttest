@@ -4,6 +4,7 @@
 .rank-keyword-shell .keyword-fold { border: 1px solid var(--line); border-radius: 12px; }
 .ai-note { margin: 12px 0 0; padding: 8px 9px; border: 1px solid #ffc8b9; border-radius: 6px; background: #fff9f7; color: #586879; font-size: 10px; line-height: 1.55; }
 .ai-note b { color: #ef593f; }
+#weekly-release-card:not([hidden]) + #weekly-previous-link { display: none; }
 
 @media (min-width: 1000px) {
   body { background: #f3f5f7; }

@@ -1,7 +1,7 @@
 /* Reference-place dashboard proportions.  Presentation only: no behavior rules live here. */
-.rank-keyword-shell { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
-.rank-keyword-shell .rank-card { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
-.rank-keyword-shell .keyword-fold { border: 0; border-radius: 0; }
+.rank-keyword-shell { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.rank-keyword-shell .rank-card { margin: 0 0 12px; border: 1px solid var(--line); border-radius: 15px; }
+.rank-keyword-shell .keyword-fold { border: 1px solid var(--line); border-radius: 12px; }
 
 @media (min-width: 1000px) {
   body { background: #f3f5f7; }

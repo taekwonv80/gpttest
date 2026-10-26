@@ -164,25 +164,30 @@ function rankCoachCopy(keyword) {
     .sort((left, right) => String(left.measured_at).localeCompare(String(right.measured_at)));
   const note = document.querySelector('.ai-note');
   if (!note) return;
+  const setCopy = (copy) => {
+    const label = document.createElement('b');
+    label.textContent = 'AI 마케터:';
+    note.replaceChildren(label, document.createTextNode(` ${copy}`));
+  };
   const latest = points.at(-1);
   const previous = points.at(-2);
   if (!latest) {
-    note.textContent = 'AI 마케터: 첫 순위가 측정되면 순위 흐름과 지금 챙길 한 가지를 데이터에 맞춰 안내합니다.';
+    setCopy('첫 순위가 측정되면 순위 흐름과 지금 챙길 한 가지를 데이터에 맞춰 안내합니다.');
     return;
   }
   if (!previous) {
-    note.textContent = `AI 마케터: ${latest.rank}위의 첫 기록이에요. 같은 기준의 순위가 더 쌓이면 오름·내림 흐름에 맞춰 다음 할 일을 안내합니다.`;
+    setCopy(`${latest.rank}위의 첫 기록이에요. 같은 기준의 순위가 더 쌓이면 오름·내림 흐름에 맞춰 다음 할 일을 안내합니다.`);
     return;
   }
   const change = latest.rank - previous.rank;
   if (change < 0) {
-    note.textContent = `AI 마케터: 지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${Math.abs(change)}위 올랐어요. 새 리뷰 답글과 대표사진처럼 이미 하던 관리를 이어가 보세요.`;
+    setCopy(`지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${Math.abs(change)}위 올랐어요. 새 리뷰 답글과 대표사진처럼 이미 하던 관리를 이어가 보세요.`);
   } else if (change > 0) {
-    note.textContent = `AI 마케터: 지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${change}위 내려왔어요. 오늘은 새 리뷰 답글, 대표사진, 소식 중 바로 확인할 수 있는 한 가지만 점검해 보세요.`;
+    setCopy(`지난 측정 ${previous.rank}위에서 ${latest.rank}위로 ${change}위 내려왔어요. 오늘은 새 리뷰 답글, 대표사진, 소식 중 바로 확인할 수 있는 한 가지만 점검해 보세요.`);
   } else if (latest.rank <= 5) {
-    note.textContent = `AI 마케터: ${latest.rank}위로 상위권을 유지하고 있어요. 손님이 보는 대표사진과 최근 소식을 최신 상태로 이어가 보세요.`;
+    setCopy(`${latest.rank}위로 상위권을 유지하고 있어요. 손님이 보는 대표사진과 최근 소식을 최신 상태로 이어가 보세요.`);
   } else {
-    note.textContent = `AI 마케터: 최근 두 번 모두 ${latest.rank}위로 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글이나 소식 한 건처럼 부담이 작은 관리부터 챙겨보세요.`;
+    setCopy(`최근 두 번 모두 ${latest.rank}위로 큰 변화 없이 유지 중이에요. 오늘은 리뷰 답글이나 소식 한 건처럼 부담이 작은 관리부터 챙겨보세요.`);
   }
 }
 

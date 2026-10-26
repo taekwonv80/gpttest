@@ -1,4 +1,8 @@
 /* Reference-place dashboard proportions.  Presentation only: no behavior rules live here. */
+.rank-keyword-shell { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.rank-keyword-shell .rank-card { margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+.rank-keyword-shell .keyword-fold { border: 0; border-radius: 0; }
+
 @media (min-width: 1000px) {
   body { background: #f3f5f7; }
 
@@ -11,17 +15,38 @@
   .side-nav {
     width: 177px;
     padding: 17px 16px;
-    gap: 2px;
+    gap: 0;
     border-right-color: #e5e9ee;
   }
-  .side-nav strong { margin-bottom: 18px; font-size: 14px; letter-spacing: -.6px; }
-  .side-nav small { margin-bottom: 11px; font-size: 10px; }
-  .side-nav a { padding: 7px 8px; border-radius: 7px; font-size: 12px; line-height: 1.25; }
+  .side-nav-brand { display: flex; align-items: center; gap: 7px; min-height: 43px; }
+  .side-nav-brand > span {
+    display: grid; place-items: center; width: 25px; height: 25px;
+    border-radius: 50%; background: #ef4f36; color: #fff;
+    font-size: 11px; font-weight: 900;
+  }
+  .side-nav strong { margin: 0; color: #142235; font-size: 12px; line-height: 1.2; letter-spacing: -.5px; }
+  .side-nav small { display: inline-block; margin-top: 2px; color: #607084; font-size: 9px; font-weight: 700; }
+  .side-nav-home { margin: 24px 8px 13px; color: #17283c; font-size: 11px; font-weight: 800; }
+  .side-nav-group {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0; padding: 9px 8px; border-radius: 8px;
+    background: #f1f3f6; color: #17283c; font-size: 11px; font-weight: 900;
+  }
+  .side-nav-group span { color: #68788a; font-size: 10px; }
+  .side-nav-menu { display: grid; gap: 1px; margin: 3px 0 0; padding: 0 0 0 15px; border-left: 1px solid #e2e7ed; }
+  .side-nav a { padding: 6px 8px; border-radius: 7px; color: #24374d; font-size: 11px; line-height: 1.25; }
+  .side-nav-menu a[href="#main-keyword"] { background: #e9f1ff; color: #17283c; }
+  body:has(#mission:target) .side-nav-menu a,
+  body:has(#weekly:target) .side-nav-menu a,
+  body:has(#performance:target) .side-nav-menu a,
+  body:has(#season:target) .side-nav-menu a { background: transparent; color: #24374d; }
+  body:has(#mission:target) .side-nav-menu a[href="#mission"],
+  body:has(#weekly:target) .side-nav-menu a[href="#weekly"],
+  body:has(#performance:target) .side-nav-menu a[href="#performance"],
+  body:has(#season:target) .side-nav-menu a[href="#season"] { background: #e9f1ff; color: #17283c; }
 
   .rank-card {
-    margin-bottom: 12px;
     padding: 18px 16px 16px;
-    border-radius: 15px;
     border-color: #dfe5eb;
   }
   .eyebrow { font-size: 11px; }

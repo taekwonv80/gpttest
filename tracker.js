@@ -519,13 +519,14 @@ function activityLogs() {
 }
 
 function renderActivityLogs() {
-  const logs = activityLogs();
-  logList.replaceChildren(...logs.map((item) => {
+  const today = koreaToday();
+  const todayLogs = activityLogs().filter((item) => performanceDateKey(item.recordedAt) === today);
+  logList.replaceChildren(...todayLogs.map((item) => {
     const row = document.createElement('li');
     row.textContent = item.text;
     return row;
   }));
-  logCount.textContent = String(logs.length);
+  logCount.textContent = String(todayLogs.length);
   renderPerformance();
 }
 

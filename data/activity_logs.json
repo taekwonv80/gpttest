@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "4b4833be-6bc0-49f3-bf3c-191651f24c16",
+      "recorded_at": "2026-10-26T07:23:54.580Z",
+      "text": "리뷰 답글 달았어요",
+      "kind": "note"
+    },
+    {
       "id": "bd7dc072-a33b-48a4-9f63-bfd3eb3b83c9",
       "recorded_at": "2026-10-25T09:04:52.366Z",
       "text": "체험단 후기 확인했어요",

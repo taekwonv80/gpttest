@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "place_id": "1827896507",
-  "updated_at": "2026-10-31T09:49:11+09:00",
+  "updated_at": "2026-10-31T14:33:38+09:00",
   "measurements": [
     {
       "keyword": "장현동맛집",
@@ -12886,6 +12886,853 @@
     {
       "keyword": "장곡동 점심맛집",
       "measured_at": "2026-10-31T09:49:11+09:00",
+      "source": "naver-map-public-search",
+      "rank": 21,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 29,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": null,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-12",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-02",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-04",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-05",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-06",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-07",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-08",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-09",
+          "ratio": 0.0
+        }
+      ]
+    },
+    {
+      "keyword": "장현동맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 4,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 70,
+      "status": "found",
+      "monthly_pc_searches": 150,
+      "monthly_mobile_searches": 1060,
+      "monthly_searches": 1210,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 99.03023
+        },
+        {
+          "month": "2025-11",
+          "ratio": 83.22875
+        },
+        {
+          "month": "2025-12",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 94.29549
+        },
+        {
+          "month": "2026-02",
+          "ratio": 87.62122
+        },
+        {
+          "month": "2026-03",
+          "ratio": 91.38619
+        },
+        {
+          "month": "2026-04",
+          "ratio": 86.70849
+        },
+        {
+          "month": "2026-05",
+          "ratio": 88.9903
+        },
+        {
+          "month": "2026-06",
+          "ratio": 78.37992
+        },
+        {
+          "month": "2026-07",
+          "ratio": 88.64803
+        },
+        {
+          "month": "2026-08",
+          "ratio": 86.36622
+        },
+        {
+          "month": "2026-09",
+          "ratio": 73.3029
+        }
+      ]
+    },
+    {
+      "keyword": "시흥능곡샤브샤브",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 6,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 9,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 150,
+      "monthly_searches": 160,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 100.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 54.71698
+        },
+        {
+          "month": "2025-12",
+          "ratio": 68.67924
+        },
+        {
+          "month": "2026-01",
+          "ratio": 52.45283
+        },
+        {
+          "month": "2026-02",
+          "ratio": 73.5849
+        },
+        {
+          "month": "2026-03",
+          "ratio": 38.49056
+        },
+        {
+          "month": "2026-04",
+          "ratio": 38.86792
+        },
+        {
+          "month": "2026-05",
+          "ratio": 70.18867
+        },
+        {
+          "month": "2026-06",
+          "ratio": 19.62264
+        },
+        {
+          "month": "2026-07",
+          "ratio": 33.96226
+        },
+        {
+          "month": "2026-08",
+          "ratio": 30.94339
+        },
+        {
+          "month": "2026-09",
+          "ratio": 52.83018
+        }
+      ]
+    },
+    {
+      "keyword": "장곡동샤브샤브",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 7,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 130,
+      "monthly_searches": 140,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 24.45054
+        },
+        {
+          "month": "2025-11",
+          "ratio": 73.90109
+        },
+        {
+          "month": "2025-12",
+          "ratio": 93.95604
+        },
+        {
+          "month": "2026-01",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-02",
+          "ratio": 94.91758
+        },
+        {
+          "month": "2026-03",
+          "ratio": 83.65384
+        },
+        {
+          "month": "2026-04",
+          "ratio": 68.13186
+        },
+        {
+          "month": "2026-05",
+          "ratio": 78.43406
+        },
+        {
+          "month": "2026-06",
+          "ratio": 52.33516
+        },
+        {
+          "month": "2026-07",
+          "ratio": 46.84065
+        },
+        {
+          "month": "2026-08",
+          "ratio": 21.56593
+        },
+        {
+          "month": "2026-09",
+          "ratio": 19.78021
+        }
+      ]
+    },
+    {
+      "keyword": "장곡동점심맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 10,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 30,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-12",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-02",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-04",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-05",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-06",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-07",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-08",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-09",
+          "ratio": 0.0
+        }
+      ]
+    },
+    {
+      "keyword": "시흥능곡역칼국수",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 13,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 22,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 20,
+      "monthly_searches": null,
+      "monthly_trend": []
+    },
+    {
+      "keyword": "장현동가족모임",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 10,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 71,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": null,
+      "monthly_searches": null,
+      "monthly_trend": []
+    },
+    {
+      "keyword": "시흥능곡역샤브샤브",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 4,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 6,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 40,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 65.21739
+        },
+        {
+          "month": "2025-11",
+          "ratio": 26.08695
+        },
+        {
+          "month": "2025-12",
+          "ratio": 21.73913
+        },
+        {
+          "month": "2026-01",
+          "ratio": 21.73913
+        },
+        {
+          "month": "2026-02",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-04",
+          "ratio": 21.73913
+        },
+        {
+          "month": "2026-05",
+          "ratio": 47.82608
+        },
+        {
+          "month": "2026-06",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-07",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-08",
+          "ratio": 21.73913
+        },
+        {
+          "month": "2026-09",
+          "ratio": 21.73913
+        }
+      ]
+    },
+    {
+      "keyword": "장현동칼국수",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 1,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 34,
+      "status": "found",
+      "monthly_pc_searches": 10,
+      "monthly_mobile_searches": 120,
+      "monthly_searches": 130,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 50.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-12",
+          "ratio": 50.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 50.0
+        },
+        {
+          "month": "2026-02",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-04",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-05",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-06",
+          "ratio": 50.0
+        },
+        {
+          "month": "2026-07",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-08",
+          "ratio": 50.0
+        },
+        {
+          "month": "2026-09",
+          "ratio": 100.0
+        }
+      ]
+    },
+    {
+      "keyword": "장곡동칼국수",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 12,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 18,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 100,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 100.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 34.06593
+        },
+        {
+          "month": "2025-12",
+          "ratio": 62.63736
+        },
+        {
+          "month": "2026-01",
+          "ratio": 73.62637
+        },
+        {
+          "month": "2026-02",
+          "ratio": 26.37362
+        },
+        {
+          "month": "2026-03",
+          "ratio": 76.92307
+        },
+        {
+          "month": "2026-04",
+          "ratio": 83.51648
+        },
+        {
+          "month": "2026-05",
+          "ratio": 83.51648
+        },
+        {
+          "month": "2026-06",
+          "ratio": 48.35164
+        },
+        {
+          "month": "2026-07",
+          "ratio": 46.15384
+        },
+        {
+          "month": "2026-08",
+          "ratio": 34.06593
+        },
+        {
+          "month": "2026-09",
+          "ratio": 35.16483
+        }
+      ]
+    },
+    {
+      "keyword": "시흥능곡칼국수",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 13,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 34,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": 50,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 60.71428
+        },
+        {
+          "month": "2025-11",
+          "ratio": 78.57142
+        },
+        {
+          "month": "2025-12",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 57.14285
+        },
+        {
+          "month": "2026-02",
+          "ratio": 25.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 35.71428
+        },
+        {
+          "month": "2026-04",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-05",
+          "ratio": 82.14285
+        },
+        {
+          "month": "2026-06",
+          "ratio": 60.71428
+        },
+        {
+          "month": "2026-07",
+          "ratio": 17.85714
+        },
+        {
+          "month": "2026-08",
+          "ratio": 53.57142
+        },
+        {
+          "month": "2026-09",
+          "ratio": 28.57142
+        }
+      ]
+    },
+    {
+      "keyword": "시흥시청맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 18,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 70,
+      "status": "found",
+      "monthly_pc_searches": 270,
+      "monthly_mobile_searches": 1560,
+      "monthly_searches": 1830,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 100.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 82.01957
+        },
+        {
+          "month": "2025-12",
+          "ratio": 80.88614
+        },
+        {
+          "month": "2026-01",
+          "ratio": 83.77125
+        },
+        {
+          "month": "2026-02",
+          "ratio": 83.41061
+        },
+        {
+          "month": "2026-03",
+          "ratio": 88.82019
+        },
+        {
+          "month": "2026-04",
+          "ratio": 85.2138
+        },
+        {
+          "month": "2026-05",
+          "ratio": 88.09891
+        },
+        {
+          "month": "2026-06",
+          "ratio": 82.38021
+        },
+        {
+          "month": "2026-07",
+          "ratio": 84.33797
+        },
+        {
+          "month": "2026-08",
+          "ratio": 85.00772
+        },
+        {
+          "month": "2026-09",
+          "ratio": 94.07521
+        }
+      ]
+    },
+    {
+      "keyword": "시흥시청역맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 5,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 14,
+      "status": "found",
+      "monthly_pc_searches": 60,
+      "monthly_mobile_searches": 370,
+      "monthly_searches": 430,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 100.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 96.26168
+        },
+        {
+          "month": "2025-12",
+          "ratio": 85.9813
+        },
+        {
+          "month": "2026-01",
+          "ratio": 78.8785
+        },
+        {
+          "month": "2026-02",
+          "ratio": 78.8785
+        },
+        {
+          "month": "2026-03",
+          "ratio": 94.95327
+        },
+        {
+          "month": "2026-04",
+          "ratio": 76.63551
+        },
+        {
+          "month": "2026-05",
+          "ratio": 89.34579
+        },
+        {
+          "month": "2026-06",
+          "ratio": 79.25233
+        },
+        {
+          "month": "2026-07",
+          "ratio": 73.27102
+        },
+        {
+          "month": "2026-08",
+          "ratio": 68.03738
+        },
+        {
+          "month": "2026-09",
+          "ratio": 79.06542
+        }
+      ]
+    },
+    {
+      "keyword": "시흥능곡역맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": null,
+      "matched_name": null,
+      "is_ad": null,
+      "visible_result_count": 70,
+      "status": "not_found_in_visible_results",
+      "monthly_pc_searches": 280,
+      "monthly_mobile_searches": 1730,
+      "monthly_searches": 2010,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 93.28048
+        },
+        {
+          "month": "2025-11",
+          "ratio": 86.37221
+        },
+        {
+          "month": "2025-12",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 89.50547
+        },
+        {
+          "month": "2026-02",
+          "ratio": 80.36995
+        },
+        {
+          "month": "2026-03",
+          "ratio": 87.76896
+        },
+        {
+          "month": "2026-04",
+          "ratio": 84.03171
+        },
+        {
+          "month": "2026-05",
+          "ratio": 86.63646
+        },
+        {
+          "month": "2026-06",
+          "ratio": 83.84295
+        },
+        {
+          "month": "2026-07",
+          "ratio": 88.10872
+        },
+        {
+          "month": "2026-08",
+          "ratio": 84.89996
+        },
+        {
+          "month": "2026-09",
+          "ratio": 75.38693
+        }
+      ]
+    },
+    {
+      "keyword": "장곡동 점심 맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
+      "source": "naver-map-public-search",
+      "rank": 21,
+      "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",
+      "is_ad": false,
+      "visible_result_count": 29,
+      "status": "found",
+      "monthly_pc_searches": null,
+      "monthly_mobile_searches": null,
+      "monthly_searches": null,
+      "monthly_trend": [
+        {
+          "month": "2025-10",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-11",
+          "ratio": 0.0
+        },
+        {
+          "month": "2025-12",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-01",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-02",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-03",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-04",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-05",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-06",
+          "ratio": 100.0
+        },
+        {
+          "month": "2026-07",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-08",
+          "ratio": 0.0
+        },
+        {
+          "month": "2026-09",
+          "ratio": 0.0
+        }
+      ]
+    },
+    {
+      "keyword": "장곡동 점심맛집",
+      "measured_at": "2026-10-31T14:33:38+09:00",
       "source": "naver-map-public-search",
       "rank": 21,
       "matched_name": "택이네조개전골 장현지구점x바다를품다 시흥플랑드르근처",

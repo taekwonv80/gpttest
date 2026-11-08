@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "c8425ec8-5264-4159-9bde-4ab1cbd435e0",
+      "recorded_at": "2026-11-08T09:41:54.368Z",
+      "text": "26.11/07 네이버플레이스 광고 문자 보냄",
+      "kind": "note"
+    },
+    {
       "id": "a29b9684-9941-4e9e-962c-eea2394a4dab",
       "recorded_at": "2026-11-08T09:41:11.725Z",
       "text": "리뷰 답글 달았어요",

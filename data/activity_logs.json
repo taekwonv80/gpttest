@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "a29b9684-9941-4e9e-962c-eea2394a4dab",
+      "recorded_at": "2026-11-08T09:41:11.725Z",
+      "text": "리뷰 답글 달았어요",
+      "kind": "note"
+    },
+    {
       "id": "6a45b64c-3d6a-47d5-92c5-7fca0ec8d583",
       "recorded_at": "2026-10-31T05:49:56.824Z",
       "text": "리뷰 답글 달았어요",

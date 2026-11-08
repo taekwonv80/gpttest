@@ -3,4 +3,5 @@
 .weekly-place-trend .trend-marker{fill:#fff;stroke:#1261d6;stroke-width:3}.weekly-place-trend .trend-marker-label{fill:#405d7c;font-size:11px;font-weight:800}
 .weekly-place-trend small{display:block;margin-top:5px;color:#526b86;font-size:11px;font-weight:800}
 .weekly-ad-metrics small{overflow:visible!important;text-overflow:clip!important}
+.weekly-ad-metrics em{display:block;margin-top:8px;color:#71829a;font-size:10px;font-style:normal;font-weight:800}
 @media(max-width:650px){.weekly-ad-report{margin:16px 0 20px;padding:16px;border-radius:15px}}

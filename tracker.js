@@ -794,12 +794,12 @@ function renderWeeklyAdReport() {
   const previousCpc = previous.clicks ? previous.spend / previous.clicks : 0;
   const change = (value, prior) => !prior ? '비교 대기' : `${value >= prior ? '↑' : '↓'} ${Math.abs((value - prior) / prior * 100).toFixed(1)}%`;
   const cards = [
-    ['총광고비', `${weeklyAdNumber(current.spend)}원`, change(current.spend, previous.spend)],
-    ['클릭수', weeklyAdNumber(current.clicks), change(current.clicks, previous.clicks)],
-    ['클릭률', `${currentCtr.toFixed(2)}%`, change(currentCtr, previousCtr)],
-    ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc), currentCpc <= previousCpc ? 'up' : 'down'],
+    ['총광고비', `${weeklyAdNumber(current.spend)}원`, change(current.spend, previous.spend), '', `이전 ${weeklyAdNumber(previous.spend)}원`],
+    ['클릭수', weeklyAdNumber(current.clicks), change(current.clicks, previous.clicks), '', `이전 ${weeklyAdNumber(previous.clicks)}`],
+    ['클릭률', `${currentCtr.toFixed(2)}%`, change(currentCtr, previousCtr), '', `이전 ${previousCtr.toFixed(2)}%`],
+    ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc), currentCpc <= previousCpc ? 'up' : 'down', `이전 ${weeklyAdNumber(previousCpc)}원`],
   ];
-  metrics.replaceChildren(...cards.map(([label, value, note, status]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${status || (note.startsWith('↑') ? 'up' : 'down')}">${note}</small>`; return card; }));
+  metrics.replaceChildren(...cards.map(([label, value, note, status, previousValue]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${status || (note.startsWith('↑') ? 'up' : 'down')}">${note}</small><em>${previousValue}</em>`; return card; }));
   const range = `${reportMonthDay(start)} ~ ${reportMonthDay(last)}`;
   document.querySelector('#weekly-ad-range').textContent = range;
   document.querySelector('#weekly-place-trend-range').textContent = `시작 ${reportMonthDay(start)} · 끝 ${reportMonthDay(last)}`;

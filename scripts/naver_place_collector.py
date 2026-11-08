@@ -36,6 +36,9 @@ FIELDS = (
     "booking_orders_weekly",
     "smartcall_weekly",
     "reviews_weekly",
+    "reviews_unreplied_weekly",
+    "reviews_replied_weekly",
+    "reviews_reply_rate_weekly",
     "place_visits_daily_delta",
     "booking_orders_daily_delta",
     "smartcall_daily_delta",
@@ -336,7 +339,16 @@ def parse_review_text(text: str) -> dict[str, int | str]:
         values = [number_after(normalized, (label,)) for label in review_types]
         if any(item is not None for item in values):
             value = sum(item or 0 for item in values)
-    return {"reviews_weekly": value if value is not None else ""}
+    unreplied = number_after(normalized, ("답글 미작성", "미답글 리뷰", "답글을 달지 않은 리뷰", "미답글"))
+    replied = number_after(normalized, ("답글 작성", "답글 완료", "답글을 단 리뷰", "답글 완료 리뷰"))
+    reply_rate_match = re.search(r"(?:답글\s*(?:관리율|작성률|률))\s*(\d+(?:\.\d+)?)\s*%", normalized)
+    reply_rate = metric_number(reply_rate_match.group(1)) if reply_rate_match else None
+    return {
+        "reviews_weekly": value if value is not None else "",
+        "reviews_unreplied_weekly": unreplied if unreplied is not None else "",
+        "reviews_replied_weekly": replied if replied is not None else "",
+        "reviews_reply_rate_weekly": reply_rate if reply_rate is not None else "",
+    }
 
 
 def parse_reservation_text(text: str) -> dict[str, Any]:

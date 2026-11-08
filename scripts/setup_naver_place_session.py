@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+import os
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -23,6 +24,35 @@ TAB_SECRETS = (
 )
 
 
+def edge_executable() -> Path:
+    candidates = (
+        Path(os.environ.get("PROGRAMFILES(X86)", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
+        Path(os.environ.get("PROGRAMFILES", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise SystemExit("Microsoft Edge를 찾지 못했습니다. Edge를 설치한 뒤 다시 실행해주세요.")
+
+
+def edge_user_data_dir() -> Path:
+    """Keep a dedicated persistent Edge profile for the collector.
+
+    Microsoft Edge rejects Playwright's automation flags against its ordinary
+    user-data directory.  A separate profile still keeps the owner's signed-in
+    session between refreshes without touching everyday Edge tabs or settings.
+    """
+    configured = os.environ.get("EDGE_USER_DATA_DIR", "").strip()
+    if configured:
+        return Path(configured)
+    local_app_data = os.environ.get("LOCALAPPDATA", "").strip()
+    if not local_app_data:
+        raise SystemExit("Windows 로컬 앱 데이터 경로를 찾지 못했습니다. EDGE_USER_DATA_DIR 경로를 지정해주세요.")
+    path = Path(local_app_data) / "NaverPlaceCollector" / "EdgeProfile"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def is_owner_page_url(url: str) -> bool:
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
@@ -35,8 +65,10 @@ def is_owner_page_url(url: str) -> bool:
 def latest_owner_page(context: "BrowserContext") -> "Page":
     candidates = [page for page in context.pages if is_owner_page_url(page.url)]
     if not candidates:
+        open_urls = "\n".join(f"- {page.url}" for page in context.pages) or "- 열린 탭 없음"
         raise SystemExit(
-            "업체 통계 페이지를 찾지 못했습니다. 업체 카드에서 통계를 새로 연 뒤 다시 시도해주세요."
+            "업체 통계 페이지를 찾지 못했습니다. 업체 카드에서 통계를 새로 연 뒤 다시 시도해주세요.\n"
+            f"스크립트에서 확인한 열린 탭:\n{open_urls}"
         )
     return candidates[-1]
 
@@ -63,9 +95,17 @@ def main() -> None:
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context(locale="ko-KR", timezone_id="Asia/Seoul")
+        context = playwright.chromium.launch_persistent_context(
+            user_data_dir=str(edge_user_data_dir()),
+            headless=False,
+            executable_path=str(edge_executable()),
+            locale="ko-KR",
+            timezone_id="Asia/Seoul",
+        )
+        blank_pages = [page for page in context.pages if page.url == "about:blank"]
         page = context.new_page()
+        for blank_page in blank_pages:
+            blank_page.close()
         page.goto("https://new.smartplace.naver.com/", wait_until="domcontentloaded")
         input("브라우저에서 로그인하고 대상 업체의 [통계] 메뉴를 연 뒤 Enter를 누르세요: ")
         latest_owner_page(context)
@@ -79,7 +119,7 @@ def main() -> None:
             saved_urls.add(tab_url)
             print(f"{tab_name} 탭 주소 확인 완료")
         context.storage_state(path=str(SESSION_PATH))
-        browser.close()
+        context.close()
 
     encoded = base64.b64encode(SESSION_PATH.read_bytes()).decode("ascii")
     print("GitHub Secrets에 로그인 세션과 통계 URL을 등록합니다.")

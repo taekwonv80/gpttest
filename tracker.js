@@ -792,14 +792,14 @@ function renderWeeklyAdReport() {
   const previousCtr = previous.impressions ? previous.clicks / previous.impressions * 100 : 0;
   const currentCpc = current.clicks ? current.spend / current.clicks : 0;
   const previousCpc = previous.clicks ? previous.spend / previous.clicks : 0;
-  const change = (value, prior, suffix = '%') => !prior ? '비교 대기' : `${value >= prior ? '↑' : '↓'} ${Math.abs((value - prior) / prior * 100).toFixed(1)}% 이전 기간 대비`;
+  const change = (value, prior) => !prior ? '비교 대기' : `${value >= prior ? '↑' : '↓'} ${Math.abs((value - prior) / prior * 100).toFixed(1)}%`;
   const cards = [
     ['총광고비', `${weeklyAdNumber(current.spend)}원`, change(current.spend, previous.spend)],
     ['클릭수', weeklyAdNumber(current.clicks), change(current.clicks, previous.clicks)],
-    ['클릭률', `${currentCtr.toFixed(2)}%`, !previous.impressions ? '비교 대기' : `${currentCtr >= previousCtr ? '↑' : '↓'} ${Math.abs(currentCtr - previousCtr).toFixed(2)}%p 이전 기간 대비`],
-    ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc)],
+    ['클릭률', `${currentCtr.toFixed(2)}%`, !previous.impressions ? '비교 대기' : `${currentCtr >= previousCtr ? '↑' : '↓'} ${Math.abs(currentCtr - previousCtr).toFixed(2)}%p`],
+    ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc), currentCpc <= previousCpc ? 'up' : 'down'],
   ];
-  metrics.replaceChildren(...cards.map(([label, value, note]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${note.startsWith('↑') ? 'up' : 'down'}">${note}</small>`; return card; }));
+  metrics.replaceChildren(...cards.map(([label, value, note, status]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${status || (note.startsWith('↑') ? 'up' : 'down')}">${note}</small>`; return card; }));
   const range = `${reportMonthDay(start)} ~ ${reportMonthDay(last)}`;
   document.querySelector('#weekly-ad-range').textContent = range;
   document.querySelector('#weekly-place-trend-range').textContent = `시작 ${reportMonthDay(start)} · 끝 ${reportMonthDay(last)}`;

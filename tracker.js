@@ -796,7 +796,7 @@ function renderWeeklyAdReport() {
   const cards = [
     ['총광고비', `${weeklyAdNumber(current.spend)}원`, change(current.spend, previous.spend)],
     ['클릭수', weeklyAdNumber(current.clicks), change(current.clicks, previous.clicks)],
-    ['클릭률', `${currentCtr.toFixed(2)}%`, !previous.impressions ? '비교 대기' : `${currentCtr >= previousCtr ? '↑' : '↓'} ${Math.abs(currentCtr - previousCtr).toFixed(2)}%p`],
+    ['클릭률', `${currentCtr.toFixed(2)}%`, change(currentCtr, previousCtr)],
     ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc), currentCpc <= previousCpc ? 'up' : 'down'],
   ];
   metrics.replaceChildren(...cards.map(([label, value, note, status]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${status || (note.startsWith('↑') ? 'up' : 'down')}">${note}</small>`; return card; }));

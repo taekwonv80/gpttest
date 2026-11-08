@@ -806,11 +806,13 @@ function renderWeeklyAdReport() {
   const trendRows = currentRows.map((row) => ({ date: row.date, clicks: (weeklyAdType === '전체' ? row.campaigns : row.campaigns.filter((item) => item.name === weeklyAdType)).reduce((sum, item) => sum + (Number(item.clicks) || 0), 0) }));
   const max = Math.max(...trendRows.map((row) => row.clicks), 1);
   const min = Math.min(...trendRows.map((row) => row.clicks));
+  const maxRow = trendRows.find((row) => row.clicks === max);
+  const minRow = trendRows.find((row) => row.clicks === min);
   const chartPoints = trendRows.map((row, index) => ({ x: trendRows.length === 1 ? 0 : index / (trendRows.length - 1) * 600, y: 150 - row.clicks / max * 125, clicks: row.clicks }));
   const points = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
   const marker = (label, value) => { const point = chartPoints.find((item) => item.clicks === value); const labelY = point.y < 28 ? point.y + 18 : point.y - 10; return `<circle class="trend-marker" cx="${point.x}" cy="${point.y}" r="4"/><text class="trend-marker-label" x="${point.x}" y="${labelY}" text-anchor="middle">${label} ${weeklyAdNumber(value)}클릭</text>`; };
   document.querySelector('#weekly-ad-trend-name').textContent = weeklyAdType === '전체' ? '전체 광고' : weeklyAdType;
-  document.querySelector('#weekly-place-trend-stats').textContent = `최대 ${weeklyAdNumber(max)}클릭 · 최소 ${weeklyAdNumber(min)}클릭`;
+  document.querySelector('#weekly-place-trend-stats').textContent = `최대 ${weeklyAdNumber(max)}클릭 (${reportMonthDay(maxRow.date)}) · 최소 ${weeklyAdNumber(min)}클릭 (${reportMonthDay(minRow.date)})`;
   document.querySelector('#weekly-place-trend-chart').setAttribute('aria-label', `${weeklyAdType === '전체' ? '전체 광고' : weeklyAdType} 클릭 추이`);
   document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>${marker('최대', max)}${marker('최소', min)}`;
   document.querySelector('#weekly-place-trend-labels').replaceChildren(...trendRows.filter((_, i) => i === 0 || i === trendRows.length - 1 || trendRows.length <= 7).map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));

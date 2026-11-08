@@ -803,11 +803,13 @@ function renderWeeklyAdReport() {
   const range = `${reportMonthDay(start)} ~ ${reportMonthDay(last)}`;
   document.querySelector('#weekly-ad-range').textContent = range;
   document.querySelector('#weekly-place-trend-range').textContent = `시작 ${reportMonthDay(start)} · 끝 ${reportMonthDay(last)}`;
-  const placeRows = currentRows.map((row) => ({ date: row.date, clicks: Number(row.campaigns.find((item) => item.name === '플레이스 검색광고')?.clicks) || 0 }));
-  const max = Math.max(...placeRows.map((row) => row.clicks), 1);
-  const points = placeRows.map((row, index) => `${placeRows.length === 1 ? 0 : index / (placeRows.length - 1) * 600},${150 - row.clicks / max * 125}`).join(' ');
+  const trendRows = currentRows.map((row) => ({ date: row.date, clicks: (weeklyAdType === '전체' ? row.campaigns : row.campaigns.filter((item) => item.name === weeklyAdType)).reduce((sum, item) => sum + (Number(item.clicks) || 0), 0) }));
+  const max = Math.max(...trendRows.map((row) => row.clicks), 1);
+  const points = trendRows.map((row, index) => `${trendRows.length === 1 ? 0 : index / (trendRows.length - 1) * 600},${150 - row.clicks / max * 125}`).join(' ');
+  document.querySelector('#weekly-ad-trend-name').textContent = weeklyAdType === '전체' ? '전체 광고' : weeklyAdType;
+  document.querySelector('#weekly-place-trend-chart').setAttribute('aria-label', `${weeklyAdType === '전체' ? '전체 광고' : weeklyAdType} 클릭 추이`);
   document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>`;
-  document.querySelector('#weekly-place-trend-labels').replaceChildren(...placeRows.filter((_, i) => i === 0 || i === placeRows.length - 1 || placeRows.length <= 7).map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));
+  document.querySelector('#weekly-place-trend-labels').replaceChildren(...trendRows.filter((_, i) => i === 0 || i === trendRows.length - 1 || trendRows.length <= 7).map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));
 }
 
 function weeklyReports() {

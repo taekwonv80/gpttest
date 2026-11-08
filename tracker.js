@@ -772,7 +772,8 @@ function reportMonthDay(value) {
 function weeklyAdNumber(value) { return new Intl.NumberFormat('ko-KR').format(Math.round(value || 0)); }
 
 function renderWeeklyAdReport() {
-  const daily = Array.isArray(campaignWeeklyData.daily) ? campaignWeeklyData.daily
+  const dailySource = Array.isArray(campaignWeeklyData.days) ? campaignWeeklyData.days : campaignWeeklyData.daily;
+  const daily = Array.isArray(dailySource) ? dailySource
     .filter((item) => item?.date && Array.isArray(item.campaigns)).sort((a, b) => a.date.localeCompare(b.date)) : [];
   const metrics = document.querySelector('#weekly-ad-metrics');
   if (!metrics || !daily.length) return;

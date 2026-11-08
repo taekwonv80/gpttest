@@ -17,6 +17,9 @@ let placeDailyRows = [];
 let performancePeriod = 'recent30';
 let showAllPerformanceActivities = false;
 let selectedWeeklyReport = '';
+let campaignWeeklyData = {};
+let weeklyAdPeriod = '7';
+let weeklyAdType = '전체';
 let primaryKeyword = localStorage.getItem(PRIMARY_KEYWORD_STORAGE) || '';
 let keywordAddedAt = {};
 let selectedPeriod = '1주';
@@ -386,18 +389,20 @@ function updateKeywordHeading(keyword) {
 
 async function loadServerTracker() {
   try {
-    const [configResponse, storeProfileResponse, historyResponse, syncResponse, placeDailyResponse] = await Promise.all([
+    const [configResponse, storeProfileResponse, historyResponse, syncResponse, placeDailyResponse, campaignWeeklyResponse] = await Promise.all([
       fetch('data/tracker_config.json', { cache: 'no-store' }),
       fetch('data/store_profile.json', { cache: 'no-store' }),
       fetch('data/rank_history.json', { cache: 'no-store' }),
       fetch('data/keyword_sync.json', { cache: 'no-store' }),
       fetch('data/naver_place_daily.csv', { cache: 'no-store' }),
+      fetch('data/campaign_weekly.json', { cache: 'no-store' }),
     ]);
     let config = configResponse.ok ? await configResponse.json() : {};
     const storeProfile = storeProfileResponse.ok ? await storeProfileResponse.json() : {};
     const history = historyResponse.ok ? await historyResponse.json() : {};
     rankHistory = Array.isArray(history.measurements) ? history.measurements : [];
     placeDailyRows = placeDailyResponse.ok ? parsePlaceDailyCsv(await placeDailyResponse.text()) : [];
+    campaignWeeklyData = campaignWeeklyResponse.ok ? await campaignWeeklyResponse.json() : {};
     const sync = syncResponse.ok ? await syncResponse.json() : {};
     keywordSyncEndpoint = typeof sync.endpoint === 'string' ? sync.endpoint.replace(/\/$/, '') : '';
     void loadSyncedActivities();
@@ -442,6 +447,7 @@ async function loadServerTracker() {
     renderKeywords();
     renderPerformance();
     renderWeeklyReport();
+    renderWeeklyAdReport();
     setKeywordSyncStatus(keywordSyncEndpoint
       ? '키워드 파일과 동기화됨 · 등록 또는 삭제하면 바로 순위 측정을 요청합니다.'
       : '자동동기화 서버를 연결하면 등록·삭제가 파일에 저장됩니다.');
@@ -761,6 +767,46 @@ function reportDateFromYmd(value) {
 function reportMonthDay(value) {
   const date = value instanceof Date ? value : reportDateFromYmd(value);
   return date ? `${date.getMonth() + 1}월 ${date.getDate()}일` : '-';
+}
+
+function weeklyAdNumber(value) { return new Intl.NumberFormat('ko-KR').format(Math.round(value || 0)); }
+
+function renderWeeklyAdReport() {
+  const daily = Array.isArray(campaignWeeklyData.daily) ? campaignWeeklyData.daily
+    .filter((item) => item?.date && Array.isArray(item.campaigns)).sort((a, b) => a.date.localeCompare(b.date)) : [];
+  const metrics = document.querySelector('#weekly-ad-metrics');
+  if (!metrics || !daily.length) return;
+  const last = reportDateFromYmd(daily.at(-1).date);
+  const days = weeklyAdPeriod === 'all' ? daily.length : Number(weeklyAdPeriod);
+  const start = new Date(last); start.setDate(last.getDate() - days + 1);
+  const previousStart = new Date(start); previousStart.setDate(start.getDate() - days);
+  const total = (rows) => rows.reduce((sum, row) => {
+    const items = weeklyAdType === '전체' ? row.campaigns : row.campaigns.filter((item) => item.name === weeklyAdType);
+    return items.reduce((all, item) => ({ spend: all.spend + (Number(item.spend) || 0), impressions: all.impressions + (Number(item.impressions) || 0), clicks: all.clicks + (Number(item.clicks) || 0) }), sum);
+  }, { spend: 0, impressions: 0, clicks: 0 });
+  const currentRows = daily.filter((row) => reportDateFromYmd(row.date) >= start);
+  const previousRows = daily.filter((row) => { const date = reportDateFromYmd(row.date); return date >= previousStart && date < start; });
+  const current = total(currentRows); const previous = total(previousRows);
+  const currentCtr = current.impressions ? current.clicks / current.impressions * 100 : 0;
+  const previousCtr = previous.impressions ? previous.clicks / previous.impressions * 100 : 0;
+  const currentCpc = current.clicks ? current.spend / current.clicks : 0;
+  const previousCpc = previous.clicks ? previous.spend / previous.clicks : 0;
+  const change = (value, prior, suffix = '%') => !prior ? '비교 대기' : `${value >= prior ? '↑' : '↓'} ${Math.abs((value - prior) / prior * 100).toFixed(1)}% 이전 기간 대비`;
+  const cards = [
+    ['총광고비', `${weeklyAdNumber(current.spend)}원`, change(current.spend, previous.spend)],
+    ['클릭수', weeklyAdNumber(current.clicks), change(current.clicks, previous.clicks)],
+    ['클릭률', `${currentCtr.toFixed(2)}%`, !previous.impressions ? '비교 대기' : `${currentCtr >= previousCtr ? '↑' : '↓'} ${Math.abs(currentCtr - previousCtr).toFixed(2)}%p 이전 기간 대비`],
+    ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc)],
+  ];
+  metrics.replaceChildren(...cards.map(([label, value, note]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${note.startsWith('↑') ? 'up' : 'down'}">${note}</small>`; return card; }));
+  const range = `${reportMonthDay(start)} ~ ${reportMonthDay(last)}`;
+  document.querySelector('#weekly-ad-range').textContent = range;
+  document.querySelector('#weekly-place-trend-range').textContent = `시작 ${reportMonthDay(start)} · 끝 ${reportMonthDay(last)}`;
+  const placeRows = currentRows.map((row) => ({ date: row.date, clicks: Number(row.campaigns.find((item) => item.name === '플레이스 검색광고')?.clicks) || 0 }));
+  const max = Math.max(...placeRows.map((row) => row.clicks), 1);
+  const points = placeRows.map((row, index) => `${placeRows.length === 1 ? 0 : index / (placeRows.length - 1) * 600},${150 - row.clicks / max * 125}`).join(' ');
+  document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>`;
+  document.querySelector('#weekly-place-trend-labels').replaceChildren(...placeRows.filter((_, i) => i === 0 || i === placeRows.length - 1 || placeRows.length <= 7).map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));
 }
 
 function weeklyReports() {
@@ -1464,6 +1510,17 @@ document.querySelector('#weekly-history-list').addEventListener('click', (event)
   if (!button) return;
   selectedWeeklyReport = button.dataset.weekStart;
   renderWeeklyReport();
+});
+
+document.querySelector('.weekly-ad-report').addEventListener('click', (event) => {
+  const typeButton = event.target.closest('[data-weekly-ad-type]');
+  const periodButton = event.target.closest('[data-weekly-ad-period]');
+  if (!typeButton && !periodButton) return;
+  if (typeButton) weeklyAdType = typeButton.dataset.weeklyAdType;
+  if (periodButton) weeklyAdPeriod = periodButton.dataset.weeklyAdPeriod;
+  document.querySelectorAll('[data-weekly-ad-type]').forEach((button) => button.classList.toggle('selected', button.dataset.weeklyAdType === weeklyAdType));
+  document.querySelectorAll('[data-weekly-ad-period]').forEach((button) => button.classList.toggle('selected', button.dataset.weeklyAdPeriod === weeklyAdPeriod));
+  renderWeeklyAdReport();
 });
 
 document.querySelector('#season-month').addEventListener('change', (event) => {

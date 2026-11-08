@@ -815,7 +815,10 @@ function renderWeeklyAdReport() {
   document.querySelector('#weekly-place-trend-stats').textContent = `최대 ${weeklyAdNumber(max)}클릭 (${reportMonthDay(maxRow.date)}) · 최소 ${weeklyAdNumber(min)}클릭 (${reportMonthDay(minRow.date)})`;
   document.querySelector('#weekly-place-trend-chart').setAttribute('aria-label', `${weeklyAdType === '전체' ? '전체 광고' : weeklyAdType} 클릭 추이`);
   document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>${marker('최대', max)}${marker('최소', min)}`;
-  document.querySelector('#weekly-place-trend-labels').replaceChildren(...trendRows.filter((_, i) => i === 0 || i === trendRows.length - 1 || trendRows.length <= 7).map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));
+  const labelRows = trendRows.length <= 7
+    ? trendRows
+    : Array.from({ length: Math.min(6, trendRows.length) }, (_, index, all) => trendRows[Math.round(index * (trendRows.length - 1) / (all.length - 1))]);
+  document.querySelector('#weekly-place-trend-labels').replaceChildren(...labelRows.map((row) => { const span = document.createElement('span'); span.textContent = reportMonthDay(row.date); return span; }));
 }
 
 function weeklyReports() {

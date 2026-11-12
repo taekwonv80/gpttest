@@ -1,33 +1,33 @@
 {
   "schema_version": 2,
   "source": "naver-searchad-api",
-  "generated_at": "2026-11-11T11:58:31+09:00",
-  "report_date": "2026-11-10",
+  "generated_at": "2026-11-12T13:02:56+09:00",
+  "report_date": "2026-11-11",
   "period": {
-    "since": "2026-08-13",
-    "until": "2026-11-10"
+    "since": "2026-08-14",
+    "until": "2026-11-11"
   },
   "coverage": {
     "keywords": "최근 7일·직전 7일·30일·90일 비교",
     "place_search_terms": "네이버 제공 최근 30일",
-    "powerlink_search_terms": "2026-08-13 ~ 2026-11-10 · 90일 누적"
+    "powerlink_search_terms": "2026-08-14 ~ 2026-11-11 · 90일 누적"
   },
   "decision_windows": {
     "7": {
-      "since": "2026-11-04",
-      "until": "2026-11-10"
+      "since": "2026-11-05",
+      "until": "2026-11-11"
     },
     "previous_7": {
-      "since": "2026-10-28",
-      "until": "2026-11-03"
+      "since": "2026-10-29",
+      "until": "2026-11-04"
     },
     "30": {
-      "since": "2026-10-12",
-      "until": "2026-11-10"
+      "since": "2026-10-13",
+      "until": "2026-11-11"
     },
     "90": {
-      "since": "2026-08-13",
-      "until": "2026-11-10"
+      "since": "2026-08-14",
+      "until": "2026-11-11"
     }
   },
   "adgroup_counts": {
@@ -39,27 +39,27 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역맛집",
-      "impressions": 667,
+      "impressions": 673,
       "clicks": 4,
       "spend": 334,
       "windows": {
         "7": {
-          "impressions": 98,
+          "impressions": 110,
           "clicks": 1,
           "spend": 88
         },
         "previous_7": {
-          "impressions": 124,
+          "impressions": 125,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 667,
+          "impressions": 673,
           "clicks": 4,
           "spend": 334
         },
         "90": {
-          "impressions": 1318,
+          "impressions": 1344,
           "clicks": 8,
           "spend": 671
         }
@@ -68,27 +68,27 @@
     {
       "category": "파워링크",
       "value": "시흥장곡동맛집",
-      "impressions": 315,
+      "impressions": 317,
       "clicks": 4,
       "spend": 328,
       "windows": {
         "7": {
-          "impressions": 74,
+          "impressions": 67,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 69,
+          "impressions": 72,
           "clicks": 1,
           "spend": 83
         },
         "30": {
-          "impressions": 315,
+          "impressions": 317,
           "clicks": 4,
           "spend": 328
         },
         "90": {
-          "impressions": 341,
+          "impressions": 345,
           "clicks": 4,
           "spend": 328
         }
@@ -107,7 +107,7 @@
           "spend": 176
         },
         "previous_7": {
-          "impressions": 12,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
@@ -117,7 +117,7 @@
           "spend": 262
         },
         "90": {
-          "impressions": 73,
+          "impressions": 75,
           "clicks": 3,
           "spend": 262
         }
@@ -126,27 +126,27 @@
     {
       "category": "파워링크",
       "value": "갯골생태공원맛집",
-      "impressions": 117,
+      "impressions": 121,
       "clicks": 3,
       "spend": 199,
       "windows": {
         "7": {
-          "impressions": 8,
+          "impressions": 12,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 21,
+          "impressions": 20,
           "clicks": 2,
           "spend": 138
         },
         "30": {
-          "impressions": 117,
+          "impressions": 121,
           "clicks": 3,
           "spend": 199
         },
         "90": {
-          "impressions": 128,
+          "impressions": 132,
           "clicks": 3,
           "spend": 199
         }
@@ -155,7 +155,7 @@
     {
       "category": "파워링크",
       "value": "물왕리맛집",
-      "impressions": 83,
+      "impressions": 79,
       "clicks": 2,
       "spend": 173,
       "windows": {
@@ -165,17 +165,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 11,
+          "impressions": 9,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 83,
+          "impressions": 79,
           "clicks": 2,
           "spend": 173
         },
         "90": {
-          "impressions": 359,
+          "impressions": 349,
           "clicks": 4,
           "spend": 344
         }
@@ -183,57 +183,28 @@
     },
     {
       "category": "파워링크",
-      "value": "장현지구칼국수",
-      "impressions": 7,
-      "clicks": 2,
-      "spend": 165,
-      "windows": {
-        "7": {
-          "impressions": 0,
-          "clicks": 0,
-          "spend": 0
-        },
-        "previous_7": {
-          "impressions": 2,
-          "clicks": 1,
-          "spend": 88
-        },
-        "30": {
-          "impressions": 7,
-          "clicks": 2,
-          "spend": 165
-        },
-        "90": {
-          "impressions": 13,
-          "clicks": 2,
-          "spend": 165
-        }
-      }
-    },
-    {
-      "category": "파워링크",
       "value": "능곡동맛집",
-      "impressions": 448,
+      "impressions": 456,
       "clicks": 1,
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 103,
+          "impressions": 99,
           "clicks": 1,
           "spend": 88
         },
         "previous_7": {
-          "impressions": 126,
+          "impressions": 124,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 448,
+          "impressions": 456,
           "clicks": 1,
           "spend": 88
         },
         "90": {
-          "impressions": 599,
+          "impressions": 610,
           "clicks": 1,
           "spend": 88
         }
@@ -242,12 +213,12 @@
     {
       "category": "파워링크",
       "value": "능곡맛집",
-      "impressions": 15,
+      "impressions": 17,
       "clicks": 1,
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -257,12 +228,12 @@
           "spend": 88
         },
         "30": {
-          "impressions": 15,
+          "impressions": 17,
           "clicks": 1,
           "spend": 88
         },
         "90": {
-          "impressions": 31,
+          "impressions": 33,
           "clicks": 1,
           "spend": 88
         }
@@ -305,7 +276,7 @@
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 5,
           "clicks": 1,
           "spend": 88
         },
@@ -320,7 +291,7 @@
           "spend": 88
         },
         "90": {
-          "impressions": 37,
+          "impressions": 38,
           "clicks": 1,
           "spend": 88
         }
@@ -339,7 +310,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 8,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -349,7 +320,7 @@
           "spend": 88
         },
         "90": {
-          "impressions": 270,
+          "impressions": 263,
           "clicks": 1,
           "spend": 88
         }
@@ -358,27 +329,27 @@
     {
       "category": "파워링크",
       "value": "시흥시굴찜",
-      "impressions": 13,
+      "impressions": 14,
       "clicks": 1,
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 1,
           "spend": 88
         },
         "30": {
-          "impressions": 13,
+          "impressions": 14,
           "clicks": 1,
           "spend": 88
         },
         "90": {
-          "impressions": 13,
+          "impressions": 14,
           "clicks": 1,
           "spend": 88
         }
@@ -444,57 +415,28 @@
     },
     {
       "category": "파워링크",
-      "value": "시흥시청역맛집",
-      "impressions": 145,
-      "clicks": 1,
-      "spend": 88,
-      "windows": {
-        "7": {
-          "impressions": 19,
-          "clicks": 0,
-          "spend": 0
-        },
-        "previous_7": {
-          "impressions": 28,
-          "clicks": 0,
-          "spend": 0
-        },
-        "30": {
-          "impressions": 145,
-          "clicks": 1,
-          "spend": 88
-        },
-        "90": {
-          "impressions": 184,
-          "clicks": 1,
-          "spend": 88
-        }
-      }
-    },
-    {
-      "category": "파워링크",
       "value": "시흥플랑드르맛집",
-      "impressions": 172,
+      "impressions": 178,
       "clicks": 1,
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 57,
+          "impressions": 63,
           "clicks": 1,
           "spend": 88
         },
         "previous_7": {
-          "impressions": 30,
+          "impressions": 33,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 172,
+          "impressions": 178,
           "clicks": 1,
           "spend": 88
         },
         "90": {
-          "impressions": 499,
+          "impressions": 508,
           "clicks": 1,
           "spend": 88
         }
@@ -532,7 +474,7 @@
     {
       "category": "파워링크",
       "value": "월곶맛집",
-      "impressions": 196,
+      "impressions": 189,
       "clicks": 1,
       "spend": 88,
       "windows": {
@@ -542,17 +484,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 38,
+          "impressions": 36,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 196,
+          "impressions": 189,
           "clicks": 1,
           "spend": 88
         },
         "90": {
-          "impressions": 384,
+          "impressions": 371,
           "clicks": 1,
           "spend": 88
         }
@@ -561,22 +503,22 @@
     {
       "category": "파워링크",
       "value": "장곡동칼국수",
-      "impressions": 77,
+      "impressions": 76,
       "clicks": 1,
       "spend": 88,
       "windows": {
         "7": {
-          "impressions": 22,
+          "impressions": 16,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 14,
+          "impressions": 20,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 77,
+          "impressions": 76,
           "clicks": 1,
           "spend": 88
         },
@@ -590,7 +532,7 @@
     {
       "category": "파워링크",
       "value": "장현동새우구이",
-      "impressions": 3,
+      "impressions": 2,
       "clicks": 1,
       "spend": 88,
       "windows": {
@@ -605,7 +547,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 1,
           "spend": 88
         },
@@ -618,13 +560,42 @@
     },
     {
       "category": "파워링크",
+      "value": "장현지구칼국수",
+      "impressions": 6,
+      "clicks": 1,
+      "spend": 88,
+      "windows": {
+        "7": {
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0
+        },
+        "previous_7": {
+          "impressions": 2,
+          "clicks": 1,
+          "spend": 88
+        },
+        "30": {
+          "impressions": 6,
+          "clicks": 1,
+          "spend": 88
+        },
+        "90": {
+          "impressions": 13,
+          "clicks": 2,
+          "spend": 165
+        }
+      }
+    },
+    {
+      "category": "파워링크",
       "value": "시흥시청맛집추천",
-      "impressions": 18,
+      "impressions": 17,
       "clicks": 1,
       "spend": 83,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -634,12 +605,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 18,
+          "impressions": 17,
           "clicks": 1,
           "spend": 83
         },
         "90": {
-          "impressions": 80,
+          "impressions": 78,
           "clicks": 3,
           "spend": 230
         }
@@ -648,7 +619,7 @@
     {
       "category": "파워링크",
       "value": "장현맛집",
-      "impressions": 136,
+      "impressions": 137,
       "clicks": 1,
       "spend": 83,
       "windows": {
@@ -658,17 +629,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 26,
+          "impressions": 23,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 136,
+          "impressions": 137,
           "clicks": 1,
           "spend": 83
         },
         "90": {
-          "impressions": 276,
+          "impressions": 278,
           "clicks": 1,
           "spend": 83
         }
@@ -677,7 +648,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡동칼국수",
-      "impressions": 13,
+      "impressions": 12,
       "clicks": 1,
       "spend": 82,
       "windows": {
@@ -692,7 +663,7 @@
           "spend": 82
         },
         "30": {
-          "impressions": 13,
+          "impressions": 12,
           "clicks": 1,
           "spend": 82
         },
@@ -735,27 +706,27 @@
     {
       "category": "파워링크",
       "value": "시흥굴찜",
-      "impressions": 80,
+      "impressions": 84,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "7": {
-          "impressions": 18,
+          "impressions": 22,
           "clicks": 1,
           "spend": 77
         },
         "previous_7": {
-          "impressions": 28,
+          "impressions": 26,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 80,
+          "impressions": 84,
           "clicks": 1,
           "spend": 77
         },
         "90": {
-          "impressions": 80,
+          "impressions": 84,
           "clicks": 1,
           "spend": 77
         }
@@ -774,7 +745,7 @@
           "spend": 77
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -832,7 +803,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -1025,27 +996,27 @@
     {
       "category": "파워링크",
       "value": "장곡동맛집",
-      "impressions": 105,
+      "impressions": 119,
       "clicks": 1,
       "spend": 74,
       "windows": {
         "7": {
-          "impressions": 18,
+          "impressions": 34,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 24,
+          "impressions": 23,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 105,
+          "impressions": 119,
           "clicks": 1,
           "spend": 74
         },
         "90": {
-          "impressions": 145,
+          "impressions": 161,
           "clicks": 1,
           "spend": 74
         }
@@ -1088,12 +1059,12 @@
       "spend": 61,
       "windows": {
         "7": {
-          "impressions": 22,
+          "impressions": 24,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 17,
+          "impressions": 12,
           "clicks": 0,
           "spend": 0
         },
@@ -1103,7 +1074,7 @@
           "spend": 61
         },
         "90": {
-          "impressions": 277,
+          "impressions": 272,
           "clicks": 2,
           "spend": 149
         }
@@ -1112,12 +1083,12 @@
     {
       "category": "파워링크",
       "value": "장곡맛집",
-      "impressions": 235,
+      "impressions": 243,
       "clicks": 1,
       "spend": 55,
       "windows": {
         "7": {
-          "impressions": 57,
+          "impressions": 60,
           "clicks": 1,
           "spend": 55
         },
@@ -1127,12 +1098,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 235,
+          "impressions": 243,
           "clicks": 1,
           "spend": 55
         },
         "90": {
-          "impressions": 262,
+          "impressions": 270,
           "clicks": 1,
           "spend": 55
         }
@@ -1354,7 +1325,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -2843,7 +2814,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 13,
+          "impressions": 10,
           "clicks": 0,
           "spend": 0
         }
@@ -2901,7 +2872,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         }
@@ -6535,12 +6506,12 @@
     {
       "category": "파워링크",
       "value": "능곡굴찜",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -6550,12 +6521,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -8208,7 +8179,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         }
@@ -16888,12 +16859,12 @@
     {
       "category": "파워링크",
       "value": "능곡동굴",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -16903,12 +16874,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -16985,7 +16956,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -17966,12 +17937,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -34984,7 +34955,7 @@
     {
       "category": "파워링크",
       "value": "능곡동샤브샤브",
-      "impressions": 44,
+      "impressions": 42,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -34994,17 +34965,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 44,
+          "impressions": 42,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 189,
+          "impressions": 188,
           "clicks": 0,
           "spend": 0
         }
@@ -38261,7 +38232,7 @@
     {
       "category": "파워링크",
       "value": "능곡동술집",
-      "impressions": 10,
+      "impressions": 9,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -38276,12 +38247,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 10,
+          "impressions": 9,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 108,
+          "impressions": 107,
           "clicks": 0,
           "spend": 0
         }
@@ -38397,7 +38368,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 147,
+          "impressions": 143,
           "clicks": 2,
           "spend": 162
         }
@@ -48527,12 +48498,12 @@
     {
       "category": "파워링크",
       "value": "능곡동점심",
-      "impressions": 11,
+      "impressions": 12,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -48542,12 +48513,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 11,
+          "impressions": 12,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 22,
+          "impressions": 23,
           "clicks": 0,
           "spend": 0
         }
@@ -55603,12 +55574,12 @@
     {
       "category": "파워링크",
       "value": "능곡동칼국수",
-      "impressions": 43,
+      "impressions": 44,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 13,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
@@ -55618,12 +55589,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 43,
+          "impressions": 44,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 130,
+          "impressions": 131,
           "clicks": 1,
           "spend": 77
         }
@@ -55869,7 +55840,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 8,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
@@ -55884,7 +55855,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 45,
+          "impressions": 43,
           "clicks": 0,
           "spend": 0
         }
@@ -62525,7 +62496,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -64062,7 +64033,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -82960,7 +82931,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -87010,7 +86981,7 @@
     {
       "category": "파워링크",
       "value": "능곡샤브샤브",
-      "impressions": 25,
+      "impressions": 24,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -87025,12 +86996,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 25,
+          "impressions": 24,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 126,
+          "impressions": 125,
           "clicks": 0,
           "spend": 0
         }
@@ -89127,7 +89098,7 @@
     {
       "category": "파워링크",
       "value": "능곡술집",
-      "impressions": 17,
+      "impressions": 14,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -89137,17 +89108,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 6,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 17,
+          "impressions": 14,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 93,
+          "impressions": 92,
           "clicks": 0,
           "spend": 0
         }
@@ -89243,7 +89214,7 @@
     {
       "category": "파워링크",
       "value": "능곡식당",
-      "impressions": 8,
+      "impressions": 9,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -89253,17 +89224,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 8,
+          "impressions": 9,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 43,
+          "impressions": 41,
           "clicks": 0,
           "spend": 0
         }
@@ -93932,7 +93903,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -130834,12 +130805,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 6,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
@@ -130849,7 +130820,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 68,
+          "impressions": 67,
           "clicks": 0,
           "spend": 0
         }
@@ -130858,12 +130829,12 @@
     {
       "category": "파워링크",
       "value": "능곡칼국수맛집",
-      "impressions": 2,
+      "impressions": 3,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -130873,7 +130844,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -136117,7 +136088,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -136165,12 +136136,12 @@
     {
       "category": "파워링크",
       "value": "능곡회식",
-      "impressions": 1,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -136180,12 +136151,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         }
@@ -145242,22 +145213,22 @@
     {
       "category": "파워링크",
       "value": "물왕리칼국수",
-      "impressions": 49,
+      "impressions": 48,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 12,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 14,
+          "impressions": 15,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 49,
+          "impressions": 48,
           "clicks": 0,
           "spend": 0
         },
@@ -145276,12 +145247,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 3,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -145339,7 +145310,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -145349,7 +145320,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 151,
+          "impressions": 142,
           "clicks": 1,
           "spend": 88
         }
@@ -150839,22 +150810,22 @@
     {
       "category": "파워링크",
       "value": "선부동맛집",
-      "impressions": 11,
+      "impressions": 10,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 11,
+          "impressions": 10,
           "clicks": 0,
           "spend": 0
         },
@@ -163580,7 +163551,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -163590,7 +163561,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 57,
+          "impressions": 56,
           "clicks": 0,
           "spend": 0
         }
@@ -210241,7 +210212,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 12,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
@@ -210270,7 +210241,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -217027,7 +216998,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -222672,12 +222643,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡동굴",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -222687,12 +222658,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -222759,12 +222730,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡동굴찜",
-      "impressions": 2,
+      "impressions": 3,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -222774,12 +222745,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         }
@@ -228414,27 +228385,27 @@
     {
       "category": "파워링크",
       "value": "시흥능곡동맛집",
-      "impressions": 175,
+      "impressions": 205,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 50,
+          "impressions": 74,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 61,
+          "impressions": 56,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 175,
+          "impressions": 205,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 242,
+          "impressions": 271,
           "clicks": 0,
           "spend": 0
         }
@@ -230019,7 +229990,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -234089,7 +234060,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 33,
+          "impressions": 32,
           "clicks": 0,
           "spend": 0
         }
@@ -236293,7 +236264,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 24,
+          "impressions": 23,
           "clicks": 0,
           "spend": 0
         }
@@ -266337,7 +266308,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 19,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         }
@@ -266462,27 +266433,27 @@
     {
       "category": "파워링크",
       "value": "시흥능곡맛집",
-      "impressions": 13,
+      "impressions": 14,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 5,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 13,
+          "impressions": 14,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 37,
+          "impressions": 38,
           "clicks": 0,
           "spend": 0
         }
@@ -266554,7 +266525,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -266569,7 +266540,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 11,
+          "impressions": 12,
           "clicks": 0,
           "spend": 0
         }
@@ -268062,12 +268033,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -272117,7 +272088,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡샤브샤브",
-      "impressions": 100,
+      "impressions": 103,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -272127,12 +272098,12 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 22,
+          "impressions": 24,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 100,
+          "impressions": 103,
           "clicks": 0,
           "spend": 0
         },
@@ -274495,12 +274466,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡아침",
-      "impressions": 1,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -274510,12 +274481,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         }
@@ -275626,12 +275597,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역가성비맛집",
-      "impressions": 0,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -275641,12 +275612,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 4,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         }
@@ -278130,7 +278101,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -280585,7 +280556,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역근처맛집",
-      "impressions": 21,
+      "impressions": 20,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -280595,17 +280566,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 6,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 21,
+          "impressions": 20,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 39,
+          "impressions": 38,
           "clicks": 0,
           "spend": 0
         }
@@ -289643,7 +289614,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 7,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
@@ -297492,12 +297463,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역샤브샤브",
-      "impressions": 33,
+      "impressions": 34,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 6,
+          "impressions": 10,
           "clicks": 0,
           "spend": 0
         },
@@ -297507,12 +297478,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 33,
+          "impressions": 34,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 99,
+          "impressions": 103,
           "clicks": 0,
           "spend": 0
         }
@@ -300769,12 +300740,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역술집",
-      "impressions": 14,
+      "impressions": 15,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -300784,12 +300755,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 14,
+          "impressions": 15,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 58,
+          "impressions": 57,
           "clicks": 0,
           "spend": 0
         }
@@ -300890,7 +300861,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 7,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         },
@@ -308865,12 +308836,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -311006,7 +310977,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역점심",
-      "impressions": 17,
+      "impressions": 18,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -311016,17 +310987,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 17,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 31,
+          "impressions": 32,
           "clicks": 0,
           "spend": 0
         }
@@ -311064,7 +311035,7 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역점심맛집",
-      "impressions": 3,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -311079,7 +311050,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -313500,12 +313471,12 @@
     {
       "category": "파워링크",
       "value": "시흥능곡역주변맛집",
-      "impressions": 7,
+      "impressions": 8,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -313515,12 +313486,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 7,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 14,
+          "impressions": 15,
           "clicks": 0,
           "spend": 0
         }
@@ -318116,7 +318087,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 10,
+          "impressions": 9,
           "clicks": 0,
           "spend": 0
         },
@@ -326570,7 +326541,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 7,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         }
@@ -365357,12 +365328,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
@@ -367063,22 +367034,22 @@
     {
       "category": "파워링크",
       "value": "시흥능곡칼국수",
-      "impressions": 56,
+      "impressions": 57,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 9,
+          "impressions": 10,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 23,
+          "impressions": 21,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 56,
+          "impressions": 57,
           "clicks": 0,
           "spend": 0
         },
@@ -367097,12 +367068,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
@@ -373564,7 +373535,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -373675,22 +373646,22 @@
     {
       "category": "파워링크",
       "value": "시흥닭한마리칼국수",
-      "impressions": 13,
+      "impressions": 11,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 13,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
@@ -373762,27 +373733,27 @@
     {
       "category": "파워링크",
       "value": "시흥대하구이",
-      "impressions": 40,
+      "impressions": 39,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 17,
+          "impressions": 16,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 40,
+          "impressions": 39,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 241,
+          "impressions": 238,
           "clicks": 1,
           "spend": 77
         }
@@ -374043,7 +374014,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 15,
+          "impressions": 14,
           "clicks": 1,
           "spend": 88
         }
@@ -377822,7 +377793,7 @@
     {
       "category": "파워링크",
       "value": "시흥막국수맛집",
-      "impressions": 12,
+      "impressions": 11,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -377837,7 +377808,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 12,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         },
@@ -388059,27 +388030,27 @@
     {
       "category": "파워링크",
       "value": "시흥모다아울렛식당",
-      "impressions": 12,
+      "impressions": 13,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 6,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 12,
+          "impressions": 13,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 24,
+          "impressions": 25,
           "clicks": 0,
           "spend": 0
         }
@@ -399398,7 +399369,7 @@
     {
       "category": "파워링크",
       "value": "시흥물왕리맛집",
-      "impressions": 31,
+      "impressions": 30,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -399413,12 +399384,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 31,
+          "impressions": 30,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 296,
+          "impressions": 292,
           "clicks": 4,
           "spend": 351
         }
@@ -399437,7 +399408,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
@@ -404357,7 +404328,7 @@
     {
       "category": "파워링크",
       "value": "시흥샤브샤브",
-      "impressions": 11,
+      "impressions": 9,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -404367,12 +404338,12 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 11,
+          "impressions": 9,
           "clicks": 0,
           "spend": 0
         },
@@ -405150,7 +405121,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 11,
+          "impressions": 10,
           "clicks": 0,
           "spend": 0
         },
@@ -406484,7 +406455,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -407499,7 +407470,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -416479,7 +416450,7 @@
     {
       "category": "파워링크",
       "value": "시흥시능곡동샤브샤브",
-      "impressions": 7,
+      "impressions": 4,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -416494,7 +416465,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 7,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
@@ -445460,7 +445431,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -445624,12 +445595,12 @@
     {
       "category": "파워링크",
       "value": "시흥시망년회맛집",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -445639,12 +445610,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -446746,7 +446717,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 8,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         }
@@ -447021,12 +446992,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -449689,12 +449660,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -503431,7 +503402,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -530826,22 +530797,22 @@
     {
       "category": "파워링크",
       "value": "시흥시청근처맛집",
-      "impressions": 33,
+      "impressions": 34,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 9,
-          "clicks": 0,
-          "spend": 0
-        },
-        "previous_7": {
           "impressions": 10,
           "clicks": 0,
           "spend": 0
         },
+        "previous_7": {
+          "impressions": 8,
+          "clicks": 0,
+          "spend": 0
+        },
         "30": {
-          "impressions": 33,
+          "impressions": 34,
           "clicks": 0,
           "spend": 0
         },
@@ -530913,12 +530884,12 @@
     {
       "category": "파워링크",
       "value": "시흥시청근처술집",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -530928,12 +530899,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         }
@@ -538656,7 +538627,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청막국수맛집",
-      "impressions": 1,
+      "impressions": 0,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -538671,7 +538642,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -539821,12 +539792,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 9,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
@@ -547733,7 +547704,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청샤브샤브",
-      "impressions": 59,
+      "impressions": 57,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -547743,12 +547714,12 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 13,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 59,
+          "impressions": 57,
           "clicks": 0,
           "spend": 0
         },
@@ -551010,12 +550981,12 @@
     {
       "category": "파워링크",
       "value": "시흥시청술집",
-      "impressions": 16,
+      "impressions": 15,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 2,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -551025,12 +550996,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 16,
+          "impressions": 15,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 51,
+          "impressions": 52,
           "clicks": 0,
           "spend": 0
         }
@@ -551126,7 +551097,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청식당",
-      "impressions": 6,
+      "impressions": 5,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -551141,12 +551112,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 6,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 43,
+          "impressions": 42,
           "clicks": 0,
           "spend": 0
         }
@@ -553330,7 +553301,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청역",
-      "impressions": 4,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -553345,12 +553316,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 4,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 35,
+          "impressions": 31,
           "clicks": 0,
           "spend": 0
         }
@@ -568235,6 +568206,35 @@
     },
     {
       "category": "파워링크",
+      "value": "시흥시청역맛집",
+      "impressions": 140,
+      "clicks": 0,
+      "spend": 0,
+      "windows": {
+        "7": {
+          "impressions": 15,
+          "clicks": 0,
+          "spend": 0
+        },
+        "previous_7": {
+          "impressions": 29,
+          "clicks": 0,
+          "spend": 0
+        },
+        "30": {
+          "impressions": 140,
+          "clicks": 0,
+          "spend": 0
+        },
+        "90": {
+          "impressions": 186,
+          "clicks": 1,
+          "spend": 88
+        }
+      }
+    },
+    {
+      "category": "파워링크",
       "value": "시흥시청역맛집가격",
       "impressions": 0,
       "clicks": 0,
@@ -576153,7 +576153,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청역샤브샤브",
-      "impressions": 2,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -576168,7 +576168,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -579566,7 +579566,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 35,
+          "impressions": 34,
           "clicks": 0,
           "spend": 0
         }
@@ -596753,7 +596753,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -610982,12 +610982,12 @@
     {
       "category": "파워링크",
       "value": "시흥시청인근맛집",
-      "impressions": 1,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -610997,12 +610997,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 7,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         }
@@ -613128,12 +613128,12 @@
     {
       "category": "파워링크",
       "value": "시흥시청점심",
-      "impressions": 15,
+      "impressions": 18,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -613143,12 +613143,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 15,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 31,
+          "impressions": 34,
           "clicks": 0,
           "spend": 0
         }
@@ -613196,7 +613196,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -615622,12 +615622,12 @@
     {
       "category": "파워링크",
       "value": "시흥시청주변맛집",
-      "impressions": 21,
+      "impressions": 20,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
@@ -615637,12 +615637,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 21,
+          "impressions": 20,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 73,
+          "impressions": 70,
           "clicks": 0,
           "spend": 0
         }
@@ -620233,27 +620233,27 @@
     {
       "category": "파워링크",
       "value": "시흥시청칼국수",
-      "impressions": 186,
+      "impressions": 184,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 33,
+          "impressions": 32,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 60,
+          "impressions": 57,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 186,
+          "impressions": 184,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 280,
+          "impressions": 283,
           "clicks": 1,
           "spend": 84
         }
@@ -620494,7 +620494,7 @@
     {
       "category": "파워링크",
       "value": "시흥시청칼국수맛집",
-      "impressions": 19,
+      "impressions": 21,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -620504,17 +620504,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 19,
+          "impressions": 21,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 22,
+          "impressions": 24,
           "clicks": 0,
           "spend": 0
         }
@@ -651060,12 +651060,12 @@
     {
       "category": "파워링크",
       "value": "시흥장곡동굴",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -651075,12 +651075,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -651147,12 +651147,12 @@
     {
       "category": "파워링크",
       "value": "시흥장곡동굴찜",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -651162,12 +651162,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -654144,7 +654144,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -662651,7 +662651,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 12,
+          "impressions": 11,
           "clicks": 0,
           "spend": 0
         }
@@ -699848,7 +699848,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -732086,27 +732086,27 @@
     {
       "category": "파워링크",
       "value": "시흥장현동맛집",
-      "impressions": 64,
+      "impressions": 67,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 15,
+          "impressions": 19,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 17,
+          "impressions": 16,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 64,
+          "impressions": 67,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 76,
+          "impressions": 80,
           "clicks": 1,
           "spend": 88
         }
@@ -733623,22 +733623,22 @@
     {
       "category": "파워링크",
       "value": "시흥장현동샤브샤브",
-      "impressions": 8,
+      "impressions": 7,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 8,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
@@ -735605,7 +735605,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -741105,12 +741105,12 @@
     {
       "category": "파워링크",
       "value": "시흥장현동점심",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -741120,12 +741120,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         }
@@ -762024,7 +762024,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -798496,27 +798496,27 @@
     {
       "category": "파워링크",
       "value": "시흥장현맛집",
-      "impressions": 112,
+      "impressions": 118,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 42,
+          "impressions": 41,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 23,
+          "impressions": 29,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 112,
+          "impressions": 118,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 158,
+          "impressions": 164,
           "clicks": 0,
           "spend": 0
         }
@@ -806278,7 +806278,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -806288,7 +806288,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 21,
+          "impressions": 17,
           "clicks": 0,
           "spend": 0
         }
@@ -830019,12 +830019,12 @@
     {
       "category": "파워링크",
       "value": "시흥장현지구",
-      "impressions": 16,
+      "impressions": 17,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -830034,12 +830034,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 16,
+          "impressions": 17,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 62,
+          "impressions": 63,
           "clicks": 0,
           "spend": 0
         }
@@ -832953,12 +832953,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 3,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
@@ -832968,7 +832968,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 22,
+          "impressions": 23,
           "clicks": 0,
           "spend": 0
         }
@@ -848473,7 +848473,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 6,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
@@ -856380,7 +856380,7 @@
     {
       "category": "파워링크",
       "value": "시흥조개전골",
-      "impressions": 5,
+      "impressions": 4,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -856390,12 +856390,12 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 5,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         },
@@ -856931,7 +856931,7 @@
     {
       "category": "파워링크",
       "value": "시흥조개전골포장",
-      "impressions": 2,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -856946,7 +856946,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -896661,7 +896661,7 @@
     {
       "category": "파워링크",
       "value": "시흥플랑드르식당",
-      "impressions": 7,
+      "impressions": 8,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -896671,12 +896671,12 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 7,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         },
@@ -913868,7 +913868,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -923254,22 +923254,22 @@
     {
       "category": "파워링크",
       "value": "신현역맛집",
-      "impressions": 26,
+      "impressions": 27,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 8,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 26,
+          "impressions": 27,
           "clicks": 0,
           "spend": 0
         },
@@ -943380,12 +943380,12 @@
     {
       "category": "파워링크",
       "value": "장곡동단체모임맛집",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -943395,12 +943395,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -949954,7 +949954,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -953153,7 +953153,7 @@
     {
       "category": "파워링크",
       "value": "장곡동바지락칼국수",
-      "impressions": 4,
+      "impressions": 3,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -953168,7 +953168,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -953318,7 +953318,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 16,
+          "impressions": 15,
           "clicks": 2,
           "spend": 165
         }
@@ -958112,7 +958112,7 @@
     {
       "category": "파워링크",
       "value": "장곡동샤브샤브맛집",
-      "impressions": 2,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -958127,7 +958127,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -958552,12 +958552,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 3,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -971452,27 +971452,27 @@
     {
       "category": "파워링크",
       "value": "장곡동점심맛집",
-      "impressions": 15,
+      "impressions": 16,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 10,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 15,
+          "impressions": 16,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 17,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         }
@@ -992714,12 +992714,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 4,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
@@ -992729,7 +992729,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 27,
+          "impressions": 24,
           "clicks": 0,
           "spend": 0
         }
@@ -1057940,7 +1057940,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1058066,7 +1058066,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 2,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         }
@@ -1063353,7 +1063353,7 @@
     {
       "category": "파워링크",
       "value": "장현동맛집",
-      "impressions": 64,
+      "impressions": 68,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -1063363,17 +1063363,17 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 64,
+          "impressions": 68,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 188,
+          "impressions": 191,
           "clicks": 0,
           "spend": 0
         }
@@ -1066717,12 +1066717,12 @@
     {
       "category": "파워링크",
       "value": "장현동밥집",
-      "impressions": 5,
+      "impressions": 6,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -1066732,12 +1066732,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 5,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 13,
+          "impressions": 15,
           "clicks": 0,
           "spend": 0
         }
@@ -1071444,7 +1071444,7 @@
     {
       "category": "파워링크",
       "value": "장현동샤브샤브",
-      "impressions": 45,
+      "impressions": 46,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -1071459,12 +1071459,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 45,
+          "impressions": 46,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 84,
+          "impressions": 83,
           "clicks": 0,
           "spend": 0
         }
@@ -1074721,22 +1074721,22 @@
     {
       "category": "파워링크",
       "value": "장현동술집",
-      "impressions": 46,
+      "impressions": 45,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 9,
+          "impressions": 5,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 12,
+          "impressions": 13,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 46,
+          "impressions": 45,
           "clicks": 0,
           "spend": 0
         },
@@ -1074842,7 +1074842,7 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 10,
+          "impressions": 8,
           "clicks": 0,
           "spend": 0
         },
@@ -1077621,12 +1077621,12 @@
     {
       "category": "파워링크",
       "value": "장현동연말모임장소",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1077636,12 +1077636,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -1077679,12 +1077679,12 @@
     {
       "category": "파워링크",
       "value": "장현동연말모임장소예약",
-      "impressions": 0,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1077694,12 +1077694,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         }
@@ -1081333,12 +1081333,12 @@
     {
       "category": "파워링크",
       "value": "장현동외식",
-      "impressions": 1,
+      "impressions": 2,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1081348,12 +1081348,12 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 3,
+          "impressions": 4,
           "clicks": 0,
           "spend": 0
         }
@@ -1085161,7 +1085161,7 @@
     {
       "category": "파워링크",
       "value": "장현동점심맛집",
-      "impressions": 2,
+      "impressions": 1,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -1085176,7 +1085176,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1092300,12 +1092300,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 16,
+          "impressions": 13,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 20,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         },
@@ -1092315,7 +1092315,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 146,
+          "impressions": 147,
           "clicks": 0,
           "spend": 0
         }
@@ -1119705,12 +1119705,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 1,
+          "impressions": 2,
           "clicks": 0,
           "spend": 0
         },
@@ -1123770,7 +1123770,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 5,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
@@ -1123780,7 +1123780,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 43,
+          "impressions": 42,
           "clicks": 0,
           "spend": 0
         }
@@ -1125882,12 +1125882,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 4,
+          "impressions": 3,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1164476,27 +1164476,27 @@
     {
       "category": "파워링크",
       "value": "장현지구맛집",
-      "impressions": 62,
+      "impressions": 59,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 8,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 13,
+          "impressions": 14,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 62,
+          "impressions": 59,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 245,
+          "impressions": 244,
           "clicks": 1,
           "spend": 59
         }
@@ -1172548,7 +1172548,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -1186173,12 +1186173,12 @@
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 0,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1202244,7 +1202244,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 7,
+          "impressions": 6,
           "clicks": 0,
           "spend": 0
         },
@@ -1207425,7 +1207425,7 @@
     {
       "category": "파워링크",
       "value": "장현해물",
-      "impressions": 1,
+      "impressions": 0,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -1207440,7 +1207440,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -1209871,7 +1209871,7 @@
           "spend": 0
         },
         "previous_7": {
-          "impressions": 2,
+          "impressions": 1,
           "clicks": 0,
           "spend": 0
         },
@@ -1236019,27 +1236019,27 @@
     {
       "category": "파워링크",
       "value": "플랑드르맛집",
-      "impressions": 52,
+      "impressions": 50,
       "clicks": 0,
       "spend": 0,
       "windows": {
         "7": {
-          "impressions": 9,
+          "impressions": 7,
           "clicks": 0,
           "spend": 0
         },
         "previous_7": {
-          "impressions": 10,
+          "impressions": 13,
           "clicks": 0,
           "spend": 0
         },
         "30": {
-          "impressions": 52,
+          "impressions": 50,
           "clicks": 0,
           "spend": 0
         },
         "90": {
-          "impressions": 107,
+          "impressions": 108,
           "clicks": 0,
           "spend": 0
         }
@@ -1257566,7 +1257566,7 @@
     {
       "category": "파워링크",
       "value": "플랑드르점심",
-      "impressions": 1,
+      "impressions": 0,
       "clicks": 0,
       "spend": 0,
       "windows": {
@@ -1257581,7 +1257581,7 @@
           "spend": 0
         },
         "30": {
-          "impressions": 1,
+          "impressions": 0,
           "clicks": 0,
           "spend": 0
         },
@@ -1264662,7 +1264662,7 @@
           "spend": 0
         },
         "90": {
-          "impressions": 21,
+          "impressions": 18,
           "clicks": 0,
           "spend": 0
         }
@@ -1274156,82 +1274156,82 @@
     {
       "category": "플레이스 검색광고",
       "value": "음식점",
-      "impressions": 5000,
-      "clicks": 161,
-      "spend": 38064,
+      "impressions": 5043,
+      "clicks": 160,
+      "spend": 37701,
       "windows": {
         "30": {
-          "impressions": 5000,
-          "clicks": 161,
-          "spend": 38064
+          "impressions": 5043,
+          "clicks": 160,
+          "spend": 37701
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥능곡역맛집",
-      "impressions": 1131,
+      "impressions": 1159,
       "clicks": 42,
-      "spend": 10555,
+      "spend": 10580,
       "windows": {
         "30": {
-          "impressions": 1131,
+          "impressions": 1159,
           "clicks": 42,
-          "spend": 10555
+          "spend": 10580
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "맛집",
-      "impressions": 1538,
-      "clicks": 29,
-      "spend": 7727,
+      "impressions": 1550,
+      "clicks": 28,
+      "spend": 7493,
       "windows": {
         "30": {
-          "impressions": 1538,
-          "clicks": 29,
-          "spend": 7727
+          "impressions": 1550,
+          "clicks": 28,
+          "spend": 7493
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "장현동맛집",
-      "impressions": 1020,
-      "clicks": 32,
-      "spend": 5422,
+      "impressions": 986,
+      "clicks": 29,
+      "spend": 4993,
       "windows": {
         "30": {
-          "impressions": 1020,
-          "clicks": 32,
-          "spend": 5422
+          "impressions": 986,
+          "clicks": 29,
+          "spend": 4993
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "조개구이",
-      "impressions": 349,
-      "clicks": 34,
-      "spend": 4284,
+      "impressions": 339,
+      "clicks": 32,
+      "spend": 4125,
       "windows": {
         "30": {
-          "impressions": 349,
-          "clicks": 34,
-          "spend": 4284
+          "impressions": 339,
+          "clicks": 32,
+          "spend": 4125
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "샤브샤브",
-      "impressions": 1221,
+      "impressions": 1217,
       "clicks": 31,
       "spend": 3627,
       "windows": {
         "30": {
-          "impressions": 1221,
+          "impressions": 1217,
           "clicks": 31,
           "spend": 3627
         }
@@ -1274239,13 +1274239,27 @@
     },
     {
       "category": "플레이스 검색광고",
+      "value": "근처맛집",
+      "impressions": 837,
+      "clicks": 13,
+      "spend": 3372,
+      "windows": {
+        "30": {
+          "impressions": 837,
+          "clicks": 13,
+          "spend": 3372
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "칼국수",
-      "impressions": 1450,
+      "impressions": 1447,
       "clicks": 26,
       "spend": 3082,
       "windows": {
         "30": {
-          "impressions": 1450,
+          "impressions": 1447,
           "clicks": 26,
           "spend": 3082
         }
@@ -1274254,12 +1274268,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥장현동맛집",
-      "impressions": 434,
+      "impressions": 428,
       "clicks": 17,
       "spend": 2893,
       "windows": {
         "30": {
-          "impressions": 434,
+          "impressions": 428,
           "clicks": 17,
           "spend": 2893
         }
@@ -1274268,12 +1274282,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥장현맛집",
-      "impressions": 395,
+      "impressions": 393,
       "clicks": 16,
       "spend": 2850,
       "windows": {
         "30": {
-          "impressions": 395,
+          "impressions": 393,
           "clicks": 16,
           "spend": 2850
         }
@@ -1274282,27 +1274296,13 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥대하구이",
-      "impressions": 116,
-      "clicks": 13,
-      "spend": 2802,
-      "windows": {
-        "30": {
-          "impressions": 116,
-          "clicks": 13,
-          "spend": 2802
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "근처맛집",
-      "impressions": 822,
-      "clicks": 11,
+      "impressions": 111,
+      "clicks": 12,
       "spend": 2722,
       "windows": {
         "30": {
-          "impressions": 822,
-          "clicks": 11,
+          "impressions": 111,
+          "clicks": 12,
           "spend": 2722
         }
       }
@@ -1274310,26 +1274310,26 @@
     {
       "category": "플레이스 검색광고",
       "value": "조개찜",
-      "impressions": 114,
+      "impressions": 115,
       "clicks": 23,
-      "spend": 2643,
+      "spend": 2632,
       "windows": {
         "30": {
-          "impressions": 114,
+          "impressions": 115,
           "clicks": 23,
-          "spend": 2643
+          "spend": 2632
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "술집",
-      "impressions": 785,
+      "impressions": 777,
       "clicks": 18,
       "spend": 2223,
       "windows": {
         "30": {
-          "impressions": 785,
+          "impressions": 777,
           "clicks": 18,
           "spend": 2223
         }
@@ -1274338,14 +1274338,28 @@
     {
       "category": "플레이스 검색광고",
       "value": "식당",
-      "impressions": 775,
+      "impressions": 782,
       "clicks": 7,
       "spend": 2016,
       "windows": {
         "30": {
-          "impressions": 775,
+          "impressions": 782,
           "clicks": 7,
           "spend": 2016
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "굴찜",
+      "impressions": 146,
+      "clicks": 21,
+      "spend": 1867,
+      "windows": {
+        "30": {
+          "impressions": 146,
+          "clicks": 21,
+          "spend": 1867
         }
       }
     },
@@ -1274365,27 +1274379,27 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "굴찜",
-      "impressions": 143,
-      "clicks": 21,
-      "spend": 1662,
+      "value": "시흥굴찜",
+      "impressions": 165,
+      "clicks": 8,
+      "spend": 1790,
       "windows": {
         "30": {
-          "impressions": 143,
-          "clicks": 21,
-          "spend": 1662
+          "impressions": 165,
+          "clicks": 8,
+          "spend": 1790
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "대하구이",
-      "impressions": 218,
+      "impressions": 211,
       "clicks": 14,
       "spend": 1623,
       "windows": {
         "30": {
-          "impressions": 218,
+          "impressions": 211,
           "clicks": 14,
           "spend": 1623
         }
@@ -1274394,28 +1274408,14 @@
     {
       "category": "플레이스 검색광고",
       "value": "석화찜",
-      "impressions": 47,
+      "impressions": 44,
       "clicks": 8,
       "spend": 1583,
       "windows": {
         "30": {
-          "impressions": 47,
+          "impressions": 44,
           "clicks": 8,
           "spend": 1583
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "시흥굴찜",
-      "impressions": 174,
-      "clicks": 7,
-      "spend": 1493,
-      "windows": {
-        "30": {
-          "impressions": 174,
-          "clicks": 7,
-          "spend": 1493
         }
       }
     },
@@ -1274436,12 +1274436,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "근처식당",
-      "impressions": 287,
+      "impressions": 277,
       "clicks": 5,
       "spend": 1294,
       "windows": {
         "30": {
-          "impressions": 287,
+          "impressions": 277,
           "clicks": 5,
           "spend": 1294
         }
@@ -1274449,27 +1274449,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "근처밥집",
-      "impressions": 217,
-      "clicks": 4,
-      "spend": 1228,
-      "windows": {
-        "30": {
-          "impressions": 217,
-          "clicks": 4,
-          "spend": 1228
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "시흥조개전골",
-      "impressions": 33,
+      "impressions": 32,
       "clicks": 6,
       "spend": 1221,
       "windows": {
         "30": {
-          "impressions": 33,
+          "impressions": 32,
           "clicks": 6,
           "spend": 1221
         }
@@ -1274478,12 +1274464,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "생선구이",
-      "impressions": 478,
+      "impressions": 476,
       "clicks": 10,
       "spend": 1168,
       "windows": {
         "30": {
-          "impressions": 478,
+          "impressions": 476,
           "clicks": 10,
           "spend": 1168
         }
@@ -1274492,12 +1274478,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현맛집",
-      "impressions": 391,
+      "impressions": 374,
       "clicks": 7,
       "spend": 1151,
       "windows": {
         "30": {
-          "impressions": 391,
+          "impressions": 374,
           "clicks": 7,
           "spend": 1151
         }
@@ -1274520,12 +1274506,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥술집",
-      "impressions": 86,
+      "impressions": 87,
       "clicks": 4,
       "spend": 1119,
       "windows": {
         "30": {
-          "impressions": 86,
+          "impressions": 87,
           "clicks": 4,
           "spend": 1119
         }
@@ -1274547,13 +1274533,27 @@
     },
     {
       "category": "플레이스 검색광고",
+      "value": "근처밥집",
+      "impressions": 211,
+      "clicks": 3,
+      "spend": 931,
+      "windows": {
+        "30": {
+          "impressions": 211,
+          "clicks": 3,
+          "spend": 931
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "칼국수맛집",
-      "impressions": 284,
+      "impressions": 275,
       "clicks": 7,
       "spend": 905,
       "windows": {
         "30": {
-          "impressions": 284,
+          "impressions": 275,
           "clicks": 7,
           "spend": 905
         }
@@ -1274562,12 +1274562,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "주변맛집",
-      "impressions": 226,
+      "impressions": 227,
       "clicks": 3,
       "spend": 881,
       "windows": {
         "30": {
-          "impressions": 226,
+          "impressions": 227,
           "clicks": 3,
           "spend": 881
         }
@@ -1274575,27 +1274575,27 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "조개",
-      "impressions": 63,
-      "clicks": 11,
-      "spend": 847,
+      "value": "내주변맛집",
+      "impressions": 104,
+      "clicks": 3,
+      "spend": 864,
       "windows": {
         "30": {
-          "impressions": 63,
-          "clicks": 11,
-          "spend": 847
+          "impressions": 104,
+          "clicks": 3,
+          "spend": 864
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "시흥능곡역술집",
-      "impressions": 165,
+      "impressions": 173,
       "clicks": 4,
       "spend": 784,
       "windows": {
         "30": {
-          "impressions": 165,
+          "impressions": 173,
           "clicks": 4,
           "spend": 784
         }
@@ -1274603,15 +1274603,15 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "보리밥",
-      "impressions": 301,
-      "clicks": 7,
-      "spend": 714,
+      "value": "조개",
+      "impressions": 61,
+      "clicks": 10,
+      "spend": 770,
       "windows": {
         "30": {
-          "impressions": 301,
-          "clicks": 7,
-          "spend": 714
+          "impressions": 61,
+          "clicks": 10,
+          "spend": 770
         }
       }
     },
@@ -1274645,12 +1274645,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시청맛집",
-      "impressions": 492,
+      "impressions": 479,
       "clicks": 2,
       "spend": 649,
       "windows": {
         "30": {
-          "impressions": 492,
+          "impressions": 479,
           "clicks": 2,
           "spend": 649
         }
@@ -1274659,12 +1274659,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥플랑드르맛집",
-      "impressions": 76,
+      "impressions": 83,
       "clicks": 2,
       "spend": 639,
       "windows": {
         "30": {
-          "impressions": 76,
+          "impressions": 83,
           "clicks": 2,
           "spend": 639
         }
@@ -1274673,12 +1274673,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "한식",
-      "impressions": 222,
+      "impressions": 218,
       "clicks": 2,
       "spend": 627,
       "windows": {
         "30": {
-          "impressions": 222,
+          "impressions": 218,
           "clicks": 2,
           "spend": 627
         }
@@ -1274701,12 +1274701,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥석화찜",
-      "impressions": 38,
+      "impressions": 39,
       "clicks": 3,
       "spend": 616,
       "windows": {
         "30": {
-          "impressions": 38,
+          "impressions": 39,
           "clicks": 3,
           "spend": 616
         }
@@ -1274715,12 +1274715,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "내근처맛집",
-      "impressions": 88,
+      "impressions": 89,
       "clicks": 2,
       "spend": 594,
       "windows": {
         "30": {
-          "impressions": 88,
+          "impressions": 89,
           "clicks": 2,
           "spend": 594
         }
@@ -1274756,41 +1274756,27 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "내주변맛집",
-      "impressions": 101,
-      "clicks": 2,
-      "spend": 534,
+      "value": "보리밥",
+      "impressions": 283,
+      "clicks": 5,
+      "spend": 547,
       "windows": {
         "30": {
-          "impressions": 101,
-          "clicks": 2,
-          "spend": 534
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "택이네조개",
-      "impressions": 9,
-      "clicks": 6,
-      "spend": 462,
-      "windows": {
-        "30": {
-          "impressions": 9,
-          "clicks": 6,
-          "spend": 462
+          "impressions": 283,
+          "clicks": 5,
+          "spend": 547
         }
       }
     },
     {
       "category": "플레이스 검색광고",
       "value": "석화",
-      "impressions": 51,
+      "impressions": 56,
       "clicks": 3,
       "spend": 455,
       "windows": {
         "30": {
-          "impressions": 51,
+          "impressions": 56,
           "clicks": 3,
           "spend": 455
         }
@@ -1274805,6 +1274791,20 @@
       "windows": {
         "30": {
           "impressions": 105,
+          "clicks": 5,
+          "spend": 385
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "택이네조개",
+      "impressions": 8,
+      "clicks": 5,
+      "spend": 385,
+      "windows": {
+        "30": {
+          "impressions": 8,
           "clicks": 5,
           "spend": 385
         }
@@ -1274839,6 +1274839,20 @@
     },
     {
       "category": "플레이스 검색광고",
+      "value": "시흥밥집",
+      "impressions": 62,
+      "clicks": 1,
+      "spend": 330,
+      "windows": {
+        "30": {
+          "impressions": 62,
+          "clicks": 1,
+          "spend": 330
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
       "value": "시흥시조개구이",
       "impressions": 6,
       "clicks": 1,
@@ -1274853,27 +1274867,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "시흥플랑드르",
-      "impressions": 282,
-      "clicks": 1,
-      "spend": 330,
-      "windows": {
-        "30": {
-          "impressions": 282,
-          "clicks": 1,
-          "spend": 330
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "해산물",
-      "impressions": 42,
+      "impressions": 41,
       "clicks": 1,
       "spend": 330,
       "windows": {
         "30": {
-          "impressions": 42,
+          "impressions": 41,
           "clicks": 1,
           "spend": 330
         }
@@ -1274923,12 +1274923,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "생선",
-      "impressions": 50,
+      "impressions": 49,
       "clicks": 1,
       "spend": 328,
       "windows": {
         "30": {
-          "impressions": 50,
+          "impressions": 49,
           "clicks": 1,
           "spend": 328
         }
@@ -1275049,12 +1275049,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "주변식당",
-      "impressions": 56,
+      "impressions": 57,
       "clicks": 1,
       "spend": 294,
       "windows": {
         "30": {
-          "impressions": 56,
+          "impressions": 57,
           "clicks": 1,
           "spend": 294
         }
@@ -1275159,12 +1275159,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥능곡역음식점",
-      "impressions": 20,
+      "impressions": 19,
       "clicks": 1,
       "spend": 258,
       "windows": {
         "30": {
-          "impressions": 20,
+          "impressions": 19,
           "clicks": 1,
           "spend": 258
         }
@@ -1275208,13 +1275208,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "시흥맛집내돈내산",
-      "impressions": 19,
+      "value": "굴찜맛집",
+      "impressions": 9,
       "clicks": 3,
       "spend": 231,
       "windows": {
         "30": {
-          "impressions": 19,
+          "impressions": 9,
           "clicks": 3,
           "spend": 231
         }
@@ -1275223,12 +1275223,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현동밥집",
-      "impressions": 20,
+      "impressions": 22,
       "clicks": 3,
       "spend": 231,
       "windows": {
         "30": {
-          "impressions": 20,
+          "impressions": 22,
           "clicks": 3,
           "spend": 231
         }
@@ -1275237,26 +1275237,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현동술집",
-      "impressions": 125,
+      "impressions": 123,
       "clicks": 3,
       "spend": 231,
       "windows": {
         "30": {
-          "impressions": 125,
-          "clicks": 3,
-          "spend": 231
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
-      "value": "장현동칼국수",
-      "impressions": 101,
-      "clicks": 3,
-      "spend": 231,
-      "windows": {
-        "30": {
-          "impressions": 101,
+          "impressions": 123,
           "clicks": 3,
           "spend": 231
         }
@@ -1275307,12 +1275293,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시청술집",
-      "impressions": 43,
+      "impressions": 41,
       "clicks": 1,
       "spend": 218,
       "windows": {
         "30": {
-          "impressions": 43,
+          "impressions": 41,
           "clicks": 1,
           "spend": 218
         }
@@ -1275374,6 +1275360,20 @@
       }
     },
     {
+      "category": "플레이스 검색광고",
+      "value": "굴",
+      "impressions": 100,
+      "clicks": 2,
+      "spend": 185,
+      "windows": {
+        "30": {
+          "impressions": 100,
+          "clicks": 2,
+          "spend": 185
+        }
+      }
+    },
+    {
       "category": "파워링크",
       "value": "능곡역고기",
       "impressions": 1,
@@ -1275397,6 +1275397,33 @@
     },
     {
       "category": "파워링크",
+      "value": "능곡장현설렁탕",
+      "impressions": 2,
+      "clicks": 1,
+      "spend": 176,
+      "match_types": [
+        "확장"
+      ],
+      "windows": {
+        "7": {
+          "impressions": 2,
+          "clicks": 1,
+          "spend": 176
+        },
+        "30": {
+          "impressions": 2,
+          "clicks": 1,
+          "spend": 176
+        },
+        "90": {
+          "impressions": 2,
+          "clicks": 1,
+          "spend": 176
+        }
+      }
+    },
+    {
+      "category": "파워링크",
       "value": "샤브맛집시흥시",
       "impressions": 1,
       "clicks": 1,
@@ -1275412,28 +1275439,6 @@
         },
         "90": {
           "impressions": 1,
-          "clicks": 1,
-          "spend": 176
-        }
-      }
-    },
-    {
-      "category": "파워링크",
-      "value": "시흥시능곡동칼국수집",
-      "impressions": 2,
-      "clicks": 1,
-      "spend": 176,
-      "match_types": [
-        "확장"
-      ],
-      "windows": {
-        "30": {
-          "impressions": 2,
-          "clicks": 1,
-          "spend": 176
-        },
-        "90": {
-          "impressions": 2,
           "clicks": 1,
           "spend": 176
         }
@@ -1275534,33 +1275539,6 @@
     },
     {
       "category": "파워링크",
-      "value": "장현지구칼국수",
-      "impressions": 2,
-      "clicks": 2,
-      "spend": 165,
-      "match_types": [
-        "일치"
-      ],
-      "windows": {
-        "previous_7": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 88
-        },
-        "30": {
-          "impressions": 2,
-          "clicks": 2,
-          "spend": 165
-        },
-        "90": {
-          "impressions": 2,
-          "clicks": 2,
-          "spend": 165
-        }
-      }
-    },
-    {
-      "category": "파워링크",
       "value": "굴찜시흥시",
       "impressions": 1,
       "clicks": 1,
@@ -1275569,11 +1275547,6 @@
         "확장"
       ],
       "windows": {
-        "previous_7": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 165
-        },
         "30": {
           "impressions": 1,
           "clicks": 1,
@@ -1275655,28 +1275628,6 @@
       }
     },
     {
-      "category": "파워링크",
-      "value": "장곡동능곡동대하소금구이",
-      "impressions": 1,
-      "clicks": 1,
-      "spend": 159,
-      "match_types": [
-        "확장"
-      ],
-      "windows": {
-        "30": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 159
-        },
-        "90": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 159
-        }
-      }
-    },
-    {
       "category": "플레이스 검색광고",
       "value": "시흥배달맛집",
       "impressions": 16,
@@ -1275693,12 +1275644,26 @@
     {
       "category": "플레이스 검색광고",
       "value": "바지락칼국수",
-      "impressions": 28,
+      "impressions": 29,
       "clicks": 2,
       "spend": 154,
       "windows": {
         "30": {
-          "impressions": 28,
+          "impressions": 29,
+          "clicks": 2,
+          "spend": 154
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "시흥맛집내돈내산",
+      "impressions": 18,
+      "clicks": 2,
+      "spend": 154,
+      "windows": {
+        "30": {
+          "impressions": 18,
           "clicks": 2,
           "spend": 154
         }
@@ -1275721,12 +1275686,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시청칼국수",
-      "impressions": 275,
+      "impressions": 271,
       "clicks": 2,
       "spend": 154,
       "windows": {
         "30": {
-          "impressions": 275,
+          "impressions": 271,
           "clicks": 2,
           "spend": 154
         }
@@ -1275734,13 +1275699,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "시흥장현지구맛집",
-      "impressions": 41,
+      "value": "장현동칼국수",
+      "impressions": 101,
       "clicks": 2,
       "spend": 154,
       "windows": {
         "30": {
-          "impressions": 41,
+          "impressions": 101,
           "clicks": 2,
           "spend": 154
         }
@@ -1275771,12 +1275736,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현지구맛집",
-      "impressions": 101,
+      "impressions": 95,
       "clicks": 2,
       "spend": 154,
       "windows": {
         "30": {
-          "impressions": 101,
+          "impressions": 95,
           "clicks": 2,
           "spend": 154
         }
@@ -1275785,12 +1275750,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "조개구이맛집",
-      "impressions": 19,
+      "impressions": 20,
       "clicks": 2,
       "spend": 154,
       "windows": {
         "30": {
-          "impressions": 19,
+          "impressions": 20,
           "clicks": 2,
           "spend": 154
         }
@@ -1275910,6 +1275875,33 @@
     },
     {
       "category": "파워링크",
+      "value": "장곡동샤브맛집",
+      "impressions": 1,
+      "clicks": 1,
+      "spend": 137,
+      "match_types": [
+        "확장"
+      ],
+      "windows": {
+        "7": {
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 137
+        },
+        "30": {
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 137
+        },
+        "90": {
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 137
+        }
+      }
+    },
+    {
+      "category": "파워링크",
       "value": "능곡해산물",
       "impressions": 2,
       "clicks": 1,
@@ -1275987,12 +1275979,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "배달",
-      "impressions": 27,
+      "impressions": 29,
       "clicks": 1,
       "spend": 130,
       "windows": {
         "30": {
-          "impressions": 27,
+          "impressions": 29,
           "clicks": 1,
           "spend": 130
         }
@@ -1276028,12 +1276020,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "막국수",
-      "impressions": 229,
+      "impressions": 226,
       "clicks": 1,
       "spend": 121,
       "windows": {
         "30": {
-          "impressions": 229,
+          "impressions": 226,
           "clicks": 1,
           "spend": 121
         }
@@ -1276118,27 +1276110,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "굴",
-      "impressions": 90,
-      "clicks": 1,
-      "spend": 108,
-      "windows": {
-        "30": {
-          "impressions": 90,
-          "clicks": 1,
-          "spend": 108
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "시흥샤브샤브",
-      "impressions": 103,
+      "impressions": 97,
       "clicks": 1,
       "spend": 106,
       "windows": {
         "30": {
-          "impressions": 103,
+          "impressions": 97,
           "clicks": 1,
           "spend": 106
         }
@@ -1276154,7 +1276132,7 @@
         "확장"
       ],
       "windows": {
-        "7": {
+        "previous_7": {
           "impressions": 1,
           "clicks": 1,
           "spend": 104
@@ -1276215,12 +1276193,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현동식당",
-      "impressions": 99,
+      "impressions": 89,
       "clicks": 1,
       "spend": 90,
       "windows": {
         "30": {
-          "impressions": 99,
+          "impressions": 89,
           "clicks": 1,
           "spend": 90
         }
@@ -1276424,28 +1276402,6 @@
     },
     {
       "category": "파워링크",
-      "value": "시흥시청역맛집",
-      "impressions": 7,
-      "clicks": 1,
-      "spend": 88,
-      "match_types": [
-        "일치"
-      ],
-      "windows": {
-        "30": {
-          "impressions": 7,
-          "clicks": 1,
-          "spend": 88
-        },
-        "90": {
-          "impressions": 7,
-          "clicks": 1,
-          "spend": 88
-        }
-      }
-    },
-    {
-      "category": "파워링크",
       "value": "시흥플랑드르맛집",
       "impressions": 12,
       "clicks": 1,
@@ -1276561,6 +1276517,33 @@
           "impressions": 1,
           "clicks": 1,
           "spend": 88
+        }
+      }
+    },
+    {
+      "category": "파워링크",
+      "value": "장현지구칼국수",
+      "impressions": 1,
+      "clicks": 1,
+      "spend": 88,
+      "match_types": [
+        "일치"
+      ],
+      "windows": {
+        "previous_7": {
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 88
+        },
+        "30": {
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 88
+        },
+        "90": {
+          "impressions": 2,
+          "clicks": 2,
+          "spend": 165
         }
       }
     },
@@ -1276736,27 +1276719,13 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "굴찜맛집",
-      "impressions": 7,
-      "clicks": 1,
-      "spend": 77,
-      "windows": {
-        "30": {
-          "impressions": 7,
-          "clicks": 1,
-          "spend": 77
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "근처술집",
-      "impressions": 167,
+      "impressions": 162,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 167,
+          "impressions": 162,
           "clicks": 1,
           "spend": 77
         }
@@ -1276793,12 +1276762,26 @@
     {
       "category": "플레이스 검색광고",
       "value": "근처칼국수",
-      "impressions": 42,
+      "impressions": 41,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 42,
+          "impressions": 41,
+          "clicks": 1,
+          "spend": 77
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "무한리필",
+      "impressions": 12,
+      "clicks": 1,
+      "spend": 77,
+      "windows": {
+        "30": {
+          "impressions": 12,
           "clicks": 1,
           "spend": 77
         }
@@ -1276807,12 +1276790,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "보리밥맛집",
-      "impressions": 25,
+      "impressions": 26,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 25,
+          "impressions": 26,
           "clicks": 1,
           "spend": 77
         }
@@ -1276827,28 +1276810,6 @@
       "windows": {
         "30": {
           "impressions": 12,
-          "clicks": 1,
-          "spend": 77
-        }
-      }
-    },
-    {
-      "category": "파워링크",
-      "value": "샤브샤브장곡동",
-      "impressions": 1,
-      "clicks": 1,
-      "spend": 77,
-      "match_types": [
-        "확장"
-      ],
-      "windows": {
-        "30": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 77
-        },
-        "90": {
-          "impressions": 1,
           "clicks": 1,
           "spend": 77
         }
@@ -1276980,20 +1276941,6 @@
       }
     },
     {
-      "category": "플레이스 검색광고",
-      "value": "시흥시샤브샤브",
-      "impressions": 9,
-      "clicks": 1,
-      "spend": 77,
-      "windows": {
-        "30": {
-          "impressions": 9,
-          "clicks": 1,
-          "spend": 77
-        }
-      }
-    },
-    {
       "category": "파워링크",
       "value": "시흥시석화",
       "impressions": 1,
@@ -1277037,12 +1276984,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥시청샤브샤브",
-      "impressions": 75,
+      "impressions": 73,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 75,
+          "impressions": 73,
           "clicks": 1,
           "spend": 77
         }
@@ -1277051,12 +1276998,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "시흥장현동샤브샤브",
-      "impressions": 10,
+      "impressions": 9,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 10,
+          "impressions": 9,
           "clicks": 1,
           "spend": 77
         }
@@ -1277098,6 +1277045,20 @@
       "windows": {
         "30": {
           "impressions": 6,
+          "clicks": 1,
+          "spend": 77
+        }
+      }
+    },
+    {
+      "category": "플레이스 검색광고",
+      "value": "시흥장현지구맛집",
+      "impressions": 39,
+      "clicks": 1,
+      "spend": 77,
+      "windows": {
+        "30": {
+          "impressions": 39,
           "clicks": 1,
           "spend": 77
         }
@@ -1277292,12 +1277253,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "장현동샤브샤브",
-      "impressions": 51,
+      "impressions": 48,
       "clicks": 1,
       "spend": 77,
       "windows": {
         "30": {
-          "impressions": 51,
+          "impressions": 48,
           "clicks": 1,
           "spend": 77
         }
@@ -1277340,28 +1277301,6 @@
       "windows": {
         "30": {
           "impressions": 162,
-          "clicks": 1,
-          "spend": 77
-        }
-      }
-    },
-    {
-      "category": "파워링크",
-      "value": "장현택이네",
-      "impressions": 1,
-      "clicks": 1,
-      "spend": 77,
-      "match_types": [
-        "확장"
-      ],
-      "windows": {
-        "30": {
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 77
-        },
-        "90": {
-          "impressions": 1,
           "clicks": 1,
           "spend": 77
         }
@@ -1277533,12 +1277472,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "문어",
-      "impressions": 43,
+      "impressions": 37,
       "clicks": 1,
       "spend": 73,
       "windows": {
         "30": {
-          "impressions": 43,
+          "impressions": 37,
           "clicks": 1,
           "spend": 73
         }
@@ -1277547,12 +1277486,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "굴요리",
-      "impressions": 19,
+      "impressions": 20,
       "clicks": 1,
       "spend": 72,
       "windows": {
         "30": {
-          "impressions": 19,
+          "impressions": 20,
           "clicks": 1,
           "spend": 72
         }
@@ -1277604,20 +1277543,6 @@
     },
     {
       "category": "플레이스 검색광고",
-      "value": "시흥능곡역점심맛집",
-      "impressions": 18,
-      "clicks": 1,
-      "spend": 64,
-      "windows": {
-        "30": {
-          "impressions": 18,
-          "clicks": 1,
-          "spend": 64
-        }
-      }
-    },
-    {
-      "category": "플레이스 검색광고",
       "value": "새우튀김",
       "impressions": 15,
       "clicks": 1,
@@ -1277655,12 +1277580,12 @@
     {
       "category": "플레이스 검색광고",
       "value": "점심맛집",
-      "impressions": 20,
+      "impressions": 19,
       "clicks": 1,
       "spend": 56,
       "windows": {
         "30": {
-          "impressions": 20,
+          "impressions": 19,
           "clicks": 1,
           "spend": 56
         }
@@ -1277739,21 +1277664,6 @@
     }
   ],
   "powerlink_days": [
-    {
-      "date": "2026-08-13",
-      "rows": [
-        {
-          "category": "파워링크",
-          "value": "택이네조개전골시흥은행점",
-          "impressions": 1,
-          "clicks": 1,
-          "spend": 77,
-          "match_types": [
-            "확장"
-          ]
-        }
-      ]
-    },
     {
       "date": "2026-08-14",
       "rows": [
@@ -1281332,6 +1281242,31 @@
           "spend": 88,
           "match_types": [
             "일치"
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "rows": [
+        {
+          "category": "파워링크",
+          "value": "능곡장현설렁탕",
+          "impressions": 2,
+          "clicks": 1,
+          "spend": 176,
+          "match_types": [
+            "확장"
+          ]
+        },
+        {
+          "category": "파워링크",
+          "value": "장곡동샤브맛집",
+          "impressions": 1,
+          "clicks": 1,
+          "spend": 137,
+          "match_types": [
+            "확장"
           ]
         }
       ]

@@ -2,6 +2,12 @@
   "schema_version": 1,
   "logs": [
     {
+      "id": "a0ef0492-7937-4e2e-a99c-1caec4553033",
+      "recorded_at": "2026-11-15T14:45:52.478Z",
+      "text": "리뷰 답글 달았어요",
+      "kind": "note"
+    },
+    {
       "id": "db051a3b-2bd5-45e0-be84-4eb39b1c80d2",
       "recorded_at": "2026-11-08T09:42:40.928Z",
       "text": "26/11/07 광고 성과 작업 https://eklove.pages.dev/#ad-performance",

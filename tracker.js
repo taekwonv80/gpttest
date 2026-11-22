@@ -6,6 +6,7 @@ const ACTIVITY_LOG_STORAGE = 'taekine-activity-log';
 const DESCRIPTION_DRAFT_STORAGE = 'taekine-description-draft';
 const SEASON_PROGRESS_STORAGE = 'taekine-season-progress';
 const CUSTOM_SEASON_STORAGE = 'taekine-custom-seasons';
+const SEASON_OVERRIDE_STORAGE = 'taekine-season-overrides';
 const SEASON_STAGE_MODULE_URL = 'https://ai.euncoach.com/components/season-dashboard-stages.generated.js';
 const PENDING_VOLUME = '실제 검색 횟수(측정대기)';
 const PENDING_RANK = '-';
@@ -545,6 +546,36 @@ document.querySelector('#season-add-form').addEventListener('submit', (event) =>
   const timeline = annualSeasonTimeline(currentStoreProfile); void renderSeasonGuide(timeline); void renderSeasonPlanner(timeline);
 });
 
+const seasonEditForm = document.querySelector('#season-edit-form');
+const seasonEditSelect = document.querySelector('#season-edit-select');
+function editableSeasons() {
+  const base = Array.isArray(currentStoreProfile.season_calendar) ? currentStoreProfile.season_calendar : [];
+  const custom = readStoredValue(CUSTOM_SEASON_STORAGE, []);
+  const overrides = readStoredValue(SEASON_OVERRIDE_STORAGE, {});
+  return [...base, ...(Array.isArray(custom) ? custom : [])].map((item) => ({ ...item, ...(overrides?.[item.key] || {}) }));
+}
+function fillSeasonEditForm() {
+  const item = editableSeasons().find((season) => season.key === seasonEditSelect.value);
+  if (!item) return;
+  seasonEditForm.elements.name.value = item.name;
+  seasonEditForm.elements.month.value = item.start_month;
+  seasonEditForm.elements.day.value = item.start_day;
+  seasonEditForm.elements.prepare.value = item.d_minus;
+}
+document.querySelector('#season-edit-open').addEventListener('click', () => {
+  const items = editableSeasons();
+  seasonEditSelect.replaceChildren(...items.map((item) => { const option = document.createElement('option'); option.value = item.key; option.textContent = item.name; return option; }));
+  fillSeasonEditForm(); document.querySelector('#season-edit-dialog').showModal();
+});
+seasonEditSelect.addEventListener('change', fillSeasonEditForm);
+seasonEditForm.addEventListener('submit', (event) => {
+  event.preventDefault(); const form = new FormData(seasonEditForm); const key = String(form.get('key'));
+  const overrides = readStoredValue(SEASON_OVERRIDE_STORAGE, {});
+  overrides[key] = { name: String(form.get('name')).trim(), start_month: Number(form.get('month')), start_day: Number(form.get('day')), d_minus: Number(form.get('prepare')) || 0 };
+  localStorage.setItem(SEASON_OVERRIDE_STORAGE, JSON.stringify(overrides));
+  document.querySelector('#season-edit-dialog').close(); const timeline = annualSeasonTimeline(currentStoreProfile); void renderSeasonGuide(timeline); void renderSeasonPlanner(timeline);
+});
+
 const tabs = document.querySelectorAll('[data-period]');
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   tabs.forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
@@ -1038,7 +1069,9 @@ function annualSeasonTimeline(storeProfile) {
   const profile = storeProfile && typeof storeProfile === 'object' ? storeProfile : {};
   const year = Number(koreaYmdParts().year);
   const customSeasons = readStoredValue(CUSTOM_SEASON_STORAGE, []);
-  const seasonCalendar = [...(Array.isArray(profile.season_calendar) ? profile.season_calendar : []), ...(Array.isArray(customSeasons) ? customSeasons : [])];
+  const overrides = readStoredValue(SEASON_OVERRIDE_STORAGE, {});
+  const seasonCalendar = [...(Array.isArray(profile.season_calendar) ? profile.season_calendar : []), ...(Array.isArray(customSeasons) ? customSeasons : [])]
+    .map((season) => ({ ...season, ...(overrides?.[season.key] || {}) }));
   const seasons = seasonCalendar.flatMap((season) => {
     const month = Number(season.start_month);
     const day = Number(season.start_day);

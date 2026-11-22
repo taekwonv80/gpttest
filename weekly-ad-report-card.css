@@ -1,6 +1,7 @@
 .weekly-ad-report{margin:18px 0 22px;padding:22px;border:1px solid #dce3eb;border-radius:17px;background:#fff;box-shadow:0 1px 0 rgba(18,37,58,.02)}
 .weekly-ad-report .weekly-ad-metrics article,.weekly-ad-report .weekly-place-trend{border:1px solid #e4eaf1}
 .weekly-place-trend .trend-marker{fill:#fff;stroke:#1261d6;stroke-width:3}.weekly-place-trend .trend-marker-label{fill:#405d7c;font-size:11px;font-weight:800}
+.weekly-place-trend .trend-check-marker{fill:#1261d6}.weekly-place-trend .trend-check-label{fill:#607993;font-size:9px;font-weight:800}
 .weekly-place-trend small{display:block;margin-top:5px;color:#526b86;font-size:11px;font-weight:800}
 .weekly-ad-metrics small{overflow:visible!important;text-overflow:clip!important}
 .weekly-ad-metrics em{display:block;margin-top:8px;color:#71829a;font-size:10px;font-style:normal;font-weight:800}

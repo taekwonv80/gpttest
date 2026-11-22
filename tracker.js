@@ -808,13 +808,22 @@ function renderWeeklyAdReport() {
   const min = Math.min(...trendRows.map((row) => row.clicks));
   const maxRow = trendRows.find((row) => row.clicks === max);
   const minRow = trendRows.find((row) => row.clicks === min);
-  const chartPoints = trendRows.map((row, index) => ({ x: trendRows.length === 1 ? 0 : index / (trendRows.length - 1) * 600, y: 150 - row.clicks / max * 125, clicks: row.clicks }));
+  const chartPoints = trendRows.map((row, index) => ({ x: trendRows.length === 1 ? 0 : index / (trendRows.length - 1) * 600, y: 150 - row.clicks / max * 125, clicks: row.clicks, date: row.date }));
   const points = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
   const marker = (label, value) => { const point = chartPoints.find((item) => item.clicks === value); const labelY = point.y < 28 ? point.y + 18 : point.y - 10; return `<circle class="trend-marker" cx="${point.x}" cy="${point.y}" r="4"/><text class="trend-marker-label" x="${point.x}" y="${labelY}" text-anchor="middle">${label} ${weeklyAdNumber(value)}클릭</text>`; };
+  const compactDate = (date) => { const value = reportDateFromYmd(date); return `${value.getMonth() + 1}${String(value.getDate()).padStart(2, '0')}`; };
+  const checkedMarkers = chartPoints.slice(1, -1).filter((point, index) => {
+    const previous = chartPoints[index]; const next = chartPoints[index + 2];
+    return ((point.clicks > previous.clicks && point.clicks > next.clicks) || (point.clicks < previous.clicks && point.clicks < next.clicks)) && point.clicks !== max && point.clicks !== min;
+  }).map((point) => {
+    const isPeak = point.y < chartPoints[chartPoints.indexOf(point) - 1].y;
+    const labelY = isPeak ? Math.max(point.y - 10, 12) : Math.min(point.y + 16, 148);
+    return `<circle class="trend-check-marker" cx="${point.x}" cy="${point.y}" r="2.5"/><text class="trend-check-label" x="${point.x}" y="${labelY}" text-anchor="middle">${weeklyAdNumber(point.clicks)}(${compactDate(point.date)})</text>`;
+  }).join('');
   document.querySelector('#weekly-ad-trend-name').textContent = weeklyAdType === '전체' ? '전체 광고' : weeklyAdType;
   document.querySelector('#weekly-place-trend-stats').textContent = `최대 ${weeklyAdNumber(max)}클릭 (${reportMonthDay(maxRow.date)}) · 최소 ${weeklyAdNumber(min)}클릭 (${reportMonthDay(minRow.date)})`;
   document.querySelector('#weekly-place-trend-chart').setAttribute('aria-label', `${weeklyAdType === '전체' ? '전체 광고' : weeklyAdType} 클릭 추이`);
-  document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>${marker('최대', max)}${marker('최소', min)}`;
+  document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>${marker('최대', max)}${marker('최소', min)}${checkedMarkers}`;
   const labelCount = weeklyAdPeriod === '7' ? 7 : 6;
   const labelDates = Array.from({ length: labelCount }, (_, index) => {
     const date = new Date(start);

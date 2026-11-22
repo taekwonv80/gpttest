@@ -808,7 +808,12 @@ function renderWeeklyAdReport() {
   const min = Math.min(...trendRows.map((row) => row.clicks));
   const maxRow = trendRows.find((row) => row.clicks === max);
   const minRow = trendRows.find((row) => row.clicks === min);
-  const chartPoints = trendRows.map((row, index) => ({ x: trendRows.length === 1 ? 0 : index / (trendRows.length - 1) * 600, y: 150 - row.clicks / max * 125, clicks: row.clicks, date: row.date }));
+  const chartDuration = Math.max(last.getTime() - start.getTime(), 86400000);
+  const chartPoints = trendRows.map((row) => {
+    const date = reportDateFromYmd(row.date);
+    const x = Math.max(0, Math.min(600, (date.getTime() - start.getTime()) / chartDuration * 600));
+    return { x, y: 150 - row.clicks / max * 125, clicks: row.clicks, date: row.date };
+  });
   const points = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
   const marker = (label, value) => { const point = chartPoints.find((item) => item.clicks === value); const labelY = point.y < 28 ? point.y + 18 : point.y - 10; return `<circle class="trend-marker" cx="${point.x}" cy="${point.y}" r="4"/><text class="trend-marker-label" x="${point.x}" y="${labelY}" text-anchor="middle">${label} ${weeklyAdNumber(value)}클릭</text>`; };
   const compactDate = (date) => { const value = reportDateFromYmd(date); return `${value.getMonth() + 1}${String(value.getDate()).padStart(2, '0')}`; };

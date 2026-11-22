@@ -30,6 +30,16 @@
       "end_day": 28,
       "d_minus": 45,
       "desc": "겨울 굴이 제철이라 따뜻한 해산물 메뉴를 찾는 손님이 늘어요."
-    }
+    },
+    { "key": "new-year", "name": "신년 모임", "start_month": 1, "start_day": 1, "end_month": 1, "end_day": 7, "d_minus": 21, "desc": "신년 가족외식과 모임 수요" },
+    { "key": "graduation", "name": "졸업·입학", "start_month": 2, "start_day": 1, "end_month": 3, "end_day": 10, "d_minus": 21, "desc": "졸업과 입학 가족모임 수요" },
+    { "key": "valentine", "name": "발렌타인데이", "start_month": 2, "start_day": 14, "end_month": 2, "end_day": 14, "d_minus": 14, "desc": "연인·친구 모임" },
+    { "key": "spring-outing", "name": "벚꽃·봄나들이", "start_month": 4, "start_day": 1, "end_month": 4, "end_day": 20, "d_minus": 21, "desc": "봄 주말 가족외식" },
+    { "key": "family-month", "name": "가정의 달", "start_month": 5, "start_day": 1, "end_month": 5, "end_day": 31, "d_minus": 30, "desc": "어린이날·어버이날·스승의날 가족모임" },
+    { "key": "summer-break", "name": "여름방학·복날", "start_month": 7, "start_day": 15, "end_month": 8, "end_day": 15, "d_minus": 21, "desc": "방학 가족외식과 여름 보양 수요" },
+    { "key": "chuseok", "name": "추석 가족모임", "start_month": 9, "start_day": 15, "end_month": 10, "end_day": 5, "d_minus": 30, "desc": "음력 추석은 해마다 날짜를 확인해 조정하세요." },
+    { "key": "ggaetgol", "name": "시흥갯골축제 관찰", "start_month": 9, "start_day": 18, "end_month": 9, "end_day": 20, "d_minus": 45, "desc": "매년 공식 공고일을 확인하세요." },
+    { "key": "nunggok-festival", "name": "능곡선사마을축제 관찰", "start_month": 10, "start_day": 24, "end_month": 10, "end_day": 24, "d_minus": 45, "desc": "매년 공식 공고일을 확인하세요." },
+    { "key": "year-end", "name": "송년회·크리스마스", "start_month": 12, "start_day": 1, "end_month": 12, "end_day": 31, "d_minus": 45, "desc": "단체 송년회와 크리스마스 가족모임" }
   ]
 }

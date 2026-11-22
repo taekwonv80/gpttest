@@ -5,6 +5,7 @@ const MISSION_STATE_STORAGE = 'taekine-mission-state';
 const ACTIVITY_LOG_STORAGE = 'taekine-activity-log';
 const DESCRIPTION_DRAFT_STORAGE = 'taekine-description-draft';
 const SEASON_PROGRESS_STORAGE = 'taekine-season-progress';
+const CUSTOM_SEASON_STORAGE = 'taekine-custom-seasons';
 const SEASON_STAGE_MODULE_URL = 'https://ai.euncoach.com/components/season-dashboard-stages.generated.js';
 const PENDING_VOLUME = '실제 검색 횟수(측정대기)';
 const PENDING_RANK = '-';
@@ -531,6 +532,19 @@ document.querySelector('#keyword-delete').addEventListener('click', async () => 
 
 document.querySelectorAll('.dialog-close').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
 
+document.querySelector('#season-add-open').addEventListener('click', () => document.querySelector('#season-add-dialog').showModal());
+document.querySelector('#season-add-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const month = Number(form.get('month')); const day = Number(form.get('day'));
+  if (!Number.isInteger(month) || !Number.isInteger(day)) return;
+  const items = readStoredValue(CUSTOM_SEASON_STORAGE, []);
+  items.push({ key: `custom-${Date.now()}`, name: String(form.get('name')).trim(), start_month: month, start_day: day, end_month: month, end_day: day, d_minus: Number(form.get('prepare')) || 0, desc: '직접 등록한 일정' });
+  localStorage.setItem(CUSTOM_SEASON_STORAGE, JSON.stringify(items));
+  event.currentTarget.reset(); document.querySelector('#season-add-dialog').close();
+  const timeline = annualSeasonTimeline(currentStoreProfile); void renderSeasonGuide(timeline); void renderSeasonPlanner(timeline);
+});
+
 const tabs = document.querySelectorAll('[data-period]');
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   tabs.forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
@@ -1023,7 +1037,8 @@ function ymdToUtcDay(ymd) {
 function annualSeasonTimeline(storeProfile) {
   const profile = storeProfile && typeof storeProfile === 'object' ? storeProfile : {};
   const year = Number(koreaYmdParts().year);
-  const seasonCalendar = Array.isArray(profile.season_calendar) ? profile.season_calendar : [];
+  const customSeasons = readStoredValue(CUSTOM_SEASON_STORAGE, []);
+  const seasonCalendar = [...(Array.isArray(profile.season_calendar) ? profile.season_calendar : []), ...(Array.isArray(customSeasons) ? customSeasons : [])];
   const seasons = seasonCalendar.flatMap((season) => {
     const month = Number(season.start_month);
     const day = Number(season.start_day);

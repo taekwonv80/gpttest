@@ -1231,7 +1231,9 @@ async function buildSeasonPlannerStages(seasonTimeline, season) {
     seasonDay: startDay,
     industryLabel: seasonTimeline.industry_label,
   });
-  return (timeline?.stages || []).map((stage) => ({ ...stage, plannerDate: seasonPlannerStageDate(season, stage) }));
+  return (timeline?.stages || [])
+    .map((stage) => ({ ...stage, plannerDate: seasonPlannerStageDate(season, stage) }))
+    .sort((left, right) => left.plannerDate - right.plannerDate);
 }
 
 function seasonPlannerFocus(seasonTimeline) {

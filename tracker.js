@@ -803,7 +803,6 @@ function renderWeeklyAdReport() {
   const trendRows = currentRows.map((row) => ({ date: row.date, clicks: (weeklyAdType === '전체' ? row.campaigns : row.campaigns.filter((item) => item.name === weeklyAdType)).reduce((sum, item) => sum + (Number(item.clicks) || 0), 0) }));
   const displayStart = reportDateFromYmd(trendRows[0].date);
   document.querySelector('#weekly-ad-range').textContent = `${reportMonthDay(displayStart)} ~ ${reportMonthDay(last)}`;
-  document.querySelector('#weekly-place-trend-range').textContent = `데이터 시작 ${reportMonthDay(displayStart)} · 끝 ${reportMonthDay(last)}`;
   const max = Math.max(...trendRows.map((row) => row.clicks), 1);
   const min = Math.min(...trendRows.map((row) => row.clicks));
   const maxRow = trendRows.find((row) => row.clicks === max);

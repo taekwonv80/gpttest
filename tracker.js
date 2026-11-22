@@ -800,18 +800,18 @@ function renderWeeklyAdReport() {
     ['평균 CPC', `${weeklyAdNumber(currentCpc)}원`, change(currentCpc, previousCpc), currentCpc <= previousCpc ? 'up' : 'down', `이전 ${weeklyAdNumber(previousCpc)}원`],
   ];
   metrics.replaceChildren(...cards.map(([label, value, note, status, previousValue]) => { const card = document.createElement('article'); card.innerHTML = `<span>${label}</span><strong>${value}</strong><small class="${status || (note.startsWith('↑') ? 'up' : 'down')}">${note}</small><em>${previousValue}</em>`; return card; }));
-  const range = `${reportMonthDay(start)} ~ ${reportMonthDay(last)}`;
-  document.querySelector('#weekly-ad-range').textContent = range;
-  document.querySelector('#weekly-place-trend-range').textContent = `시작 ${reportMonthDay(start)} · 끝 ${reportMonthDay(last)}`;
   const trendRows = currentRows.map((row) => ({ date: row.date, clicks: (weeklyAdType === '전체' ? row.campaigns : row.campaigns.filter((item) => item.name === weeklyAdType)).reduce((sum, item) => sum + (Number(item.clicks) || 0), 0) }));
+  const displayStart = reportDateFromYmd(trendRows[0].date);
+  document.querySelector('#weekly-ad-range').textContent = `${reportMonthDay(displayStart)} ~ ${reportMonthDay(last)}`;
+  document.querySelector('#weekly-place-trend-range').textContent = `데이터 시작 ${reportMonthDay(displayStart)} · 끝 ${reportMonthDay(last)}`;
   const max = Math.max(...trendRows.map((row) => row.clicks), 1);
   const min = Math.min(...trendRows.map((row) => row.clicks));
   const maxRow = trendRows.find((row) => row.clicks === max);
   const minRow = trendRows.find((row) => row.clicks === min);
-  const chartDuration = Math.max(last.getTime() - start.getTime(), 86400000);
+  const chartDuration = Math.max(last.getTime() - displayStart.getTime(), 86400000);
   const chartPoints = trendRows.map((row) => {
     const date = reportDateFromYmd(row.date);
-    const x = Math.max(0, Math.min(600, (date.getTime() - start.getTime()) / chartDuration * 600));
+    const x = Math.max(0, Math.min(600, (date.getTime() - displayStart.getTime()) / chartDuration * 600));
     return { x, y: 150 - row.clicks / max * 125, clicks: row.clicks, date: row.date };
   });
   const points = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
@@ -831,8 +831,8 @@ function renderWeeklyAdReport() {
   document.querySelector('#weekly-place-trend-chart').innerHTML = `<line x1="0" y1="150" x2="600" y2="150"/><polyline points="${points}"/>${marker('최대', max)}${marker('최소', min)}${checkedMarkers}`;
   const labelCount = weeklyAdPeriod === '7' ? 7 : 6;
   const labelDates = Array.from({ length: labelCount }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + Math.round(index * ((last - start) / 86400000) / (labelCount - 1)));
+    const date = new Date(displayStart);
+    date.setDate(displayStart.getDate() + Math.round(index * ((last - displayStart) / 86400000) / (labelCount - 1)));
     return date;
   });
   document.querySelector('#weekly-place-trend-labels').replaceChildren(...labelDates.map((date) => { const span = document.createElement('span'); span.textContent = reportMonthDay(date); return span; }));

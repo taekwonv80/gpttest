@@ -561,6 +561,20 @@ function fillSeasonEditForm() {
   seasonEditForm.elements.month.value = item.start_month;
   seasonEditForm.elements.day.value = item.start_day;
   seasonEditForm.elements.prepare.value = item.d_minus;
+  void renderSeasonEditGuide(item);
+}
+async function renderSeasonEditGuide(item) {
+  const guide = document.querySelector('#season-edit-guide');
+  if (!guide) return;
+  guide.replaceChildren(Object.assign(document.createElement('b'), { textContent: '기존 가이드를 불러오는 중' }));
+  try {
+    const timeline = annualSeasonTimeline(currentStoreProfile);
+    const season = timeline.seasons.find((value) => value.key === item.key && String(value.start_date).startsWith(`${koreaYmdParts().year}-`));
+    const stages = season ? await buildSeasonPlannerStages(timeline, season) : [];
+    guide.replaceChildren(Object.assign(document.createElement('b'), { textContent: '현재 설정된 준비 가이드' }), ...stages.map((stage) => Object.assign(document.createElement('span'), { textContent: `${stage.dDay || 0}일 전 · ${stage.name}` })));
+  } catch {
+    guide.replaceChildren(Object.assign(document.createElement('b'), { textContent: '기존 가이드를 불러오지 못했습니다.' }));
+  }
 }
 document.querySelector('#season-edit-open').addEventListener('click', () => {
   const items = editableSeasons();
